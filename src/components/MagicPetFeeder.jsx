@@ -1172,23 +1172,35 @@ export default function MagicPetFeeder({
               >
                 <div className="absolute top-2 left-3 w-4 h-2 bg-white/70 rounded-full rotate-[-20deg]" />
 
-                {/* NUMBER DISPLAY WITH COUNTING DOTS */}
+                {/* NUMBER DISPLAY WITH ALL COUNTING DOTS (NO +5 TRUNCATION) */}
                 {choice.type === 'number' && (
                   <div className="flex flex-col items-center justify-center">
-                    <span className={`text-4xl sm:text-5xl font-black ${choice.color?.text || 'text-amber-600'}`}>
+                    <span className={`text-4xl sm:text-5xl font-black leading-none ${choice.color?.text || 'text-amber-600'}`}>
                       {choice.label}
                     </span>
-                    {/* Counting Sprinkle Dots */}
-                    <div className="flex gap-1 mt-1">
-                      {Array.from({ length: Math.min(choice.count, 5) }).map((_, dotIdx) => (
-                        <div
-                          key={dotIdx}
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: choice.color.fill }}
-                        />
-                      ))}
+                    {/* Counting Sprinkle Dots - Ten-Frame Layout */}
+                    <div className="flex flex-col items-center gap-1 mt-1.5">
+                      {/* Top Row: up to 5 dots */}
+                      <div className="flex gap-1 justify-center">
+                        {Array.from({ length: Math.min(choice.count, 5) }).map((_, dotIdx) => (
+                          <div
+                            key={`row1-${dotIdx}`}
+                            className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm"
+                            style={{ backgroundColor: choice.color.fill }}
+                          />
+                        ))}
+                      </div>
+                      {/* Bottom Row: remaining dots for 6 to 10 */}
                       {choice.count > 5 && (
-                        <span className="text-[9px] font-black text-slate-500">+{choice.count - 5}</span>
+                        <div className="flex gap-1 justify-center">
+                          {Array.from({ length: choice.count - 5 }).map((_, dotIdx) => (
+                            <div
+                              key={`row2-${dotIdx}`}
+                              className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm"
+                              style={{ backgroundColor: choice.color.fill }}
+                            />
+                          ))}
+                        </div>
                       )}
                     </div>
                   </div>
