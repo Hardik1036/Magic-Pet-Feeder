@@ -38,7 +38,7 @@ export default function PlayroomPage({
   useEffect(() => {
     const timer = setTimeout(() => {
       speakPetText(`Yay, play time! Throw the bouncy ball to ${petDisplayName}!`, currentPet.voice);
-    }, 450);
+    }, 200);
     return () => clearTimeout(timer);
   }, [currentPet, petDisplayName]);
 
@@ -76,7 +76,7 @@ export default function PlayroomPage({
         const praises = ['Good catch!', 'Wheee!', 'Bounce bounce!', 'Super jump!'];
         speakPetText(praises[Math.floor(Math.random() * praises.length)], currentPet.voice);
       }
-    }, 600);
+    }, 320);
   };
 
   // Squeeze squeaky duck
@@ -84,7 +84,7 @@ export default function PlayroomPage({
     sfx.squeak();
     setPetExpression('happy');
     speakPetText(`Quack quack! ${petDisplayName} loves that sound!`, currentPet.voice);
-    setTimeout(() => setPetExpression('idle'), 700);
+    setTimeout(() => setPetExpression('idle'), 400);
   };
 
   // Pop balloon
@@ -92,9 +92,9 @@ export default function PlayroomPage({
     sfx.pop();
     setBalloons((prev) => prev.filter((b) => b.id !== id));
     setPetExpression('happy');
-    setTimeout(() => setPetExpression('idle'), 600);
+    setTimeout(() => setPetExpression('idle'), 350);
 
-    // Respawn after moment
+    // Fast respawn
     setTimeout(() => {
       setBalloons((prev) => [
         ...prev,
@@ -107,7 +107,7 @@ export default function PlayroomPage({
           x: 20 + Math.random() * 60,
         },
       ]);
-    }, 1500);
+    }, 600);
   };
 
   return (

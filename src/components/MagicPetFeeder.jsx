@@ -309,12 +309,13 @@ export default function MagicPetFeeder({
   const [draggingItem, setDraggingItem] = useState(null);
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
   const petZoneRef = useRef(null);
+  const petZoneRectRef = useRef(null);
 
   // Auto-speak on round change using selected pet's voice!
   useEffect(() => {
     const timer = setTimeout(() => {
       speakPetText(round.spokenPrompt, currentPet.voice);
-    }, 450);
+    }, 200);
     return () => clearTimeout(timer);
   }, [round, currentPet]);
 
@@ -469,8 +470,10 @@ export default function MagicPetFeeder({
   );
 
   const checkCollisionWithPet = useCallback((x, y) => {
-    if (!petZoneRef.current) return false;
-    const rect = petZoneRef.current.getBoundingClientRect();
+    const rect =
+      petZoneRectRef.current ||
+      (petZoneRef.current ? petZoneRef.current.getBoundingClientRect() : null);
+    if (!rect) return false;
     const margin = 45;
     return (
       x >= rect.left - margin &&
@@ -492,7 +495,7 @@ export default function MagicPetFeeder({
       }
 
       setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 1400);
+      setTimeout(() => setShowConfetti(false), 600);
 
       const newFeedCount = feedCount + 1;
       const newStageIndex = getStageFromFeeds(newFeedCount);
@@ -571,14 +574,14 @@ export default function MagicPetFeeder({
           } else {
             speakPetText(`AMAZING! ${petDisplayName} is now a full grown adult!`, currentPet.voice);
           }
-        }, 800);
+        }, 500);
       } else {
         const praises =
           stageIndex === 0
             ? ['Crack crack!', 'The egg loves it!', 'Keep going!', 'Almost hatching!']
             : [currentPet.voice.nomSound, 'So yummy!', 'Delicious!', 'Super job!', 'Nom nom nom!'];
         const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-        setTimeout(() => speakPetText(randomPraise, currentPet.voice), 300);
+        setTimeout(() => speakPetText(randomPraise, currentPet.voice), 150);
 
         if (newFeedCount % 4 === 0) {
           const remaining = ACCESSORIES.filter((acc) => !unlockedAccessories.includes(acc.id));
@@ -594,25 +597,27 @@ export default function MagicPetFeeder({
             setAccessoryModal(accessoryToUnlock);
             sfx.fanfare();
             speakPetText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`, currentPet.voice);
-          }, 1100);
+          }, 500);
         }
       }
 
+      // Snappy and fast round transition: 280ms!
       setTimeout(() => {
         setPetExpression('happy');
+        setFlyingFoodId(null);
+        const nextMode =
+          currentMode === 'numbers'
+            ? 'phonics'
+            : currentMode === 'phonics'
+            ? 'shapes'
+            : 'numbers';
+        setCurrentMode(nextMode);
+        setRound(generateRound(nextMode, newStageIndex, petDisplayName));
+
         setTimeout(() => {
-          setFlyingFoodId(null);
           setPetExpression('idle');
-          const nextMode =
-            currentMode === 'numbers'
-              ? 'phonics'
-              : currentMode === 'phonics'
-              ? 'shapes'
-              : 'numbers';
-          setCurrentMode(nextMode);
-          setRound(generateRound(nextMode, newStageIndex, petDisplayName));
-        }, 700);
-      }, 900);
+        }, 350);
+      }, 280);
     },
     [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName, checkBadgeAwards, playerStats, onUpdateStats, totalFeeds]
   );
@@ -621,7 +626,7 @@ export default function MagicPetFeeder({
     (choice) => {
       sfx.boing();
       setWobbleId(choice.id);
-      setTimeout(() => setWobbleId(null), 650);
+      setTimeout(() => setWobbleId(null), 320);
 
       // Reset streak on miss so High Five badge requires genuine 5 consecutive answers!
       if (onUpdateStats) {
@@ -644,6 +649,9 @@ export default function MagicPetFeeder({
   const handlePointerDown = (choice, e) => {
     if (!e.isPrimary) return;
     sfx.pop();
+    if (petZoneRef.current) {
+      petZoneRectRef.current = petZoneRef.current.getBoundingClientRect();
+    }
     const touch = e.touches ? e.touches[0] : e;
     setDraggingItem(choice);
     setDragPos({ x: touch.clientX, y: touch.clientY });
@@ -902,7 +910,7 @@ export default function MagicPetFeeder({
                   ${choice.color?.border || 'border-indigo-300'}
                   ${isWobbling ? 'animate-wobble bg-rose-50 border-rose-400' : 'bg-white hover:scale-105 active:scale-95'}
                   ${isBeingDragged ? 'opacity-30 scale-90' : 'opacity-100'}
-                  ${isFlying ? 'scale-0 translate-y-[-180px] transition-transform duration-700 ease-in' : ''}
+                  ${isFlying ? 'scale-0 translate-y-[-180px] transition-all duration-250 ease-out' : ''}
                 `}
               >
                 <div className="absolute top-2 left-3 w-4 h-2 bg-white/70 rounded-full rotate-[-20deg]" />

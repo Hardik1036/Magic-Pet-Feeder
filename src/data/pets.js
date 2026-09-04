@@ -20,7 +20,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.15,
-      rate: 0.88,
+      rate: 1.08,
       soundType: 'chomp',
       greeting: "Roar! Let's eat tasty snacks!",
       nomSound: "Nom nom roar!",
@@ -44,7 +44,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.48, // High cute squeaky voice
-      rate: 0.95,
+      rate: 1.12,
       soundType: 'squeak',
       greeting: "Hop hop! I love yummy treats!",
       nomSound: "Munch munch squeak!",
@@ -68,7 +68,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.25,
-      rate: 0.92,
+      rate: 1.10,
       soundType: 'bark',
       greeting: "Woof woof! Ready to snack with you!",
       nomSound: "Slurp munch woof!",
@@ -92,7 +92,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.35,
-      rate: 0.88,
+      rate: 1.08,
       soundType: 'purr',
       greeting: "Meow! Can we find my favorite snack?",
       nomSound: "Purr purr yummy!",
@@ -116,7 +116,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.08, // Cute chubby baby voice
-      rate: 0.86,
+      rate: 1.06,
       soundType: 'chomp',
       greeting: "Hello! I am hungry for green snacks!",
       nomSound: "Chomp chomp yum!",
@@ -140,7 +140,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.38,
-      rate: 0.94,
+      rate: 1.10,
       soundType: 'chirp',
       greeting: "Yip yip! Let's find yummy shapes!",
       nomSound: "Yip munch nom!",
@@ -164,7 +164,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.3,
-      rate: 0.9,
+      rate: 1.08,
       soundType: 'quack',
       greeting: "Waddle waddle! Can you feed me please?",
       nomSound: "Flap munch yummy!",
@@ -188,7 +188,7 @@ export const PETS = [
     },
     voice: {
       pitch: 1.55, // Extra squeaky cute voice!
-      rate: 0.98,
+      rate: 1.14,
       soundType: 'squeak',
       greeting: "Squeeeak! So many crunchy treats!",
       nomSound: "Nibble nibble squeak!",

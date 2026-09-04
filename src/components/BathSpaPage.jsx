@@ -50,7 +50,7 @@ export default function BathSpaPage({
   useEffect(() => {
     const timer = setTimeout(() => {
       speakPetText(`Splish splash! Let's take a warm bubble bath, ${playerName}!`, currentPet.voice);
-    }, 450);
+    }, 200);
     return () => clearTimeout(timer);
   }, [currentPet, playerName]);
 
@@ -62,7 +62,7 @@ export default function BathSpaPage({
       prev.map((s) => (s.id === spotId ? { ...s, cleaned: true } : s))
     );
 
-    setTimeout(() => setPetExpression('idle'), 600);
+    setTimeout(() => setPetExpression('idle'), 320);
 
     // Check if all spots cleaned
     const remaining = spots.filter((s) => s.id !== spotId && !s.cleaned);
@@ -71,8 +71,8 @@ export default function BathSpaPage({
         sfx.fanfare();
         setPetSparkle(true);
         speakPetText(`So clean and sparkly! You are the best!`, currentPet.voice);
-        setTimeout(() => setPetSparkle(false), 2000);
-      }, 500);
+        setTimeout(() => setPetSparkle(false), 1200);
+      }, 350);
     }
   };
 
@@ -81,7 +81,7 @@ export default function BathSpaPage({
     sfx.bubblePop();
     setBubbles((prev) => prev.filter((b) => b.id !== bubbleId));
 
-    // Add replacement bubble after a moment
+    // Fast replacement bubble
     setTimeout(() => {
       setBubbles((prev) => [
         ...prev,
@@ -93,7 +93,7 @@ export default function BathSpaPage({
           color: ['#93C5FD', '#F472B6', '#C084FC', '#67E8F9'][Math.floor(Math.random() * 4)],
         },
       ]);
-    }, 1200);
+    }, 500);
 
     // Track bubbles popped stat
     const newBubbleCount = (playerStats.bubblesPopped || 0) + 1;
@@ -121,7 +121,7 @@ export default function BathSpaPage({
       // Wash all spots
       setSpots((prev) => prev.map((s) => ({ ...s, cleaned: true })));
       speakPetText(`Whoosh! Warm water feels so nice!`, currentPet.voice);
-      setTimeout(() => setPetExpression('idle'), 1000);
+      setTimeout(() => setPetExpression('idle'), 500);
     } else if (toolId === 'bubbles') {
       sfx.bubblePop();
       speakPetText(`Pop all the rainbow bubbles!`, currentPet.voice);
@@ -143,7 +143,7 @@ export default function BathSpaPage({
       setTimeout(() => {
         setPetSparkle(false);
         setPetExpression('idle');
-      }, 1500);
+      }, 800);
     } else {
       sfx.pop();
       speakPetText(`Rub-a-dub with the soft sponge!`, currentPet.voice);

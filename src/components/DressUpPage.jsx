@@ -44,7 +44,7 @@ export default function DressUpPage({
         `Welcome to the Dress-Up Salon! Pick your favorite costume for ${petDisplayName}!`,
         currentPet.voice
       );
-    }, 450);
+    }, 200);
     return () => clearTimeout(timer);
   }, [currentPet, petDisplayName]);
 

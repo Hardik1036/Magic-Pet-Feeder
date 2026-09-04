@@ -361,23 +361,52 @@ class SoundFX {
 export const sfx = new SoundFX();
 
 // Voice synthesis helper with pet custom pitch and speed
-export function speakPetText(text, petVoice) {
-  if (!('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.pitch = petVoice?.pitch || 1.25;
-    utterance.rate = petVoice?.rate || 0.9;
-    utterance.lang = 'en-US';
-
+let cachedVoice = null;
+if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+  const loadVoices = () => {
     const voices = window.speechSynthesis.getVoices();
-    const naturalVoice = voices.find(
+    cachedVoice = voices.find(
       (v) =>
         v.lang.startsWith('en') &&
         (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
-    );
-    if (naturalVoice) utterance.voice = naturalVoice;
-    window.speechSynthesis.speak(utterance);
+    ) || voices.find((v) => v.lang.startsWith('en')) || null;
+  };
+  loadVoices();
+  if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+}
+
+export function speakPetText(text, petVoice) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    setTimeout(() => {
+      try {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.pitch = petVoice?.pitch || 1.25;
+        utterance.rate = petVoice?.rate || 1.08;
+        utterance.lang = 'en-US';
+
+        if (cachedVoice) {
+          utterance.voice = cachedVoice;
+        } else {
+          const voices = window.speechSynthesis.getVoices();
+          const found = voices.find(
+            (v) =>
+              v.lang.startsWith('en') &&
+              (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
+          ) || voices.find((v) => v.lang.startsWith('en'));
+          if (found) {
+            cachedVoice = found;
+            utterance.voice = found;
+          }
+        }
+        window.speechSynthesis.speak(utterance);
+      } catch (innerErr) {
+        console.warn('Speech utterance error:', innerErr);
+      }
+    }, 15);
   } catch (e) {
     console.warn('Speech error:', e);
   }

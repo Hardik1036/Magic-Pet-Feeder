@@ -31,9 +31,9 @@ export default function BedroomPage({
     const timer = setTimeout(() => {
       speakPetText(
         `Yawn! It's bedtime for ${petDisplayName}. Let's count 5 twinkling stars!`,
-        { ...currentPet.voice, rate: 0.85 }
+        { ...currentPet.voice, rate: 1.05 }
       );
-    }, 450);
+    }, 200);
     return () => clearTimeout(timer);
   }, [currentPet, petDisplayName]);
 
@@ -46,7 +46,7 @@ export default function BedroomPage({
       setLitStars(nextLit);
 
       const words = ['One', 'Two', 'Three', 'Four', 'Five'];
-      speakPetText(words[starNum - 1], { ...currentPet.voice, rate: 0.85 });
+      speakPetText(words[starNum - 1], { ...currentPet.voice, rate: 1.08 });
 
       // Track total stars counted in player stats
       const nextCount = (playerStats.starsCounted || 0) + 1;
@@ -63,7 +63,7 @@ export default function BedroomPage({
           if (onUnlockBadge) onUnlockBadge('starlight_dreamer');
           sfx.fanfare();
           speakPetText(`Hooray! You counted all 5 stars and earned the Starlight Dreamer trophy!`, currentPet.voice);
-        }, 800);
+        }, 400);
       }
     }
   };
