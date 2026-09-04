@@ -849,40 +849,44 @@ export default function MagicPetFeeder({
     }
   }, [feedCount, stageIndex, unlockedAccessories, onSaveProgress]);
 
-  // Check and award badges based on milestones
+  // Check and award badges based on milestones & achievements
   const checkBadgeAwards = useCallback(
-    (newFeeds, newStage, lastMode) => {
+    (newFeeds, newStage, lastMode, choice) => {
       const awarded = [];
 
-      // First snack
-      if (newFeeds >= 1 && !unlockedBadges.includes('first_snack')) {
-        awarded.push('first_snack');
+      // --- Milestones ---
+      if (newFeeds >= 1 && !unlockedBadges.includes('first_snack')) awarded.push('first_snack');
+      if (newFeeds >= 5 && !unlockedBadges.includes('high_five')) awarded.push('high_five');
+      if (newFeeds >= 10 && !unlockedBadges.includes('super_feeder')) awarded.push('super_feeder');
+      if (newFeeds >= 20 && !unlockedBadges.includes('mega_feeder')) awarded.push('mega_feeder');
+      if (newStage >= 1 && !unlockedBadges.includes('egg_cracker')) awarded.push('egg_cracker');
+      if (newStage >= 2 && !unlockedBadges.includes('kid_growth')) awarded.push('kid_growth');
+      if (newStage >= 3 && !unlockedBadges.includes('adult_majesty')) awarded.push('adult_majesty');
+      if (newFeeds >= 4 && !unlockedBadges.includes('rainbow_belly')) awarded.push('rainbow_belly');
+
+      // --- Learning Modes ---
+      if (lastMode === 'numbers' && !unlockedBadges.includes('number_whiz')) awarded.push('number_whiz');
+      if (choice?.id === '10' && !unlockedBadges.includes('ten_frame_master')) awarded.push('ten_frame_master');
+      if (lastMode === 'phonics' && !unlockedBadges.includes('alphabet_champ')) awarded.push('alphabet_champ');
+      if (['A', 'E', 'I', 'O', 'U'].includes(choice?.id) && !unlockedBadges.includes('vowel_superstar')) awarded.push('vowel_superstar');
+      if (lastMode === 'shapes' && !unlockedBadges.includes('shape_master')) awarded.push('shape_master');
+      if (['diamond', 'moon', 'flower', 'cloud'].some((sh) => choice?.id?.includes(sh)) && !unlockedBadges.includes('gem_collector')) {
+        awarded.push('gem_collector');
       }
-      // Egg hatched
-      if (newStage >= 1 && !unlockedBadges.includes('egg_cracker')) {
-        awarded.push('egg_cracker');
-      }
-      // Kid stage
-      if (newStage >= 2 && !unlockedBadges.includes('kid_growth')) {
-        awarded.push('kid_growth');
-      }
-      // Adult stage
-      if (newStage >= 3 && !unlockedBadges.includes('adult_majesty')) {
-        awarded.push('adult_majesty');
-      }
-      // 10 snacks
-      if (newFeeds >= 10 && !unlockedBadges.includes('super_feeder')) {
-        awarded.push('super_feeder');
-      }
-      // Mode badges
-      if (lastMode === 'numbers' && !unlockedBadges.includes('number_whiz')) {
-        awarded.push('number_whiz');
-      }
-      if (lastMode === 'phonics' && !unlockedBadges.includes('alphabet_champ')) {
-        awarded.push('alphabet_champ');
-      }
-      if (lastMode === 'shapes' && !unlockedBadges.includes('shape_master')) {
-        awarded.push('shape_master');
+
+      // --- Animal Bonds ---
+      if (selectedPetId === 'dino' && !unlockedBadges.includes('dino_tamer')) awarded.push('dino_tamer');
+      if (selectedPetId === 'bunny' && !unlockedBadges.includes('bunny_buddy')) awarded.push('bunny_buddy');
+      if (selectedPetId === 'puppy' && !unlockedBadges.includes('puppy_pal')) awarded.push('puppy_pal');
+      if (selectedPetId === 'kitten' && !unlockedBadges.includes('kitty_cuddle')) awarded.push('kitty_cuddle');
+      if (selectedPetId === 'panda' && !unlockedBadges.includes('bamboo_master')) awarded.push('bamboo_master');
+      if (selectedPetId === 'fox' && !unlockedBadges.includes('fox_explorer')) awarded.push('fox_explorer');
+      if (selectedPetId === 'penguin' && !unlockedBadges.includes('penguin_dancer')) awarded.push('penguin_dancer');
+      if (selectedPetId === 'hamster' && !unlockedBadges.includes('hamster_cheeks')) awarded.push('hamster_cheeks');
+
+      // --- Random Fun Celebration Clear ---
+      if (newFeeds >= 3 && !unlockedBadges.includes('party_animal') && Math.random() > 0.3) {
+        awarded.push('party_animal');
       }
 
       if (awarded.length > 0) {
@@ -897,7 +901,7 @@ export default function MagicPetFeeder({
         }
       }
     },
-    [unlockedBadges, onUnlockBadge, currentPet]
+    [unlockedBadges, onUnlockBadge, currentPet, selectedPetId]
   );
 
   const checkCollisionWithPet = useCallback((x, y) => {
@@ -931,7 +935,7 @@ export default function MagicPetFeeder({
       setFeedCount(newFeedCount);
 
       // Check badge awards
-      checkBadgeAwards(newFeedCount, newStageIndex, currentMode);
+      checkBadgeAwards(newFeedCount, newStageIndex, currentMode, choice);
 
       if (newStageIndex > stageIndex) {
         setStageIndex(newStageIndex);
