@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Volume2, Sparkles, RefreshCw, Heart, Star, Award, Egg, Baby, Smile, Crown } from 'lucide-react';
+import { Volume2, Sparkles, RefreshCw, Heart, Star, Award, ArrowLeft, User, PawPrint } from 'lucide-react';
+import { PETS } from '../data/pets.js';
 
 // ==========================================
 // 1. SOUND FX (Pure Web Audio API Synthesizer)
-// Zero external sound files!
 // ==========================================
 class SoundFX {
   constructor() {
@@ -20,7 +20,6 @@ class SoundFX {
     }
   }
 
-  // Playful pop when tapping / selecting food
   pop() {
     this.init();
     if (!this.ctx) return;
@@ -42,7 +41,6 @@ class SoundFX {
     osc.stop(now + 0.08);
   }
 
-  // Crunchy egg crack sound for the egg phase
   crack() {
     this.init();
     if (!this.ctx) return;
@@ -67,7 +65,6 @@ class SoundFX {
     });
   }
 
-  // Cute cartoon crunchy munching sequence (3 rapid crunchy bites)
   munch() {
     this.init();
     if (!this.ctx) return;
@@ -94,7 +91,6 @@ class SoundFX {
     });
   }
 
-  // Friendly, soft springy cartoon boing for an incorrect choice (zero penalty)
   boing() {
     this.init();
     if (!this.ctx) return;
@@ -117,7 +113,6 @@ class SoundFX {
     osc.stop(now + 0.28);
   }
 
-  // Magical ascension sound when pet grows!
   grow() {
     this.init();
     if (!this.ctx) return;
@@ -139,7 +134,6 @@ class SoundFX {
     osc.stop(now + 0.5);
   }
 
-  // Celebratory musical fanfare arpeggio (C E G C E)
   fanfare() {
     this.init();
     if (!this.ctx) return;
@@ -169,15 +163,15 @@ class SoundFX {
 const sfx = new SoundFX();
 
 // ==========================================
-// 2. VOICE SYNTHESIS HELPER
+// 2. VOICE SYNTHESIS HELPER (CUSTOM PER PET)
 // ==========================================
-function speakText(text) {
+function speakPetText(text, petVoice) {
   if (!('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.pitch = 1.25; // Friendly higher cartoon tone
-    utterance.rate = 0.9;   // Slower & clear for toddlers
+    utterance.pitch = petVoice?.pitch || 1.25;
+    utterance.rate = petVoice?.rate || 0.9;
     utterance.lang = 'en-US';
 
     const voices = window.speechSynthesis.getVoices();
@@ -194,16 +188,12 @@ function speakText(text) {
 }
 
 // ==========================================
-// 3. GROWTH STAGES DEFINITION
+// 3. EVOLUTION STAGES
 // ==========================================
-// Stage 0: Egg (0 to 2 feeds, hatches at 3)
-// Stage 1: Baby Dino (3 to 6 feeds, grows to kid at 7)
-// Stage 2: Playful Kid (7 to 10 feeds, matures to adult at 11)
-// Stage 3: Full Adult Dragon (11+ feeds)
 export const STAGES = [
   { id: 'egg', name: 'Magic Egg', icon: '🥚', minFeeds: 0, targetFeeds: 3, description: 'Feed the egg to help it crack and hatch!' },
-  { id: 'baby', name: 'Baby Dino', icon: '🐣', minFeeds: 3, targetFeeds: 7, description: 'So tiny and hungry! Give baby lots of treats!' },
-  { id: 'kid', name: 'Playful Kid', icon: '🦖', minFeeds: 7, targetFeeds: 11, description: 'Running and bouncing! Getting so big!' },
+  { id: 'baby', name: 'Baby Pet', icon: '🐣', minFeeds: 3, targetFeeds: 7, description: 'So tiny and hungry! Give baby lots of treats!' },
+  { id: 'kid', name: 'Playful Kid', icon: '🐾', minFeeds: 7, targetFeeds: 11, description: 'Running and bouncing! Getting so big!' },
   { id: 'adult', name: 'Majestic Adult', icon: '👑', minFeeds: 11, targetFeeds: 15, description: 'Full grown magic creature! Proud of you!' },
 ];
 
@@ -215,8 +205,9 @@ export function getStageFromFeeds(feedCount) {
 }
 
 // ==========================================
-// 4. GAME DATA & GENERATION
+// 4. GAME MODES DATA (NUMBERS, LETTERS, SHAPES)
 // ==========================================
+const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'W'];
 
 const SHAPES = [
@@ -249,11 +240,29 @@ function getRandomItems(array, count) {
   return shuffled.slice(0, count);
 }
 
-function generateRound(mode, stageIndex) {
-  const stage = STAGES[stageIndex];
-  const petSubject = stage.id === 'egg' ? 'the egg' : stage.id === 'baby' ? 'baby dino' : 'my pet';
+function generateRound(mode, stageIndex, petDisplayName) {
+  const isEgg = stageIndex === 0;
+  const petSubject = isEgg ? 'the magic egg' : petDisplayName || 'your pet';
 
-  if (mode === 'phonics') {
+  if (mode === 'numbers') {
+    // Numbers Mode (1 to 10)
+    const numbers = getRandomItems(NUMBERS, 3);
+    const target = numbers[Math.floor(Math.random() * numbers.length)];
+    return {
+      mode: 'numbers',
+      targetLabel: `Number ${target}`,
+      spokenPrompt: `Feed ${petSubject} the number ${target}!`,
+      targetId: target.toString(),
+      choices: numbers.map((num) => ({
+        id: num.toString(),
+        label: num.toString(),
+        type: 'number',
+        count: num,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      })),
+    };
+  } else if (mode === 'phonics') {
+    // Phonics Mode
     const letters = getRandomItems(LETTERS, 3);
     const target = letters[Math.floor(Math.random() * letters.length)];
     return {
@@ -269,6 +278,7 @@ function generateRound(mode, stageIndex) {
       })),
     };
   } else {
+    // Shapes & Colors Mode
     const selectedColors = getRandomItems(COLORS, 3);
     const selectedShapes = getRandomItems(SHAPES, 3);
     const choices = [0, 1, 2].map((i) => ({
@@ -290,18 +300,22 @@ function generateRound(mode, stageIndex) {
 }
 
 // ==========================================
-// 5. ANIMATED PET SVG (WITH 4 EVOLUTION STAGES)
+// 5. MULTI-SPECIES PET AVATAR SVG
+// (Dino 🦖, Bunny 🐰, Puppy 🐶, Kitten 🐱)
 // ==========================================
-function PetAvatar({ stageIndex, feedCount, expression, accessories, isNearFood }) {
+function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNearFood }) {
   const mouthOpen = isNearFood || expression === 'hungry';
   const isChewing = expression === 'chewing';
   const isHappy = expression === 'happy';
 
+  const petConfig = PETS.find((p) => p.id === petId) || PETS[0];
+
   // ------------------------------------------
-  // STAGE 0: THE MAGIC EGG 🥚
+  // STAGE 0: SPECIES-SPECIFIC MAGIC EGG 🥚
   // ------------------------------------------
   if (stageIndex === 0) {
-    const crackLevel = feedCount; // 0, 1, or 2
+    const crackLevel = feedCount; // 0, 1, 2
+    const ec = petConfig.eggColors;
     return (
       <div className="relative w-48 h-56 flex items-center justify-center select-none">
         <div
@@ -316,51 +330,50 @@ function PetAvatar({ stageIndex, feedCount, expression, accessories, isNearFood 
           }`}
         >
           <defs>
-            <linearGradient id="eggGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#C084FC" />
-              <stop offset="50%" stopColor="#A855F7" />
-              <stop offset="100%" stopColor="#7E22CE" />
+            <linearGradient id="eggGradCustom" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={ec.gradStart} />
+              <stop offset="50%" stopColor={ec.gradMid} />
+              <stop offset="100%" stopColor={ec.gradEnd} />
             </linearGradient>
-            <radialGradient id="eggSpot">
-              <stop offset="0%" stopColor="#FDE047" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#FDE047" stopOpacity="0" />
+            <radialGradient id="eggSpotCustom">
+              <stop offset="0%" stopColor={ec.spot} stopOpacity="0.9" />
+              <stop offset="100%" stopColor={ec.spot} stopOpacity="0" />
             </radialGradient>
           </defs>
 
-          {/* Soft Egg Shadow */}
-          <ellipse cx="100" cy="215" rx="45" ry="12" fill="#4C1D95" opacity="0.3" />
+          {/* Shadow */}
+          <ellipse cx="100" cy="215" rx="45" ry="12" fill="#1E293B" opacity="0.3" />
 
-          {/* Magic Egg Shell */}
+          {/* Egg Shell */}
           <path
             d="M 100 20 C 150 20, 175 90, 175 160 C 175 205, 145 220, 100 220 C 55 220, 25 205, 25 160 C 25 90, 50 20, 100 20 Z"
-            fill="url(#eggGrad)"
-            stroke="#581C87"
+            fill="url(#eggGradCustom)"
+            stroke={ec.stroke}
             strokeWidth="4"
           />
 
-          {/* Pretty Magic Spots */}
-          <circle cx="65" cy="85" r="14" fill="url(#eggSpot)" />
-          <circle cx="135" cy="70" r="10" fill="url(#eggSpot)" />
-          <circle cx="140" cy="140" r="18" fill="url(#eggSpot)" />
-          <circle cx="60" cy="155" r="12" fill="url(#eggSpot)" />
-          <circle cx="100" cy="115" r="16" fill="url(#eggSpot)" />
+          {/* Spots */}
+          <circle cx="65" cy="85" r="14" fill="url(#eggSpotCustom)" />
+          <circle cx="135" cy="70" r="10" fill="url(#eggSpotCustom)" />
+          <circle cx="140" cy="140" r="18" fill="url(#eggSpotCustom)" />
+          <circle cx="60" cy="155" r="12" fill="url(#eggSpotCustom)" />
+          <circle cx="100" cy="115" r="16" fill="url(#eggSpotCustom)" />
 
-          {/* Cute Eyes peeking through or painted on egg */}
+          {/* Peeking Kawaii Eyes */}
           <g>
             <circle cx="80" cy="115" r="7" fill="#FFFFFF" />
-            <circle cx="81" cy="115" r="4.5" fill="#3B0764" />
+            <circle cx="81" cy="115" r="4.5" fill="#1E293B" />
             <circle cx="79" cy="113" r="2" fill="#FFFFFF" />
 
             <circle cx="120" cy="115" r="7" fill="#FFFFFF" />
-            <circle cx="119" cy="115" r="4.5" fill="#3B0764" />
+            <circle cx="119" cy="115" r="4.5" fill="#1E293B" />
             <circle cx="117" cy="113" r="2" fill="#FFFFFF" />
 
-            {/* Rosy Egg Cheeks */}
             <ellipse cx="68" cy="125" rx="6" ry="3.5" fill="#F472B6" opacity="0.8" />
             <ellipse cx="132" cy="125" rx="6" ry="3.5" fill="#F472B6" opacity="0.8" />
           </g>
 
-          {/* Cracks appearing as egg is fed! */}
+          {/* Cracks appearing upon feeding */}
           {crackLevel >= 1 && (
             <path
               d="M 100 20 L 95 45 L 110 65 L 90 85"
@@ -384,7 +397,7 @@ function PetAvatar({ stageIndex, feedCount, expression, accessories, isNearFood 
             />
           )}
 
-          {/* Magic Stars on Egg */}
+          {/* Magic Star Symbol */}
           <polygon points="100,55 103,62 110,63 105,68 106,75 100,71 94,75 95,68 90,63 97,62" fill="#FEF08A" />
         </svg>
       </div>
@@ -392,344 +405,218 @@ function PetAvatar({ stageIndex, feedCount, expression, accessories, isNearFood 
   }
 
   // ------------------------------------------
-  // STAGE 1: BABY DINO 🐣 (scale ~0.8)
+  // STAGES 1, 2, 3: MULTI-SPECIES ANIMAL
   // ------------------------------------------
-  if (stageIndex === 1) {
-    return (
-      <div className="relative w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center select-none scale-90 transition-transform duration-500">
-        <div
-          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
-            isHappy ? 'bg-amber-200 scale-110' : mouthOpen ? 'bg-rose-200 scale-105' : 'bg-emerald-200 scale-95'
-          }`}
-        />
-        <svg
-          viewBox="0 0 240 240"
-          className={`w-full h-full relative z-10 drop-shadow-xl transition-transform duration-300 ${
-            isChewing ? 'animate-chew' : isHappy ? 'animate-bounce' : 'animate-float'
-          }`}
-        >
-          <defs>
-            <linearGradient id="babyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6EE7B7" />
-              <stop offset="60%" stopColor="#34D399" />
-              <stop offset="100%" stopColor="#10B981" />
-            </linearGradient>
-            <linearGradient id="bibGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#FBCFE8" />
-              <stop offset="100%" stopColor="#F472B6" />
-            </linearGradient>
-          </defs>
+  const isBaby = stageIndex === 1;
+  const isAdult = stageIndex === 3;
+  const scaleClass = isBaby ? 'scale-90' : isAdult ? 'scale-110' : 'scale-100';
 
-          {/* Baby Feet */}
-          <ellipse cx="90" cy="205" rx="18" ry="12" fill="#047857" />
-          <ellipse cx="150" cy="205" rx="18" ry="12" fill="#047857" />
+  // Primary colors by species
+  let bodyColor = '#10B981';
+  let tummyColor = '#A7F3D0';
+  let earType = 'horns'; // 'horns' | 'bunnyEars' | 'pupEars' | 'catEars'
 
-          {/* Tiny Baby Monster Body */}
-          <path
-            d="M 120 45 C 170 45, 195 85, 195 140 C 195 195, 165 210, 120 210 C 75 210, 45 195, 45 140 C 45 85, 70 45, 120 45 Z"
-            fill="url(#babyGrad)"
-          />
-
-          {/* Tiny Baby Horns */}
-          <path d="M 80 58 Q 65 35 74 30 Q 88 38 90 52 Z" fill="#FDE047" />
-          <path d="M 160 58 Q 175 35 166 30 Q 152 38 150 52 Z" fill="#FDE047" />
-
-          {/* Baby Bib with heart */}
-          <path d="M 85 140 C 85 140, 120 180, 155 140 L 145 125 L 95 125 Z" fill="url(#bibGrad)" stroke="#DB2777" strokeWidth="2" />
-          <circle cx="120" cy="150" r="4" fill="#FFFFFF" />
-
-          {/* Rosy Baby Cheeks */}
-          <circle cx="70" cy="125" r="13" fill="#F472B6" opacity="0.75" />
-          <circle cx="170" cy="125" r="13" fill="#F472B6" opacity="0.75" />
-
-          {/* Giant Sparkly Baby Eyes */}
-          {isHappy ? (
-            <g stroke="#064E3B" strokeWidth="5" strokeLinecap="round" fill="none">
-              <path d="M 75 105 Q 88 92 100 105" />
-              <path d="M 140 105 Q 152 92 165 105" />
-            </g>
-          ) : (
-            <g>
-              <circle cx="88" cy="100" r={mouthOpen ? 18 : 16} fill="#FFFFFF" />
-              <circle cx="90" cy="100" r="11" fill="#064E3B" />
-              <circle cx="86" cy="95" r="5" fill="#FFFFFF" />
-              <circle cx="93" cy="103" r="2.5" fill="#FFFFFF" />
-
-              <circle cx="152" cy="100" r={mouthOpen ? 18 : 16} fill="#FFFFFF" />
-              <circle cx="150" cy="100" r="11" fill="#064E3B" />
-              <circle cx="146" cy="95" r="5" fill="#FFFFFF" />
-              <circle cx="153" cy="103" r="2.5" fill="#FFFFFF" />
-            </g>
-          )}
-
-          {/* Baby Mouth */}
-          {mouthOpen ? (
-            <g>
-              <path d="M 98 122 C 98 122, 120 115, 142 122 C 146 150, 94 150, 98 122 Z" fill="#881337" stroke="#064E3B" strokeWidth="3" />
-              <ellipse cx="120" cy="140" rx="13" ry="7" fill="#FB7185" />
-              <rect x="116" y="120" width="8" height="5" rx="2" fill="#FFFFFF" />
-            </g>
-          ) : isChewing ? (
-            <path d="M 106 128 Q 120 142 134 128 Q 120 134 106 128 Z" fill="#881337" stroke="#064E3B" strokeWidth="3" />
-          ) : (
-            <path d="M 105 125 Q 120 138 135 125" fill="none" stroke="#064E3B" strokeWidth="3.5" strokeLinecap="round" />
-          )}
-
-          {/* Baby pacifier clip or small flower */}
-          {accessories.includes('flower_clip') && (
-            <g transform="translate(68, 55)">
-              <circle cx="-6" cy="0" r="6" fill="#F472B6" />
-              <circle cx="6" cy="0" r="6" fill="#F472B6" />
-              <circle cx="0" cy="-6" r="6" fill="#F472B6" />
-              <circle cx="0" cy="6" r="6" fill="#F472B6" />
-              <circle cx="0" cy="0" r="5" fill="#FBBF24" />
-            </g>
-          )}
-        </svg>
-      </div>
-    );
+  if (petId === 'bunny') {
+    bodyColor = '#F472B6';
+    tummyColor = '#FCE7F3';
+    earType = 'bunnyEars';
+  } else if (petId === 'puppy') {
+    bodyColor = '#F59E0B';
+    tummyColor = '#FEF3C7';
+    earType = 'pupEars';
+  } else if (petId === 'kitten') {
+    bodyColor = '#A78BFA';
+    tummyColor = '#EDE9FE';
+    earType = 'catEars';
   }
 
-  // ------------------------------------------
-  // STAGE 2: PLAYFUL KID 🦖 (scale 1.0)
-  // ------------------------------------------
-  if (stageIndex === 2) {
-    return (
-      <div className="relative w-56 h-56 sm:w-60 sm:h-60 flex items-center justify-center select-none scale-100 transition-transform duration-500">
-        <div
-          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
-            isHappy ? 'bg-amber-300 scale-110' : mouthOpen ? 'bg-rose-300 scale-105' : 'bg-emerald-200 scale-95'
-          }`}
-        />
-        <svg
-          viewBox="0 0 240 240"
-          className={`w-full h-full relative z-10 drop-shadow-xl transition-transform duration-300 ${
-            isChewing ? 'animate-chew' : isHappy ? 'animate-bounce' : 'animate-float'
-          }`}
-        >
-          <defs>
-            <linearGradient id="kidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#34D399" />
-              <stop offset="60%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-            <linearGradient id="kidTummy" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#A7F3D0" />
-              <stop offset="100%" stopColor="#6EE7B7" />
-            </linearGradient>
-          </defs>
-
-          {/* Feet */}
-          <ellipse cx="80" cy="205" rx="22" ry="14" fill="#047857" />
-          <ellipse cx="160" cy="205" rx="22" ry="14" fill="#047857" />
-
-          {/* Playful Monster Body */}
-          <path
-            d="M 120 30 C 180 30, 210 75, 210 135 C 210 195, 175 210, 120 210 C 65 210, 30 195, 30 135 C 30 75, 60 30, 120 30 Z"
-            fill="url(#kidGrad)"
-          />
-
-          {/* Horns */}
-          <path d="M 65 52 Q 40 20 52 14 Q 72 26 78 44 Z" fill="#FBBF24" />
-          <path d="M 175 52 Q 200 20 188 14 Q 168 26 162 44 Z" fill="#FBBF24" />
-
-          {/* Tummy */}
-          <ellipse cx="120" cy="155" rx="54" ry="42" fill="url(#kidTummy)" opacity="0.9" />
-
-          {/* Cheeks */}
-          <circle cx="62" cy="130" r="14" fill="#F472B6" opacity="0.75" />
-          <circle cx="178" cy="130" r="14" fill="#F472B6" opacity="0.75" />
-
-          {/* Eyes */}
-          {isHappy ? (
-            <g stroke="#064E3B" strokeWidth="5" strokeLinecap="round" fill="none">
-              <path d="M 70 102 Q 85 88 100 102" />
-              <path d="M 140 102 Q 155 88 170 102" />
-            </g>
-          ) : (
-            <g>
-              <circle cx="85" cy="100" r={mouthOpen ? 17 : 15} fill="#FFFFFF" />
-              <circle cx="87" cy="100" r="10" fill="#064E3B" />
-              <circle cx="83" cy="96" r="4.5" fill="#FFFFFF" />
-              <circle cx="91" cy="103" r="2" fill="#FFFFFF" />
-
-              <circle cx="155" cy="100" r={mouthOpen ? 17 : 15} fill="#FFFFFF" />
-              <circle cx="153" cy="100" r="10" fill="#064E3B" />
-              <circle cx="149" cy="96" r="4.5" fill="#FFFFFF" />
-              <circle cx="157" cy="103" r="2" fill="#FFFFFF" />
-            </g>
-          )}
-
-          {/* Mouth */}
-          {mouthOpen ? (
-            <g>
-              <path d="M 92 125 C 92 125, 120 118, 148 125 C 152 158, 88 158, 92 125 Z" fill="#881337" stroke="#064E3B" strokeWidth="3.5" />
-              <ellipse cx="120" cy="148" rx="16" ry="9" fill="#FB7185" />
-              <rect x="108" y="122" width="7" height="6" rx="2.5" fill="#FFFFFF" />
-              <rect x="125" y="122" width="7" height="6" rx="2.5" fill="#FFFFFF" />
-            </g>
-          ) : isChewing ? (
-            <path d="M 102 132 Q 120 148 138 132 Q 120 138 102 132 Z" fill="#881337" stroke="#064E3B" strokeWidth="3.5" />
-          ) : (
-            <path d="M 100 130 Q 120 146 140 130" fill="none" stroke="#064E3B" strokeWidth="4" strokeLinecap="round" />
-          )}
-
-          {/* Accessories */}
-          {accessories.includes('party_hat') && (
-            <g className="animate-pulse-glow origin-bottom">
-              <polygon points="120,4 88,48 152,48" fill="#EC4899" stroke="#BE185D" strokeWidth="2" />
-              <polygon points="120,4 98,34 142,34" fill="#FBBF24" opacity="0.8" />
-              <polygon points="120,4 108,18 132,18" fill="#3B82F6" opacity="0.8" />
-              <circle cx="120" cy="4" r="9" fill="#FDE047" />
-            </g>
-          )}
-
-          {accessories.includes('cool_sunglasses') && (
-            <g>
-              <path d="M 66 100 Q 88 100 98 102 Q 120 95 142 102 Q 152 100 174 100" stroke="#1E293B" strokeWidth="3" fill="none" />
-              <rect x="68" y="90" width="38" height="22" rx="7" fill="#1E293B" />
-              <rect x="134" y="90" width="38" height="22" rx="7" fill="#1E293B" />
-              <line x1="72" y1="94" x2="88" y2="108" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="138" y1="94" x2="154" y2="108" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
-            </g>
-          )}
-
-          {accessories.includes('dapper_bowtie') && (
-            <g transform="translate(120, 192)">
-              <polygon points="0,0 -24,-12 -24,12" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
-              <polygon points="0,0 24,-12 24,12" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
-              <circle cx="0" cy="0" r="7" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
-            </g>
-          )}
-        </svg>
-      </div>
-    );
-  }
-
-  // ------------------------------------------
-  // STAGE 3: MAJESTIC FULL ADULT DRAGON 🦕👑 (scale 1.18)
-  // ------------------------------------------
   return (
-    <div className="relative w-60 h-60 sm:w-72 sm:h-72 flex items-center justify-center select-none scale-105 sm:scale-110 transition-transform duration-500">
-      {/* Majestic Golden Sparkle Aura */}
-      <div className="absolute inset-0 rounded-full blur-3xl bg-gradient-to-tr from-amber-300 via-emerald-300 to-sky-300 opacity-70 animate-pulse" />
+    <div className={`relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center select-none ${scaleClass} transition-transform duration-500`}>
+      {/* Glow Aura */}
+      <div
+        className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
+          isHappy ? 'bg-amber-300 scale-110' : mouthOpen ? 'bg-rose-300 scale-105' : 'bg-emerald-200 scale-95'
+        }`}
+      />
 
       <svg
-        viewBox="0 0 260 260"
-        className={`w-full h-full relative z-10 drop-shadow-2xl transition-transform duration-300 ${
+        viewBox="0 0 240 240"
+        className={`w-full h-full relative z-10 drop-shadow-xl transition-transform duration-300 ${
           isChewing ? 'animate-chew' : isHappy ? 'animate-bounce' : 'animate-float'
         }`}
       >
-        <defs>
-          <linearGradient id="adultGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#10B981" />
-            <stop offset="40%" stopColor="#059669" />
-            <stop offset="100%" stopColor="#047857" />
-          </linearGradient>
-          <linearGradient id="wingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FBBF24" />
-            <stop offset="100%" stopColor="#F59E0B" />
-          </linearGradient>
-          <linearGradient id="adultTummy" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#FEF08A" />
-            <stop offset="100%" stopColor="#FDE047" />
-          </linearGradient>
-        </defs>
-
-        {/* Majestic Golden Dragon Wings */}
-        <g className="animate-pulse">
-          {/* Left Wing */}
-          <path d="M 50 110 Q 5 70 20 30 Q 50 60 70 95 Z" fill="url(#wingGrad)" opacity="0.95" stroke="#B45309" strokeWidth="2.5" />
-          {/* Right Wing */}
-          <path d="M 210 110 Q 255 70 240 30 Q 210 60 190 95 Z" fill="url(#wingGrad)" opacity="0.95" stroke="#B45309" strokeWidth="2.5" />
-        </g>
+        {/* Adult Wings if Adult Dino or Adult Fairy Wings */}
+        {isAdult && (
+          <g className="animate-pulse">
+            <path d="M 45 105 Q 5 65 20 25 Q 50 55 70 90 Z" fill="#FBBF24" opacity="0.9" stroke="#B45309" strokeWidth="2" />
+            <path d="M 195 105 Q 235 65 220 25 Q 190 55 170 90 Z" fill="#FBBF24" opacity="0.9" stroke="#B45309" strokeWidth="2" />
+          </g>
+        )}
 
         {/* Feet */}
-        <ellipse cx="90" cy="225" rx="26" ry="16" fill="#064E3B" />
-        <ellipse cx="170" cy="225" rx="26" ry="16" fill="#064E3B" />
+        <ellipse cx="80" cy="205" rx="20" ry="13" fill="#334155" opacity="0.3" />
+        <ellipse cx="160" cy="205" rx="20" ry="13" fill="#334155" opacity="0.3" />
+        <ellipse cx="80" cy="202" rx="20" ry="13" fill={bodyColor} />
+        <ellipse cx="160" cy="202" rx="20" ry="13" fill={bodyColor} />
 
-        {/* Adult Body */}
+        {/* Species Ears / Horns */}
+        {earType === 'bunnyEars' && (
+          <g>
+            {/* Left Bunny Ear */}
+            <path d="M 75 60 C 55 -5, 80 -15, 95 60 Z" fill={bodyColor} stroke="#BE185D" strokeWidth="2.5" />
+            <path d="M 80 50 C 68 10, 85 5, 92 50 Z" fill="#FCE7F3" />
+            {/* Right Bunny Ear */}
+            <path d="M 165 60 C 185 -5, 160 -15, 145 60 Z" fill={bodyColor} stroke="#BE185D" strokeWidth="2.5" />
+            <path d="M 160 50 C 172 10, 155 5, 148 50 Z" fill="#FCE7F3" />
+          </g>
+        )}
+
+        {earType === 'pupEars' && (
+          <g>
+            {/* Left Floppy Pup Ear */}
+            <path d="M 65 60 Q 25 75 35 115 Q 55 110 70 85 Z" fill="#B45309" />
+            {/* Right Floppy Pup Ear */}
+            <path d="M 175 60 Q 215 75 205 115 Q 185 110 170 85 Z" fill="#B45309" />
+          </g>
+        )}
+
+        {earType === 'catEars' && (
+          <g>
+            {/* Triangular Cat Ears */}
+            <polygon points="60,65 75,20 100,55" fill={bodyColor} stroke="#581C87" strokeWidth="2" />
+            <polygon points="68,60 76,32 94,54" fill="#FCE7F3" />
+            <polygon points="180,65 165,20 140,55" fill={bodyColor} stroke="#581C87" strokeWidth="2" />
+            <polygon points="172,60 164,32 146,54" fill="#FCE7F3" />
+          </g>
+        )}
+
+        {earType === 'horns' && (
+          <g>
+            <path d="M 65 52 Q 40 20 52 14 Q 72 26 78 44 Z" fill="#FBBF24" stroke="#B45309" strokeWidth="1.5" />
+            <path d="M 175 52 Q 200 20 188 14 Q 168 26 162 44 Z" fill="#FBBF24" stroke="#B45309" strokeWidth="1.5" />
+          </g>
+        )}
+
+        {/* Round Cute Main Body */}
         <path
-          d="M 130 35 C 195 35, 225 80, 225 145 C 225 210, 190 230, 130 230 C 70 230, 35 210, 35 145 C 35 80, 65 35, 130 35 Z"
-          fill="url(#adultGrad)"
-          stroke="#064E3B"
-          strokeWidth="3.5"
+          d="M 120 35 C 180 35, 210 75, 210 135 C 210 195, 175 210, 120 210 C 65 210, 30 195, 30 135 C 30 75, 60 35, 120 35 Z"
+          fill={bodyColor}
         />
 
-        {/* Majestic Golden Horns */}
-        <path d="M 75 55 Q 35 15 50 8 Q 80 22 88 45 Z" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
-        <path d="M 185 55 Q 225 15 210 8 Q 180 22 172 45 Z" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+        {/* Creamy Tummy */}
+        <ellipse cx="120" cy="155" rx="54" ry="42" fill={tummyColor} opacity="0.9" />
 
-        {/* Golden Dragon Scales Tummy */}
-        <ellipse cx="130" cy="165" rx="58" ry="46" fill="url(#adultTummy)" opacity="0.95" />
-        {/* Scale ridges */}
-        <path d="M 105 145 Q 130 155 155 145" stroke="#D97706" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        <path d="M 100 165 Q 130 175 160 165" stroke="#D97706" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-        <path d="M 110 185 Q 130 195 150 185" stroke="#D97706" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        {/* Baby Bib if Baby */}
+        {isBaby && (
+          <g>
+            <path d="M 90 140 C 90 140, 120 175, 150 140 L 140 128 L 100 128 Z" fill="#FEF08A" stroke="#EAB308" strokeWidth="2" />
+            <circle cx="120" cy="148" r="3.5" fill="#EF4444" />
+          </g>
+        )}
 
         {/* Cheeks */}
-        <circle cx="70" cy="138" r="16" fill="#F472B6" opacity="0.8" />
-        <circle cx="190" cy="138" r="16" fill="#F472B6" opacity="0.8" />
+        <circle cx="65" cy="130" r="14" fill="#F472B6" opacity="0.75" />
+        <circle cx="175" cy="130" r="14" fill="#F472B6" opacity="0.75" />
+
+        {/* Kitten Whiskers */}
+        {petId === 'kitten' && (
+          <g stroke="#4C1D95" strokeWidth="2" strokeLinecap="round">
+            <line x1="45" y1="125" x2="68" y2="128" />
+            <line x1="42" y1="135" x2="68" y2="134" />
+            <line x1="195" y1="125" x2="172" y2="128" />
+            <line x1="198" y1="135" x2="172" y2="134" />
+          </g>
+        )}
 
         {/* Eyes */}
         {isHappy ? (
-          <g stroke="#064E3B" strokeWidth="6" strokeLinecap="round" fill="none">
-            <path d="M 80 110 Q 95 95 110 110" />
-            <path d="M 150 110 Q 165 95 180 110" />
+          <g stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none">
+            <path d="M 72 102 Q 86 88 100 102" />
+            <path d="M 140 102 Q 154 88 168 102" />
           </g>
         ) : (
           <g>
-            <circle cx="95" cy="108" r={mouthOpen ? 18 : 16} fill="#FFFFFF" />
-            <circle cx="97" cy="108" r="11" fill="#064E3B" />
-            <circle cx="93" cy="104" r="5" fill="#FFFFFF" />
-            <circle cx="101" cy="111" r="2.5" fill="#FFFFFF" />
+            <circle cx="85" cy="100" r={mouthOpen ? 17 : 15} fill="#FFFFFF" />
+            <circle cx="87" cy="100" r="10" fill="#1E293B" />
+            <circle cx="83" cy="96" r="4.5" fill="#FFFFFF" />
+            <circle cx="91" cy="103" r="2" fill="#FFFFFF" />
 
-            <circle cx="165" cy="108" r={mouthOpen ? 18 : 16} fill="#FFFFFF" />
-            <circle cx="163" cy="108" r="11" fill="#064E3B" />
-            <circle cx="159" cy="104" r="5" fill="#FFFFFF" />
-            <circle cx="167" cy="111" r="2.5" fill="#FFFFFF" />
+            <circle cx="155" cy="100" r={mouthOpen ? 17 : 15} fill="#FFFFFF" />
+            <circle cx="153" cy="100" r="10" fill="#1E293B" />
+            <circle cx="149" cy="96" r="4.5" fill="#FFFFFF" />
+            <circle cx="157" cy="103" r="2" fill="#FFFFFF" />
           </g>
+        )}
+
+        {/* Cute Species Nose */}
+        {petId === 'puppy' && (
+          <ellipse cx="120" cy="118" rx="8" ry="6" fill="#3B1C0B" />
+        )}
+        {petId === 'bunny' && (
+          <polygon points="120,122 115,116 125,116" fill="#DB2777" />
+        )}
+        {petId === 'kitten' && (
+          <polygon points="120,121 116,117 124,117" fill="#DB2777" />
         )}
 
         {/* Mouth */}
         {mouthOpen ? (
           <g>
-            <path d="M 102 135 C 102 135, 130 128, 158 135 C 162 170, 98 170, 102 135 Z" fill="#881337" stroke="#064E3B" strokeWidth="4" />
-            <ellipse cx="130" cy="158" rx="18" ry="10" fill="#FB7185" />
-            <rect x="117" y="132" width="8" height="7" rx="3" fill="#FFFFFF" />
-            <rect x="135" y="132" width="8" height="7" rx="3" fill="#FFFFFF" />
+            <path d="M 94 125 C 94 125, 120 118, 146 125 C 150 155, 90 155, 94 125 Z" fill="#881337" stroke="#1E293B" strokeWidth="3.5" />
+            <ellipse cx="120" cy="146" rx="15" ry="9" fill="#FB7185" />
+            <rect x="110" y="122" width="7" height="6" rx="2.5" fill="#FFFFFF" />
+            <rect x="123" y="122" width="7" height="6" rx="2.5" fill="#FFFFFF" />
           </g>
         ) : isChewing ? (
-          <path d="M 112 142 Q 130 158 148 142 Q 130 148 112 142 Z" fill="#881337" stroke="#064E3B" strokeWidth="4" />
+          <path d="M 104 132 Q 120 146 136 132 Q 120 138 104 132 Z" fill="#881337" stroke="#1E293B" strokeWidth="3.5" />
         ) : (
-          <path d="M 108 140 Q 130 156 152 140" fill="none" stroke="#064E3B" strokeWidth="4.5" strokeLinecap="round" />
+          <path d="M 102 128 Q 120 144 138 128" fill="none" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
         )}
 
-        {/* Royal Crown or Accessories */}
-        {accessories.includes('golden_crown') || stageIndex === 3 ? (
-          <g transform="translate(95, 12)">
-            <polygon points="0,32 10,8 25,24 40,4 55,24 70,8 80,32" fill="#F59E0B" stroke="#B45309" strokeWidth="2.5" />
-            <circle cx="10" cy="7" r="4" fill="#EF4444" />
-            <circle cx="40" cy="3" r="5" fill="#3B82F6" />
-            <circle cx="70" cy="7" r="4" fill="#10B981" />
+        {/* Accessories Rendering */}
+        {accessories.includes('party_hat') && (
+          <g className="animate-pulse-glow origin-bottom">
+            <polygon points="120,4 88,48 152,48" fill="#EC4899" stroke="#BE185D" strokeWidth="2" />
+            <polygon points="120,4 98,34 142,34" fill="#FBBF24" opacity="0.8" />
+            <polygon points="120,4 108,18 132,18" fill="#3B82F6" opacity="0.8" />
+            <circle cx="120" cy="4" r="9" fill="#FDE047" />
           </g>
-        ) : null}
+        )}
+
+        {(accessories.includes('golden_crown') || isAdult) && (
+          <g transform="translate(85, 10)">
+            <polygon points="0,28 10,6 25,20 40,3 55,20 70,6 80,28" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+            <circle cx="10" cy="5" r="3.5" fill="#EF4444" />
+            <circle cx="40" cy="2" r="4" fill="#3B82F6" />
+            <circle cx="70" cy="5" r="3.5" fill="#10B981" />
+          </g>
+        )}
 
         {accessories.includes('cool_sunglasses') && (
-          <g transform="translate(10, 8)">
-            <path d="M 66 100 Q 88 100 98 102 Q 120 95 142 102 Q 152 100 174 100" stroke="#1E293B" strokeWidth="3.5" fill="none" />
-            <rect x="68" y="90" width="40" height="24" rx="8" fill="#1E293B" />
-            <rect x="134" y="90" width="40" height="24" rx="8" fill="#1E293B" />
-            <line x1="72" y1="94" x2="90" y2="110" stroke="#94A3B8" strokeWidth="3" strokeLinecap="round" />
-            <line x1="138" y1="94" x2="156" y2="110" stroke="#94A3B8" strokeWidth="3" strokeLinecap="round" />
+          <g>
+            <path d="M 66 100 Q 88 100 98 102 Q 120 95 142 102 Q 152 100 174 100" stroke="#1E293B" strokeWidth="3" fill="none" />
+            <rect x="68" y="90" width="38" height="22" rx="7" fill="#1E293B" />
+            <rect x="134" y="90" width="38" height="22" rx="7" fill="#1E293B" />
+            <line x1="72" y1="94" x2="88" y2="108" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
+            <line x1="138" y1="94" x2="154" y2="108" stroke="#94A3B8" strokeWidth="2.5" strokeLinecap="round" />
           </g>
         )}
 
         {accessories.includes('dapper_bowtie') && (
-          <g transform="translate(130, 212)">
-            <polygon points="0,0 -26,-14 -26,14" fill="#EF4444" stroke="#B91C1C" strokeWidth="2.5" />
-            <polygon points="0,0 26,-14 26,14" fill="#EF4444" stroke="#B91C1C" strokeWidth="2.5" />
-            <circle cx="0" cy="0" r="8" fill="#FBBF24" stroke="#D97706" strokeWidth="2" />
+          <g transform="translate(120, 196)">
+            <polygon points="0,0 -24,-12 -24,12" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
+            <polygon points="0,0 24,-12 24,12" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
+            <circle cx="0" cy="0" r="7" fill="#FBBF24" stroke="#D97706" strokeWidth="1.5" />
+          </g>
+        )}
+
+        {accessories.includes('flower_clip') && (
+          <g transform="translate(62, 54)">
+            <circle cx="-8" cy="0" r="7" fill="#F472B6" />
+            <circle cx="8" cy="0" r="7" fill="#F472B6" />
+            <circle cx="0" cy="-8" r="7" fill="#F472B6" />
+            <circle cx="0" cy="8" r="7" fill="#F472B6" />
+            <circle cx="0" cy="0" r="6" fill="#FBBF24" />
           </g>
         )}
       </svg>
@@ -778,7 +665,7 @@ function ShapeIcon({ shape, color, size = 56 }) {
 }
 
 // ==========================================
-// 7. CELEBRATION PARTICLES (HTML5 Canvas)
+// 7. CONFETTI PARTICLES
 // ==========================================
 function ConfettiCanvas({ active }) {
   const canvasRef = useRef(null);
@@ -863,44 +750,65 @@ function ConfettiCanvas({ active }) {
 }
 
 // ==========================================
-// 8. MAIN MAGIC PET FEEDER COMPONENT
+// 8. MAIN GAME COMPONENT (PAGE 3)
 // ==========================================
-export default function MagicPetFeeder() {
-  const [currentMode, setCurrentMode] = useState('phonics'); // 'phonics' | 'shapes'
-  const [feedCount, setFeedCount] = useState(0); // tracks lifetime feeds for growth!
-  const [stageIndex, setStageIndex] = useState(0); // 0: egg, 1: baby, 2: kid, 3: adult
-  const [round, setRound] = useState(() => generateRound('phonics', 0));
-  const [unlockedAccessories, setUnlockedAccessories] = useState([]);
+export default function MagicPetFeeder({
+  playerName,
+  petNickname,
+  selectedPetId,
+  initialFeedCount = 0,
+  initialAccessories = [],
+  onSwitchPet,
+  onChangeProfile,
+  onSaveProgress,
+}) {
+  const currentPet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
+  const petDisplayName = petNickname || currentPet.defaultName;
+
+  const [currentMode, setCurrentMode] = useState('numbers'); // 'numbers' | 'phonics' | 'shapes'
+  const [feedCount, setFeedCount] = useState(initialFeedCount);
+  const [stageIndex, setStageIndex] = useState(() => getStageFromFeeds(initialFeedCount));
+  const [round, setRound] = useState(() => generateRound('numbers', getStageFromFeeds(initialFeedCount), petDisplayName));
+  const [unlockedAccessories, setUnlockedAccessories] = useState(initialAccessories);
 
   // Modals
   const [evolutionModal, setEvolutionModal] = useState(null);
   const [accessoryModal, setAccessoryModal] = useState(null);
 
   // States
-  const [petExpression, setPetExpression] = useState('idle'); // 'idle' | 'hungry' | 'chewing' | 'happy'
+  const [petExpression, setPetExpression] = useState('idle');
   const [isNearPet, setIsNearPet] = useState(false);
   const [wobbleId, setWobbleId] = useState(null);
   const [flyingFoodId, setFlyingFoodId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Touch / Drag States
+  // Dragging
   const [draggingItem, setDraggingItem] = useState(null);
   const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
   const petZoneRef = useRef(null);
 
-  // Read prompt on round change
+  // Auto-speak on round change using selected pet's voice!
   useEffect(() => {
     const timer = setTimeout(() => {
-      speakText(round.spokenPrompt);
+      speakPetText(round.spokenPrompt, currentPet.voice);
     }, 450);
     return () => clearTimeout(timer);
-  }, [round]);
+  }, [round, currentPet]);
 
-  // Toddler-forgiving collision detection
+  // Persist whenever feedCount or accessories change
+  useEffect(() => {
+    if (onSaveProgress) {
+      onSaveProgress({
+        feedCount,
+        unlockedAccessories,
+      });
+    }
+  }, [feedCount, unlockedAccessories, onSaveProgress]);
+
   const checkCollisionWithPet = useCallback((x, y) => {
     if (!petZoneRef.current) return false;
     const rect = petZoneRef.current.getBoundingClientRect();
-    const margin = 45; // generous tolerance for toddler fingers
+    const margin = 45;
     return (
       x >= rect.left - margin &&
       x <= rect.right + margin &&
@@ -909,29 +817,24 @@ export default function MagicPetFeeder() {
     );
   }, []);
 
-  // Positive Reinforcement: Correct Snack Fed
   const handleSuccessfulFeed = useCallback(
     (choice) => {
       setFlyingFoodId(choice.id);
       setPetExpression('chewing');
 
-      // If in egg stage, play egg crack sound! Otherwise play munch crunch
       if (stageIndex === 0) {
         sfx.crack();
       } else {
         sfx.munch();
       }
 
-      // Confetti burst
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 1400);
 
-      // Increment total feeds & check for evolution
       const newFeedCount = feedCount + 1;
       const newStageIndex = getStageFromFeeds(newFeedCount);
       setFeedCount(newFeedCount);
 
-      // Evolution Milestone Reached!
       if (newStageIndex > stageIndex) {
         setStageIndex(newStageIndex);
         const nextStageObj = STAGES[newStageIndex];
@@ -941,23 +844,21 @@ export default function MagicPetFeeder() {
           sfx.fanfare();
           setEvolutionModal(nextStageObj);
           if (newStageIndex === 1) {
-            speakText('WOW! The egg hatched! Welcome baby dino!');
+            speakPetText(`WOW! The egg hatched! Welcome ${petDisplayName}!`, currentPet.voice);
           } else if (newStageIndex === 2) {
-            speakText('Hooray! Your pet grew into a playful kid!');
+            speakPetText(`Hooray! ${petDisplayName} grew into a playful kid!`, currentPet.voice);
           } else {
-            speakText('AMAZING! Your pet is now a full grown majestic dragon!');
+            speakPetText(`AMAZING! ${petDisplayName} is now a full grown adult!`, currentPet.voice);
           }
         }, 800);
       } else {
-        // Cheerful praise
         const praises =
           stageIndex === 0
-            ? ['Crack crack!', 'The egg loves it!', 'Keep going!', 'Almost hatching!']
-            : ['Yum yum yum!', 'So yummy!', 'Delicious!', 'Super job!', 'Nom nom nom!'];
+            ? ['Crack crack!', 'The egg is hungry!', 'Keep going!', 'Almost hatching!']
+            : [currentPet.voice.nomSound, 'So yummy!', 'Delicious!', 'Super job!', 'Nom nom nom!'];
         const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-        setTimeout(() => speakText(randomPraise), 300);
+        setTimeout(() => speakPetText(randomPraise, currentPet.voice), 300);
 
-        // Every 4 feeds unlock silly accessory
         if (newFeedCount % 4 === 0) {
           const remaining = ACCESSORIES.filter((acc) => !unlockedAccessories.includes(acc.id));
           const accessoryToUnlock =
@@ -971,27 +872,31 @@ export default function MagicPetFeeder() {
             );
             setAccessoryModal(accessoryToUnlock);
             sfx.fanfare();
-            speakText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`);
+            speakPetText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`, currentPet.voice);
           }, 1100);
         }
       }
 
-      // Advance to next prompt smoothly after 1.5s
       setTimeout(() => {
         setPetExpression('happy');
         setTimeout(() => {
           setFlyingFoodId(null);
           setPetExpression('idle');
-          const nextMode = currentMode === 'phonics' ? 'shapes' : 'phonics';
+          // Automatically cycle between modes: numbers -> phonics -> shapes -> numbers
+          const nextMode =
+            currentMode === 'numbers'
+              ? 'phonics'
+              : currentMode === 'phonics'
+              ? 'shapes'
+              : 'numbers';
           setCurrentMode(nextMode);
-          setRound(generateRound(nextMode, newStageIndex));
+          setRound(generateRound(nextMode, newStageIndex, petDisplayName));
         }, 700);
       }, 900);
     },
-    [currentMode, feedCount, stageIndex, unlockedAccessories]
+    [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName]
   );
 
-  // Positive Reinforcement: Incorrect Snack (Zero penalty, soft wobble, playful giggle)
   const handleGentleMiss = useCallback(
     (choice) => {
       sfx.boing();
@@ -1003,12 +908,14 @@ export default function MagicPetFeeder() {
         `Hehe, that tickles! Try ${round.targetLabel}!`,
         `Almost! Can you find ${round.targetLabel}?`,
       ];
-      speakText(softReminders[Math.floor(Math.random() * softReminders.length)]);
+      speakPetText(
+        softReminders[Math.floor(Math.random() * softReminders.length)],
+        currentPet.voice
+      );
     },
-    [round]
+    [round, currentPet]
   );
 
-  // Pointer Drag Handlers
   const handlePointerDown = (choice, e) => {
     if (!e.isPrimary) return;
     sfx.pop();
@@ -1050,7 +957,6 @@ export default function MagicPetFeeder() {
     setDraggingItem(null);
   };
 
-  // Direct Tap-to-Feed mechanic
   const handleDirectTap = (choice) => {
     if (draggingItem || flyingFoodId) return;
     sfx.pop();
@@ -1061,7 +967,6 @@ export default function MagicPetFeeder() {
     }
   };
 
-  // Current stage progress percentage
   const currentStage = STAGES[stageIndex];
   const nextMilestone = currentStage.targetFeeds;
   const prevMilestone = currentStage.minFeeds;
@@ -1075,40 +980,65 @@ export default function MagicPetFeeder() {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative w-full min-h-screen bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center p-3 sm:p-5 select-none overflow-hidden"
+      className="relative w-full min-h-screen bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center p-3 sm:p-5 select-none overflow-hidden font-sans"
       style={{ touchAction: 'manipulation' }}
     >
       <ConfettiCanvas active={showConfetti} />
 
       {/* ------------------------------------ */}
-      {/* HEADER: PET GROWTH & EVOLUTION BAR    */}
+      {/* TOP HEADER: PLAYERS, PETS, & MODES   */}
       {/* ------------------------------------ */}
-      <header className="w-full max-w-md flex flex-col items-center gap-2 pt-2 z-20">
-        {/* Top title and mode switcher */}
+      <header className="w-full max-w-md flex flex-col items-center gap-1.5 pt-1 z-20">
+        {/* Profile & Pet Tag */}
         <div className="w-full flex items-center justify-between px-1">
-          <div className="flex items-center gap-1.5 bg-white/85 backdrop-blur-md px-3 py-1 rounded-full shadow-md border-2 border-emerald-300">
-            <Sparkles className="w-4 h-4 text-emerald-600 animate-spin" />
-            <span className="font-black text-emerald-800 text-xs sm:text-sm tracking-wide uppercase">
-              Magic Pet Feeder
-            </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onChangeProfile}
+              title="Change Player Name"
+              className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-indigo-900 border border-indigo-200 shadow-sm active:scale-95 transition-transform"
+            >
+              <User className="w-3.5 h-3.5 text-indigo-600" />
+              <span>{playerName || 'Player'}</span>
+            </button>
+
+            <button
+              onClick={onSwitchPet}
+              title="Change Pet Species"
+              className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-purple-900 border border-purple-200 shadow-sm active:scale-95 transition-transform"
+            >
+              <span>{currentPet.icon}</span>
+              <span>{petDisplayName}</span>
+            </button>
           </div>
 
+          {/* Mode Switcher Button (Numbers ➔ Letters ➔ Shapes) */}
           <button
             onClick={() => {
               sfx.pop();
-              const nextMode = currentMode === 'phonics' ? 'shapes' : 'phonics';
+              const nextMode =
+                currentMode === 'numbers'
+                  ? 'phonics'
+                  : currentMode === 'phonics'
+                  ? 'shapes'
+                  : 'numbers';
               setCurrentMode(nextMode);
-              setRound(generateRound(nextMode, stageIndex));
+              setRound(generateRound(nextMode, stageIndex, petDisplayName));
             }}
-            className="flex items-center gap-1.5 bg-white/85 active:scale-95 px-3 py-1 rounded-full text-xs font-bold text-indigo-700 shadow-md border-2 border-indigo-200 transition-transform"
+            className="flex items-center gap-1 bg-white/90 active:scale-95 px-3 py-1 rounded-full text-xs font-black text-amber-900 shadow-md border-2 border-amber-300 transition-transform"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>{currentMode === 'phonics' ? '🔤 Letters' : '🎨 Shapes'}</span>
+            <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+            <span>
+              {currentMode === 'numbers'
+                ? '🔢 Numbers'
+                : currentMode === 'phonics'
+                ? '🔤 Letters'
+                : '🎨 Shapes'}
+            </span>
           </button>
         </div>
 
-        {/* Visual Pet Growth Timeline Bar (Egg -> Baby -> Kid -> Adult) */}
-        <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border-2 border-purple-300 flex flex-col gap-1.5">
+        {/* Growth Timeline Bar */}
+        <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border-2 border-purple-300 flex flex-col gap-1">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1">
               <span className="text-base">{currentStage.icon}</span>
@@ -1121,7 +1051,7 @@ export default function MagicPetFeeder() {
             </span>
           </div>
 
-          {/* 4 Evolution Icons Indicator */}
+          {/* 4 Stages Icons */}
           <div className="flex items-center justify-between px-2 pt-0.5">
             {STAGES.map((st, idx) => {
               const isCurrent = stageIndex === idx;
@@ -1139,14 +1069,16 @@ export default function MagicPetFeeder() {
                   >
                     {st.icon}
                   </div>
-                  <span className="text-[9px] font-bold text-slate-600 mt-0.5">{st.name.split(' ')[0]}</span>
+                  <span className="text-[9px] font-bold text-slate-600 mt-0.5">
+                    {st.name.split(' ')[0]}
+                  </span>
                 </div>
               );
             })}
           </div>
 
-          {/* Growth Progress Bar to next stage */}
-          <div className="w-full bg-purple-100 h-2.5 rounded-full overflow-hidden border border-purple-200 mt-0.5">
+          {/* Progress Bar */}
+          <div className="w-full bg-purple-100 h-2 rounded-full overflow-hidden border border-purple-200 mt-0.5">
             <div
               className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 transition-all duration-500 rounded-full"
               style={{ width: `${stageIndex === 3 ? 100 : stageProgress}%` }}
@@ -1162,18 +1094,20 @@ export default function MagicPetFeeder() {
         <div className="bg-white/95 rounded-3xl p-3.5 shadow-xl border-4 border-amber-400 flex items-center justify-between gap-2">
           <div className="flex-1 text-left">
             <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
-              {stageIndex === 0 ? 'Help The Egg Hatch:' : `Feed ${currentStage.name}:`}
+              {stageIndex === 0 ? 'Help The Egg Hatch:' : `Feed ${petDisplayName}:`}
             </p>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
               <span>{round.targetLabel}</span>
-              <span className="text-2xl animate-pulse">{stageIndex === 0 ? '✨' : '😋'}</span>
+              <span className="text-2xl animate-pulse">
+                {stageIndex === 0 ? '✨' : currentPet.icon}
+              </span>
             </h1>
           </div>
 
           <button
             onClick={() => {
               sfx.pop();
-              speakText(round.spokenPrompt);
+              speakPetText(round.spokenPrompt, currentPet.voice);
             }}
             aria-label="Repeat Prompt"
             className="w-13 h-13 p-3 bg-gradient-to-tr from-amber-400 to-yellow-300 active:scale-90 hover:scale-105 rounded-2xl shadow-lg border-2 border-amber-500 flex items-center justify-center text-amber-900 transition-transform"
@@ -1184,10 +1118,11 @@ export default function MagicPetFeeder() {
       </section>
 
       {/* ------------------------------------ */}
-      {/* PET DROP ZONE & EVOLUTION GRAPHIC    */}
+      {/* PET DROP ZONE & AVATAR               */}
       {/* ------------------------------------ */}
       <main ref={petZoneRef} className="relative my-auto flex flex-col items-center justify-center z-10">
         <PetAvatar
+          petId={currentPet.id}
           stageIndex={stageIndex}
           feedCount={feedCount}
           expression={petExpression}
@@ -1209,7 +1144,7 @@ export default function MagicPetFeeder() {
       </main>
 
       {/* ------------------------------------ */}
-      {/* CHOICES: LARGE 88px+ TOUCH BUBBLES   */}
+      {/* CHOICES: NUMBERS, LETTERS OR SHAPES  */}
       {/* ------------------------------------ */}
       <footer className="w-full max-w-md pb-3 pt-1 z-20">
         <div className="flex justify-around items-center gap-2 px-1">
@@ -1237,7 +1172,30 @@ export default function MagicPetFeeder() {
               >
                 <div className="absolute top-2 left-3 w-4 h-2 bg-white/70 rounded-full rotate-[-20deg]" />
 
-                {choice.type === 'letter' ? (
+                {/* NUMBER DISPLAY WITH COUNTING DOTS */}
+                {choice.type === 'number' && (
+                  <div className="flex flex-col items-center justify-center">
+                    <span className={`text-4xl sm:text-5xl font-black ${choice.color?.text || 'text-amber-600'}`}>
+                      {choice.label}
+                    </span>
+                    {/* Counting Sprinkle Dots */}
+                    <div className="flex gap-1 mt-1">
+                      {Array.from({ length: Math.min(choice.count, 5) }).map((_, dotIdx) => (
+                        <div
+                          key={dotIdx}
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: choice.color.fill }}
+                        />
+                      ))}
+                      {choice.count > 5 && (
+                        <span className="text-[9px] font-black text-slate-500">+{choice.count - 5}</span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* PHONICS LETTER DISPLAY */}
+                {choice.type === 'letter' && (
                   <div className="flex flex-col items-center justify-center">
                     <span className={`text-4xl sm:text-5xl font-black ${choice.color?.text || 'text-indigo-600'}`}>
                       {choice.label}
@@ -1246,9 +1204,12 @@ export default function MagicPetFeeder() {
                       Cookie
                     </span>
                   </div>
-                ) : (
+                )}
+
+                {/* SHAPE DISPLAY */}
+                {choice.type === 'shape' && (
                   <div className="flex flex-col items-center justify-center">
-                    <ShapeIcon shape={choice.shape} color={choice.color} size={48} />
+                    <ShapeIcon shape={choice.shape} color={choice.color} size={46} />
                     <span className="text-[10px] font-extrabold text-slate-600 capitalize mt-1 text-center leading-tight">
                       {choice.color.name}
                     </span>
@@ -1278,7 +1239,11 @@ export default function MagicPetFeeder() {
             draggingItem.color?.border || 'border-amber-400'
           } flex flex-col items-center justify-center`}
         >
-          {draggingItem.type === 'letter' ? (
+          {draggingItem.type === 'number' ? (
+            <span className={`text-5xl font-black ${draggingItem.color?.text || 'text-amber-600'}`}>
+              {draggingItem.label}
+            </span>
+          ) : draggingItem.type === 'letter' ? (
             <span className={`text-5xl font-black ${draggingItem.color?.text || 'text-indigo-600'}`}>
               {draggingItem.label}
             </span>
@@ -1289,7 +1254,7 @@ export default function MagicPetFeeder() {
       )}
 
       {/* ------------------------------------ */}
-      {/* EVOLUTION CELEBRATION MODAL 🌟       */}
+      {/* EVOLUTION CELEBRATION MODAL          */}
       {/* ------------------------------------ */}
       {evolutionModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -1309,7 +1274,7 @@ export default function MagicPetFeeder() {
               onClick={() => {
                 sfx.pop();
                 setEvolutionModal(null);
-                setRound(generateRound(currentMode, stageIndex));
+                setRound(generateRound(currentMode, stageIndex, petDisplayName));
               }}
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform"
             >
@@ -1334,7 +1299,7 @@ export default function MagicPetFeeder() {
               {accessoryModal.name}
             </h2>
             <p className="text-sm font-semibold text-slate-600 mb-6">
-              Your pet loves dressing up! Look at that style!
+              {petDisplayName} loves dressing up! Look at that style!
             </p>
 
             <button

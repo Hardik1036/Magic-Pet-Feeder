@@ -1,57 +1,51 @@
 # 🌟 Magic Pet Feeder 🐾
 
-A mobile-first, positive-reinforcement web game built with React, Vite, and Tailwind CSS designed specifically for a 4-year-old child! Watch your pet grow from a magical egg to a full adult creature through joyful feeding!
+A multi-page, mobile-first, positive-reinforcement web game built with React, Vite, and Tailwind CSS designed specifically for a 4-year-old child!
 
 ![Magic Pet Feeder](https://img.shields.io/badge/Designed%20for-Toddlers%20%26%20Preschoolers-pink)
-![Pet Evolution](https://img.shields.io/badge/Evolution-Egg%20to%20Adult-purple)
-![Tech Stack](https://img.shields.io/badge/Stack-React%20%7C%20Vite%20%7C%20TailwindCSS-blue)
-![Audio](https://img.shields.io/badge/Audio-Web%20Audio%20API%20%2B%20SpeechSynthesis-green)
+![Multi-Page UI](https://img.shields.io/badge/UI-Multi--Page%20App-purple)
+![Persistence](https://img.shields.io/badge/Save-Auto%20Local%20Storage-orange)
+![Audio](https://img.shields.io/badge/Audio-Custom%20Pet%20Voices-green)
 
 ---
 
-## 🐣 Pet Evolution Stages
+## 📱 Multi-Page UI Flow
 
-As children feed the pet with correct letters and shapes, the pet visibly grows across 4 life stages:
+1. **Page 1: Welcome & Profile Creation**:
+   - Player types their name or taps toddler-friendly name chips (e.g. *Emma, Leo, Maya, Noah, Zara*).
+   - Player gives their pet a custom nickname (e.g. *Sparky, Cookie, Bubbles*).
+   - **Full Device Persistence (`localStorage`)**: Saves progress automatically so when a child leaves and comes back, it resumes right where they left off!
 
-1. **Stage 1: The Magic Egg 🥚** (0–2 feeds):
-   - A sparkling purple egg with glowing yellow spots that wobbles and rocks.
-   - Feeding snacks creates glowing cracks on the shell with a realistic crunch/crack sound!
-   - At 3 feeds, the egg bursts open with golden confetti and hatches!
+2. **Page 2: Pet Selection with Custom Voices**:
+   - **Dino "Rexy"** 🦖: Friendly little dragon with a cheerful cartoon voice and chomp munch sounds.
+   - **Bunny "Fluffy"** 🐰: Bouncy star bunny with floppy ears and a cute high-pitched squeaky voice.
+   - **Puppy "Barnaby"** 🐶: Joyful pup with wagging tail, floppy ears, and energetic barks.
+   - **Kitten "Mochi"** 🐱: Calico kitty with playful whiskers, soft purrs, and melodic voice.
+   - **"Hear Voice" preview button** on each card so the child can listen to each pet's unique voice before choosing!
 
-2. **Stage 2: Baby Dino 🐣** (3–6 feeds):
-   - A tiny, super cute baby hatchling wearing a pastel bib with big innocent kawaii eyes.
-   - Needs nourishing snacks to grow stronger!
-
-3. **Stage 3: Playful Kid 🦖** (7–10 feeds):
-   - Medium-sized, high-energy pet bouncing joyfully with playful horns and a wide toothy grin.
-   - Can wear fun accessories like sunglasses, party hats, and bowties.
-
-4. **Stage 4: Majestic Adult Dragon 🦕👑** (11+ feeds):
-   - A full-grown, loving giant pet with golden dragon wings, shiny scales, royal crown, and warm protective aura.
-   - Reaching adult status triggers a grand celebration fanfare!
+3. **Page 3: The Magic Feeding Game**:
+   - Spoken prompts dynamically adjust their pitch and tone to match the chosen pet's voice!
+   - Shows player name and pet nickname in the top navigation.
+   - Easy "Switch Pet" and "Change Profile" buttons to switch characters without losing lifetime feeds.
 
 ---
 
-## 🎯 Target Audience & UX Principles
+## 🎮 3 Learning & Feeding Modes
 
-1. **Toddler-Friendly Touch Mechanics**:
-   - Oversized buttons ($\ge 96\text{px} \times 96\text{px}$ hitboxes).
-   - Generous drop radii and dual mechanics: supports both **drag-and-drop** AND **tap-to-feed** (ideal for toddlers who struggle with long screen drags).
-   - Strict `touch-action: manipulation` and `touch-action: none` to prevent unintended browser zooming or scrolling.
+Children can tap the mode button anytime to cycle between:
+- **🔢 Numbers Mode (1 to 10)**: Large bold numbers with counting sprinkle dots underneath to help toddlers connect digits with visual quantities.
+- **🔤 Phonics & Letters (A to W)**: Giant alphabet cookies.
+- **🎨 Colors & Shapes**: Recognizing stars, hearts, circles, triangles, and squares in vibrant colors.
 
-2. **Positive Reinforcement Only**:
-   - **Zero game-over screens**, no countdown timers, no harsh buzzers, and no red "X" icons.
-   - Correct answers trigger cartoon munch/crack sounds, starry confetti explosions, and growth progress.
-   - Incorrect answers trigger a soft, playful cartoon boing and wobble animation with zero penalty.
+---
 
-3. **Voice & Audio Synthesis**:
-   - Built-in `window.speechSynthesis` speaks prompts aloud in a high-pitch, friendly cartoon voice.
-   - Pure **Web Audio API** sound engine generates pops, bites/munching, egg cracks, growth swells, and fanfare chords on the fly (100% self-contained with no external audio file dependencies).
-   - Big audio replay button so children can listen to the prompt again anytime.
+## 🐣 Pet Evolution & Silly Accessories
 
-4. **2 Learning Modes**:
-   - **Phonics & Letter Matching**: Matching big, bold letters with spoken prompts.
-   - **Colors & Shapes**: Identifying geometric shapes (stars, hearts, circles, triangles, squares) and bright primary colors.
+- **Stage 1: The Magic Egg 🥚** (Feeds 0–2): Species-colored magic egg that cracks as it is fed with realistic crack sound effects.
+- **Stage 2: Baby Pet 🐣** (Feeds 3–6): Hatches into a tiny baby wearing a bib with cute baby chirps.
+- **Stage 3: Playful Kid 🐾** (Feeds 7–10): Bouncy, playful young creature.
+- **Stage 4: Majestic Adult Dragon / Pet 👑** (Feeds 11+): Fully grown with golden wings, royal crown, and sparkling celebratory aura.
+- Every 4 feeds unlocks a silly accessory (Party Hat, Cool Shades, Bowtie, Crown, Flower).
 
 ---
 
@@ -67,31 +61,11 @@ npm install
 npm run dev
 ```
 
-Visit `http://localhost:5173` in your browser (or open it on a tablet/phone on your local network).
+Open `http://localhost:5173` in your browser.
 
 ### 3. Build for Production
 ```bash
 npm run build
-```
-
----
-
-## 📁 Project Structure
-
-```text
-magic-pet-feeder/
-├── index.html                  # HTML entry point
-├── package.json                # Project dependencies & scripts
-├── vite.config.js              # Vite configuration
-├── tailwind.config.js          # Tailwind styling & toddler animations
-├── postcss.config.js           # PostCSS configuration
-├── src/
-│   ├── App.jsx                 # App root container
-│   ├── main.jsx                # React DOM render entry
-│   ├── index.css               # Base Tailwind directives & keyframe animations
-│   └── components/
-│       └── MagicPetFeeder.jsx  # Complete game component, 4 evolution stages & Web Audio synthesizer
-└── README.md
 ```
 
 ---

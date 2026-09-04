@@ -1,0 +1,97 @@
+// ==========================================
+// PET DEFINITIONS & CUSTOM VOICES
+// ==========================================
+export const PETS = [
+  {
+    id: 'dino',
+    defaultName: 'Rexy',
+    species: 'Magic Dino',
+    tagline: 'Friendly & hungry little dragon!',
+    icon: '🦖',
+    themeColor: '#10B981',
+    bgColor: 'from-emerald-300 to-teal-200',
+    eggColors: {
+      gradStart: '#34D399',
+      gradMid: '#10B981',
+      gradEnd: '#047857',
+      spot: '#FDE047',
+      stroke: '#064E3B',
+    },
+    voice: {
+      pitch: 1.15,
+      rate: 0.88,
+      soundType: 'chomp',
+      greeting: "Roar! Let's eat tasty snacks!",
+      nomSound: "Nom nom roar!",
+    },
+  },
+  {
+    id: 'bunny',
+    defaultName: 'Fluffy',
+    species: 'Star Bunny',
+    tagline: 'Sweet, bouncy with floppy ears!',
+    icon: '🐰',
+    themeColor: '#EC4899',
+    bgColor: 'from-pink-300 to-rose-200',
+    eggColors: {
+      gradStart: '#F472B6',
+      gradMid: '#EC4899',
+      gradEnd: '#BE185D',
+      spot: '#FBCFE8',
+      stroke: '#831843',
+    },
+    voice: {
+      pitch: 1.48, // High cute squeaky voice
+      rate: 0.95,
+      soundType: 'squeak',
+      greeting: "Hop hop! I love yummy treats!",
+      nomSound: "Munch munch squeak!",
+    },
+  },
+  {
+    id: 'puppy',
+    defaultName: 'Barnaby',
+    species: 'Golden Pup',
+    tagline: 'Excited, joyful with a wagging tail!',
+    icon: '🐶',
+    themeColor: '#F59E0B',
+    bgColor: 'from-amber-300 to-yellow-200',
+    eggColors: {
+      gradStart: '#FBBF24',
+      gradMid: '#F59E0B',
+      gradEnd: '#B45309',
+      spot: '#FEF3C7',
+      stroke: '#78350F',
+    },
+    voice: {
+      pitch: 1.25,
+      rate: 0.92,
+      soundType: 'bark',
+      greeting: "Woof woof! Ready to snack with you!",
+      nomSound: "Slurp munch woof!",
+    },
+  },
+  {
+    id: 'kitten',
+    defaultName: 'Mochi',
+    species: 'Cozy Kitten',
+    tagline: 'Soft, gentle purrs and playful paws!',
+    icon: '🐱',
+    themeColor: '#8B5CF6',
+    bgColor: 'from-purple-300 to-indigo-200',
+    eggColors: {
+      gradStart: '#C084FC',
+      gradMid: '#8B5CF6',
+      gradEnd: '#581C87',
+      spot: '#E9D5FF',
+      stroke: '#3B0764',
+    },
+    voice: {
+      pitch: 1.35,
+      rate: 0.88,
+      soundType: 'purr',
+      greeting: "Meow! Can we find my favorite snack?",
+      nomSound: "Purr purr yummy!",
+    },
+  },
+];
