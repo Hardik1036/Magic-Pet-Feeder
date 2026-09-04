@@ -3,72 +3,71 @@
 A multi-page, mobile-first, positive-reinforcement web game built with React, Vite, and Tailwind CSS designed specifically for a 4-year-old child!
 
 ![Magic Pet Feeder](https://img.shields.io/badge/Designed%20for-Toddlers%20%26%20Preschoolers-pink)
-![Multi-Page UI](https://img.shields.io/badge/UI-Multi--Page%20App-purple)
-![Persistence](https://img.shields.io/badge/Save-Auto%20Local%20Storage-orange)
-![Audio](https://img.shields.io/badge/Audio-Custom%20Pet%20Voices-green)
+![8 Animals](https://img.shields.io/badge/Animals-8%20Unique%20Pets-green)
+![All Alphabet](https://img.shields.io/badge/Alphabet-All%2026%20Letters-blue)
+![10 Shapes](https://img.shields.io/badge/Shapes-10%20Toddler%20Shapes-purple)
+![Trophies](https://img.shields.io/badge/Rewards-10%20Collectible%20Badges-amber)
+![Per-Pet Save](https://img.shields.io/badge/Save-Independent%20Pet%20Progress-orange)
 
 ---
 
-## 📱 Multi-Page UI Flow
+## 🐾 8 Lovable Animals (With Unique Voices!)
 
-1. **Page 1: Welcome & Profile Creation**:
-   - Player types their name or taps toddler-friendly name chips (e.g. *Emma, Leo, Maya, Noah, Zara*).
-   - Player gives their pet a custom nickname (e.g. *Sparky, Cookie, Bubbles*).
-   - **Full Device Persistence (`localStorage`)**: Saves progress automatically so when a child leaves and comes back, it resumes right where they left off!
+Each animal has its own tailored speech synthesis pitch, speech rate, species egg, and custom nom phrases:
 
-2. **Page 2: Pet Selection with Custom Voices**:
-   - **Dino "Rexy"** 🦖: Friendly little dragon with a cheerful cartoon voice and chomp munch sounds.
-   - **Bunny "Fluffy"** 🐰: Bouncy star bunny with floppy ears and a cute high-pitched squeaky voice.
-   - **Puppy "Barnaby"** 🐶: Joyful pup with wagging tail, floppy ears, and energetic barks.
-   - **Kitten "Mochi"** 🐱: Calico kitty with playful whiskers, soft purrs, and melodic voice.
-   - **"Hear Voice" preview button** on each card so the child can listen to each pet's unique voice before choosing!
-
-3. **Page 3: The Magic Feeding Game**:
-   - Spoken prompts dynamically adjust their pitch and tone to match the chosen pet's voice!
-   - Shows player name and pet nickname in the top navigation.
-   - Easy "Switch Pet" and "Change Profile" buttons to switch characters without losing lifetime feeds.
+1. **Rexy the Magic Dino** 🦖 (`pitch: 1.15`): Friendly little emerald dragon who loves crunchy chomp treats.
+2. **Fluffy the Star Bunny** 🐰 (`pitch: 1.48`): Sweet star bunny with floppy ears and a cute squeaky voice.
+3. **Barnaby the Golden Pup** 🐶 (`pitch: 1.25`): Bubbly puppy with wagging tail and joyful woofs.
+4. **Mochi the Cozy Kitten** 🐱 (`pitch: 1.35`): Calico kitty with playful whiskers and soothing purrs.
+5. **Bao the Baby Panda** 🐼 (`pitch: 1.08`): Chubby cuddly panda with black/white patches.
+6. **Pip the Woodland Fox** 🦊 (`pitch: 1.38`): Curious orange fox with bushy tail and pointy ears.
+7. **Pebble the Arctic Penguin** 🐧 (`pitch: 1.30`): Cute waddler wearing a natural tuxedo.
+8. **Nugget the Chubby Hamster** 🐹 (`pitch: 1.55`): Puffed-cheeked golden hamster with an ultra-cute squeaky tone!
 
 ---
 
-## 🎮 3 Learning & Feeding Modes
+## 💾 Independent Per-Pet Progress (Never Lost!)
 
-Children can tap the mode button anytime to cycle between:
-- **🔢 Numbers Mode (1 to 10)**: Large bold numbers with counting sprinkle dots underneath to help toddlers connect digits with visual quantities.
-- **🔤 Phonics & Letters (A to W)**: Giant alphabet cookies.
-- **🎨 Colors & Shapes**: Recognizing stars, hearts, circles, triangles, and squares in vibrant colors.
+- **Switch animals anytime**: If a child hatches and raises Dino to Stage 2, and then wants to switch to Bunny, **Dino's level, stage, and treats are safely preserved**!
+- When she switches back to Dino later, Rexy is right where she left him!
+- **Auto-saved in `localStorage`**: Progress persists across device restarts and browser closes.
 
 ---
 
-## 🐣 Pet Evolution & Silly Accessories
+## 🎨 3 Learning Modes & Rich Content
 
-- **Stage 1: The Magic Egg 🥚** (Feeds 0–2): Species-colored magic egg that cracks as it is fed with realistic crack sound effects.
-- **Stage 2: Baby Pet 🐣** (Feeds 3–6): Hatches into a tiny baby wearing a bib with cute baby chirps.
-- **Stage 3: Playful Kid 🐾** (Feeds 7–10): Bouncy, playful young creature.
-- **Stage 4: Majestic Adult Dragon / Pet 👑** (Feeds 11+): Fully grown with golden wings, royal crown, and sparkling celebratory aura.
-- Every 4 feeds unlocks a silly accessory (Party Hat, Cool Shades, Bowtie, Crown, Flower).
+1. **🔢 Numbers Mode (1 to 10)**:
+   - Full ten-frame visual counting layout (no `+5` truncation; all dots are cleanly displayed).
+2. **🔤 Phonics & Alphabet (All 26 Letters A to Z)**:
+   - Complete alphabet from A to Z in big, bold cartoon cookies.
+3. **🎨 10 Geometric & Nature Shapes**:
+   - Star ⭐, Heart 💖, Circle ⚪, Triangle 🔺, Square 🟩, Diamond 💎, Crescent Moon 🌙, Oval 🥚, Flower 🌸, Cloud ☁️.
+
+---
+
+## 🏆 Badges & Trophy Room
+
+Children earn 10 sparkling badges as they feed and reach milestones:
+- 🍪 **First Bite!** (First snack fed)
+- 🐣 **Egg Cracker** (First magic egg hatched)
+- 🔢 **Counting Star** (Fed number snacks)
+- 🔤 **Alphabet Hero** (Fed letter treats)
+- 🎨 **Shape Wizard** (Matched shapes and colors)
+- 🌟 **Super Feeder** (Fed 10+ snacks)
+- 🐾 **Growing Tall!** (Reached Kid Stage)
+- 👑 **Majestic Adult** (Reached Adult Stage)
+- 🎩 **Fashion Star** (Unlocked silly costumes)
+- 💖 **Animal Lover** (Played with multiple pets)
+
+Tap any badge in the Trophy Room to hear its story read aloud with friendly cartoon speech!
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
 ```bash
 npm install
-```
-
-### 2. Run Locally
-```bash
 npm run dev
 ```
 
 Open `http://localhost:5173` in your browser.
-
-### 3. Build for Production
-```bash
-npm run build
-```
-
----
-
-## 💖 Made for Early Childhood Learning
-Designed to bring smiles, confidence, and joyful sensory learning to young toddlers!

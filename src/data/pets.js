@@ -1,5 +1,5 @@
 // ==========================================
-// PET DEFINITIONS & CUSTOM VOICES
+// 8 UNIQUE PETS WITH DISTINCT VOICES & SPECIES
 // ==========================================
 export const PETS = [
   {
@@ -10,6 +10,7 @@ export const PETS = [
     icon: '🦖',
     themeColor: '#10B981',
     bgColor: 'from-emerald-300 to-teal-200',
+    suggestedNames: ['Rexy', 'Spike', 'Draco', 'Chomp', 'Pip'],
     eggColors: {
       gradStart: '#34D399',
       gradMid: '#10B981',
@@ -33,6 +34,7 @@ export const PETS = [
     icon: '🐰',
     themeColor: '#EC4899',
     bgColor: 'from-pink-300 to-rose-200',
+    suggestedNames: ['Fluffy', 'Cotton', 'Snowball', 'Bun-Bun', 'Daisy'],
     eggColors: {
       gradStart: '#F472B6',
       gradMid: '#EC4899',
@@ -56,6 +58,7 @@ export const PETS = [
     icon: '🐶',
     themeColor: '#F59E0B',
     bgColor: 'from-amber-300 to-yellow-200',
+    suggestedNames: ['Barnaby', 'Buddy', 'Biscuit', 'Rusty', 'Toby'],
     eggColors: {
       gradStart: '#FBBF24',
       gradMid: '#F59E0B',
@@ -79,6 +82,7 @@ export const PETS = [
     icon: '🐱',
     themeColor: '#8B5CF6',
     bgColor: 'from-purple-300 to-indigo-200',
+    suggestedNames: ['Mochi', 'Whiskers', 'Milo', 'Luna', 'Cleo'],
     eggColors: {
       gradStart: '#C084FC',
       gradMid: '#8B5CF6',
@@ -92,6 +96,102 @@ export const PETS = [
       soundType: 'purr',
       greeting: "Meow! Can we find my favorite snack?",
       nomSound: "Purr purr yummy!",
+    },
+  },
+  {
+    id: 'panda',
+    defaultName: 'Bao',
+    species: 'Baby Panda',
+    tagline: 'Chubby, cuddly and loves bamboo snacks!',
+    icon: '🐼',
+    themeColor: '#0EA5E9',
+    bgColor: 'from-sky-300 to-blue-200',
+    suggestedNames: ['Bao', 'Bamboo', 'Panda', 'Po', 'Bobo'],
+    eggColors: {
+      gradStart: '#E2E8F0',
+      gradMid: '#94A3B8',
+      gradEnd: '#475569',
+      spot: '#0F172A',
+      stroke: '#0F172A',
+    },
+    voice: {
+      pitch: 1.08, // Cute chubby baby voice
+      rate: 0.86,
+      soundType: 'chomp',
+      greeting: "Hello! I am hungry for green snacks!",
+      nomSound: "Chomp chomp yum!",
+    },
+  },
+  {
+    id: 'fox',
+    defaultName: 'Pip',
+    species: 'Woodland Fox',
+    tagline: 'Clever, curious with a bushy tail!',
+    icon: '🦊',
+    themeColor: '#EA580C',
+    bgColor: 'from-orange-300 to-amber-200',
+    suggestedNames: ['Pip', 'Rusty', 'Foxy', 'Copper', 'Amber'],
+    eggColors: {
+      gradStart: '#FB923C',
+      gradMid: '#EA580C',
+      gradEnd: '#9A3412',
+      spot: '#FFEDD5',
+      stroke: '#7C2D12',
+    },
+    voice: {
+      pitch: 1.38,
+      rate: 0.94,
+      soundType: 'chirp',
+      greeting: "Yip yip! Let's find yummy shapes!",
+      nomSound: "Yip munch nom!",
+    },
+  },
+  {
+    id: 'penguin',
+    defaultName: 'Pebble',
+    species: 'Arctic Penguin',
+    tagline: 'Wobbly waddler in a tiny tuxedo!',
+    icon: '🐧',
+    themeColor: '#0284C7',
+    bgColor: 'from-cyan-300 to-sky-200',
+    suggestedNames: ['Pebble', 'Waddle', 'Pippy', 'Chilly', 'Pip'],
+    eggColors: {
+      gradStart: '#67E8F9',
+      gradMid: '#06B6D4',
+      gradEnd: '#0E7490',
+      spot: '#CFFAFE',
+      stroke: '#164E63',
+    },
+    voice: {
+      pitch: 1.3,
+      rate: 0.9,
+      soundType: 'quack',
+      greeting: "Waddle waddle! Can you feed me please?",
+      nomSound: "Flap munch yummy!",
+    },
+  },
+  {
+    id: 'hamster',
+    defaultName: 'Nugget',
+    species: 'Chubby Hamster',
+    tagline: 'Cheeks full of treats and speedy spins!',
+    icon: '🐹',
+    themeColor: '#D97706',
+    bgColor: 'from-amber-300 to-orange-200',
+    suggestedNames: ['Nugget', 'Peanut', 'Cheeks', 'Pip', 'Chippy'],
+    eggColors: {
+      gradStart: '#FDE68A',
+      gradMid: '#F59E0B',
+      gradEnd: '#D97706',
+      spot: '#FFFBEB',
+      stroke: '#92400E',
+    },
+    voice: {
+      pitch: 1.55, // Extra squeaky cute voice!
+      rate: 0.98,
+      soundType: 'squeak',
+      greeting: "Squeeeak! So many crunchy treats!",
+      nomSound: "Nibble nibble squeak!",
     },
   },
 ];

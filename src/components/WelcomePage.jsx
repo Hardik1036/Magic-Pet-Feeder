@@ -1,26 +1,23 @@
 import React, { useState } from 'react';
-import { Sparkles, Heart, ArrowRight, User, PawPrint, Volume2 } from 'lucide-react';
+import { Sparkles, ArrowRight, User, Volume2, Trophy } from 'lucide-react';
 
 const POPULAR_PLAYER_NAMES = ['Emma', 'Leo', 'Maya', 'Noah', 'Zara', 'Lucas', 'Oliver', 'Chloe'];
-const POPULAR_PET_NAMES = ['Sparky', 'Bubbles', 'Cookie', 'Peanut', 'Lucky', 'Sunny'];
 
 export default function WelcomePage({
   initialPlayerName,
-  initialPetName,
   onProceed,
   hasExistingSave,
   onResumeExisting,
   savedPetName,
+  unlockedBadgesCount = 0,
+  onOpenBadges,
 }) {
   const [playerName, setPlayerName] = useState(initialPlayerName || '');
-  const [petName, setPetName] = useState(initialPetName || '');
-  const [errorMsg, setErrorMsg] = useState('');
 
   const handleStart = (e) => {
     if (e) e.preventDefault();
     const finalPlayer = playerName.trim() || 'Little Friend';
-    const finalPet = petName.trim() || 'Buddy';
-    onProceed(finalPlayer, finalPet);
+    onProceed(finalPlayer);
   };
 
   const speakWelcome = () => {
@@ -50,13 +47,25 @@ export default function WelcomePage({
           </span>
         </div>
 
-        <button
-          onClick={speakWelcome}
-          aria-label="Listen to instructions"
-          className="w-10 h-10 bg-amber-400 text-amber-900 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
-        >
-          <Volume2 className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {unlockedBadgesCount > 0 && onOpenBadges && (
+            <button
+              onClick={onOpenBadges}
+              className="flex items-center gap-1 bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-xs font-black shadow-md border-2 border-amber-500 active:scale-95 transition-transform"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              <span>{unlockedBadgesCount}</span>
+            </button>
+          )}
+
+          <button
+            onClick={speakWelcome}
+            aria-label="Listen to instructions"
+            className="w-10 h-10 bg-amber-400 text-amber-900 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
+          >
+            <Volume2 className="w-5 h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Main Form Card */}
@@ -70,7 +79,7 @@ export default function WelcomePage({
             Welcome, Adventurer!
           </h1>
           <p className="text-sm font-semibold text-slate-600">
-            Feed, care, and watch your magic pet hatch and grow!
+            Feed, care, and watch your magic pets hatch and grow!
           </p>
         </div>
 
@@ -91,7 +100,6 @@ export default function WelcomePage({
         )}
 
         <form onSubmit={handleStart} className="flex flex-col gap-4 text-left">
-          {/* Player Name Field */}
           <div>
             <label className="flex items-center gap-1.5 text-xs font-black text-indigo-900 uppercase tracking-wider mb-1">
               <User className="w-4 h-4 text-indigo-600" />
@@ -106,9 +114,9 @@ export default function WelcomePage({
               className="w-full text-lg font-bold text-slate-800 px-4 py-3 rounded-2xl bg-indigo-50/70 border-2 border-indigo-200 focus:border-indigo-500 focus:bg-white outline-none transition-all shadow-inner"
             />
 
-            {/* Quick Tap Name Chips for Toddlers */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {POPULAR_PLAYER_NAMES.slice(0, 5).map((name) => (
+            {/* Quick Tap Name Chips */}
+            <div className="flex flex-wrap gap-1.5 mt-2.5">
+              {POPULAR_PLAYER_NAMES.map((name) => (
                 <button
                   type="button"
                   key={name}
@@ -125,52 +133,16 @@ export default function WelcomePage({
             </div>
           </div>
 
-          {/* Pet Nickname Field */}
-          <div>
-            <label className="flex items-center gap-1.5 text-xs font-black text-purple-900 uppercase tracking-wider mb-1">
-              <PawPrint className="w-4 h-4 text-purple-600" />
-              <span>Give your pet a nickname:</span>
-            </label>
-            <input
-              type="text"
-              value={petName}
-              onChange={(e) => setPetName(e.target.value)}
-              placeholder="e.g. Sparky, Cookie"
-              maxLength={20}
-              className="w-full text-lg font-bold text-slate-800 px-4 py-3 rounded-2xl bg-purple-50/70 border-2 border-purple-200 focus:border-purple-500 focus:bg-white outline-none transition-all shadow-inner"
-            />
-
-            {/* Quick Tap Pet Names */}
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {POPULAR_PET_NAMES.map((name) => (
-                <button
-                  type="button"
-                  key={name}
-                  onClick={() => setPetName(name)}
-                  className={`text-xs font-bold px-2.5 py-1 rounded-full border transition-all ${
-                    petName === name
-                      ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                      : 'bg-white text-purple-700 border-purple-200 active:scale-95'
-                  }`}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Big Start Adventure Button */}
           <button
             type="submit"
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-lg shadow-xl active:scale-95 transition-transform flex items-center justify-center gap-2 mt-2"
           >
-            <span>CHOOSE MY PET</span>
+            <span>CHOOSE MY PET 🐾</span>
             <ArrowRight className="w-5 h-5" />
           </button>
         </form>
       </main>
 
-      {/* Footer Safe Note */}
       <footer className="w-full max-w-md pb-2 text-center text-xs font-bold text-indigo-900/70">
         ✨ Automatically saved on your device!
       </footer>

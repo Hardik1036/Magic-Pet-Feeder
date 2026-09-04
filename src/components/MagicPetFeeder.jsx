@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Volume2, Sparkles, RefreshCw, Heart, Star, Award, ArrowLeft, User, PawPrint } from 'lucide-react';
+import { Volume2, Sparkles, RefreshCw, Heart, Star, Award, User, PawPrint, Trophy } from 'lucide-react';
 import { PETS } from '../data/pets.js';
+import { ALL_LETTERS, ALL_NUMBERS, ALL_SHAPES, ALL_COLORS } from '../data/shapes.js';
+import { BADGES } from '../data/badges.js';
 
 // ==========================================
 // 1. SOUND FX (Pure Web Audio API Synthesizer)
@@ -163,7 +165,7 @@ class SoundFX {
 const sfx = new SoundFX();
 
 // ==========================================
-// 2. VOICE SYNTHESIS HELPER (CUSTOM PER PET)
+// 2. VOICE SYNTHESIS HELPER
 // ==========================================
 function speakPetText(text, petVoice) {
   if (!('speechSynthesis' in window)) return;
@@ -204,29 +206,6 @@ function getStageFromFeeds(feedCount) {
   return 3;
 }
 
-// ==========================================
-// 4. GAME MODES DATA (NUMBERS, LETTERS, SHAPES)
-// ==========================================
-const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'R', 'S', 'T', 'W'];
-
-const SHAPES = [
-  { id: 'star', name: 'Star' },
-  { id: 'heart', name: 'Heart' },
-  { id: 'circle', name: 'Circle' },
-  { id: 'triangle', name: 'Triangle' },
-  { id: 'square', name: 'Square' },
-];
-
-const COLORS = [
-  { id: 'red', name: 'Red', fill: '#EF4444', text: 'text-red-500', border: 'border-red-400' },
-  { id: 'blue', name: 'Blue', fill: '#3B82F6', text: 'text-blue-500', border: 'border-blue-400' },
-  { id: 'green', name: 'Green', fill: '#10B981', text: 'text-emerald-500', border: 'border-emerald-400' },
-  { id: 'yellow', name: 'Yellow', fill: '#F59E0B', text: 'text-amber-500', border: 'border-amber-400' },
-  { id: 'purple', name: 'Purple', fill: '#8B5CF6', text: 'text-purple-500', border: 'border-purple-400' },
-  { id: 'pink', name: 'Pink', fill: '#EC4899', text: 'text-pink-500', border: 'border-pink-400' },
-];
-
 const ACCESSORIES = [
   { id: 'party_hat', name: 'Party Hat', icon: '🎉' },
   { id: 'cool_sunglasses', name: 'Cool Sunglasses', icon: '🕶️' },
@@ -245,8 +224,7 @@ function generateRound(mode, stageIndex, petDisplayName) {
   const petSubject = isEgg ? 'the magic egg' : petDisplayName || 'your pet';
 
   if (mode === 'numbers') {
-    // Numbers Mode (1 to 10)
-    const numbers = getRandomItems(NUMBERS, 3);
+    const numbers = getRandomItems(ALL_NUMBERS, 3);
     const target = numbers[Math.floor(Math.random() * numbers.length)];
     return {
       mode: 'numbers',
@@ -258,12 +236,12 @@ function generateRound(mode, stageIndex, petDisplayName) {
         label: num.toString(),
         type: 'number',
         count: num,
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        color: ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)],
       })),
     };
   } else if (mode === 'phonics') {
-    // Phonics Mode
-    const letters = getRandomItems(LETTERS, 3);
+    // All 26 letters of alphabet
+    const letters = getRandomItems(ALL_LETTERS, 3);
     const target = letters[Math.floor(Math.random() * letters.length)];
     return {
       mode: 'phonics',
@@ -274,13 +252,13 @@ function generateRound(mode, stageIndex, petDisplayName) {
         id: letter,
         label: letter,
         type: 'letter',
-        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        color: ALL_COLORS[Math.floor(Math.random() * ALL_COLORS.length)],
       })),
     };
   } else {
-    // Shapes & Colors Mode
-    const selectedColors = getRandomItems(COLORS, 3);
-    const selectedShapes = getRandomItems(SHAPES, 3);
+    // 10 Shapes Mode
+    const selectedColors = getRandomItems(ALL_COLORS, 3);
+    const selectedShapes = getRandomItems(ALL_SHAPES, 3);
     const choices = [0, 1, 2].map((i) => ({
       id: `${selectedColors[i].id}_${selectedShapes[i].id}`,
       color: selectedColors[i],
@@ -300,8 +278,7 @@ function generateRound(mode, stageIndex, petDisplayName) {
 }
 
 // ==========================================
-// 5. MULTI-SPECIES PET AVATAR SVG
-// (Dino 🦖, Bunny 🐰, Puppy 🐶, Kitten 🐱)
+// 4. MULTI-SPECIES PET AVATAR SVG (8 ANIMALS)
 // ==========================================
 function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNearFood }) {
   const mouthOpen = isNearFood || expression === 'hungry';
@@ -311,10 +288,10 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
   const petConfig = PETS.find((p) => p.id === petId) || PETS[0];
 
   // ------------------------------------------
-  // STAGE 0: SPECIES-SPECIFIC MAGIC EGG 🥚
+  // STAGE 0: SPECIES MAGIC EGG
   // ------------------------------------------
   if (stageIndex === 0) {
-    const crackLevel = feedCount; // 0, 1, 2
+    const crackLevel = feedCount;
     const ec = petConfig.eggColors;
     return (
       <div className="relative w-48 h-56 flex items-center justify-center select-none">
@@ -330,36 +307,34 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
           }`}
         >
           <defs>
-            <linearGradient id="eggGradCustom" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id={`eggGrad_${petId}`} x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor={ec.gradStart} />
               <stop offset="50%" stopColor={ec.gradMid} />
               <stop offset="100%" stopColor={ec.gradEnd} />
             </linearGradient>
-            <radialGradient id="eggSpotCustom">
+            <radialGradient id={`eggSpot_${petId}`}>
               <stop offset="0%" stopColor={ec.spot} stopOpacity="0.9" />
               <stop offset="100%" stopColor={ec.spot} stopOpacity="0" />
             </radialGradient>
           </defs>
 
-          {/* Shadow */}
           <ellipse cx="100" cy="215" rx="45" ry="12" fill="#1E293B" opacity="0.3" />
 
           {/* Egg Shell */}
           <path
             d="M 100 20 C 150 20, 175 90, 175 160 C 175 205, 145 220, 100 220 C 55 220, 25 205, 25 160 C 25 90, 50 20, 100 20 Z"
-            fill="url(#eggGradCustom)"
+            fill={`url(#eggGrad_${petId})`}
             stroke={ec.stroke}
             strokeWidth="4"
           />
 
-          {/* Spots */}
-          <circle cx="65" cy="85" r="14" fill="url(#eggSpotCustom)" />
-          <circle cx="135" cy="70" r="10" fill="url(#eggSpotCustom)" />
-          <circle cx="140" cy="140" r="18" fill="url(#eggSpotCustom)" />
-          <circle cx="60" cy="155" r="12" fill="url(#eggSpotCustom)" />
-          <circle cx="100" cy="115" r="16" fill="url(#eggSpotCustom)" />
+          <circle cx="65" cy="85" r="14" fill={`url(#eggSpot_${petId})`} />
+          <circle cx="135" cy="70" r="10" fill={`url(#eggSpot_${petId})`} />
+          <circle cx="140" cy="140" r="18" fill={`url(#eggSpot_${petId})`} />
+          <circle cx="60" cy="155" r="12" fill={`url(#eggSpot_${petId})`} />
+          <circle cx="100" cy="115" r="16" fill={`url(#eggSpot_${petId})`} />
 
-          {/* Peeking Kawaii Eyes */}
+          {/* Eyes */}
           <g>
             <circle cx="80" cy="115" r="7" fill="#FFFFFF" />
             <circle cx="81" cy="115" r="4.5" fill="#1E293B" />
@@ -373,7 +348,6 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
             <ellipse cx="132" cy="125" rx="6" ry="3.5" fill="#F472B6" opacity="0.8" />
           </g>
 
-          {/* Cracks appearing upon feeding */}
           {crackLevel >= 1 && (
             <path
               d="M 100 20 L 95 45 L 110 65 L 90 85"
@@ -397,7 +371,6 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
             />
           )}
 
-          {/* Magic Star Symbol */}
           <polygon points="100,55 103,62 110,63 105,68 106,75 100,71 94,75 95,68 90,63 97,62" fill="#FEF08A" />
         </svg>
       </div>
@@ -405,34 +378,40 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
   }
 
   // ------------------------------------------
-  // STAGES 1, 2, 3: MULTI-SPECIES ANIMAL
+  // STAGES 1, 2, 3: ANIMAL SPECIES
   // ------------------------------------------
   const isBaby = stageIndex === 1;
   const isAdult = stageIndex === 3;
   const scaleClass = isBaby ? 'scale-90' : isAdult ? 'scale-110' : 'scale-100';
 
-  // Primary colors by species
   let bodyColor = '#10B981';
   let tummyColor = '#A7F3D0';
-  let earType = 'horns'; // 'horns' | 'bunnyEars' | 'pupEars' | 'catEars'
 
   if (petId === 'bunny') {
     bodyColor = '#F472B6';
     tummyColor = '#FCE7F3';
-    earType = 'bunnyEars';
   } else if (petId === 'puppy') {
     bodyColor = '#F59E0B';
     tummyColor = '#FEF3C7';
-    earType = 'pupEars';
   } else if (petId === 'kitten') {
     bodyColor = '#A78BFA';
     tummyColor = '#EDE9FE';
-    earType = 'catEars';
+  } else if (petId === 'panda') {
+    bodyColor = '#FFFFFF';
+    tummyColor = '#F1F5F9';
+  } else if (petId === 'fox') {
+    bodyColor = '#EA580C';
+    tummyColor = '#FFEDD5';
+  } else if (petId === 'penguin') {
+    bodyColor = '#0F172A';
+    tummyColor = '#FFFFFF';
+  } else if (petId === 'hamster') {
+    bodyColor = '#F59E0B';
+    tummyColor = '#FEF3C7';
   }
 
   return (
     <div className={`relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center select-none ${scaleClass} transition-transform duration-500`}>
-      {/* Glow Aura */}
       <div
         className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
           isHappy ? 'bg-amber-300 scale-110' : mouthOpen ? 'bg-rose-300 scale-105' : 'bg-emerald-200 scale-95'
@@ -445,7 +424,7 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
           isChewing ? 'animate-chew' : isHappy ? 'animate-bounce' : 'animate-float'
         }`}
       >
-        {/* Adult Wings if Adult Dino or Adult Fairy Wings */}
+        {/* Adult Wings */}
         {isAdult && (
           <g className="animate-pulse">
             <path d="M 45 105 Q 5 65 20 25 Q 50 55 70 90 Z" fill="#FBBF24" opacity="0.9" stroke="#B45309" strokeWidth="2" />
@@ -456,33 +435,28 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
         {/* Feet */}
         <ellipse cx="80" cy="205" rx="20" ry="13" fill="#334155" opacity="0.3" />
         <ellipse cx="160" cy="205" rx="20" ry="13" fill="#334155" opacity="0.3" />
-        <ellipse cx="80" cy="202" rx="20" ry="13" fill={bodyColor} />
-        <ellipse cx="160" cy="202" rx="20" ry="13" fill={bodyColor} />
+        <ellipse cx="80" cy="202" rx="20" ry="13" fill={petId === 'penguin' ? '#F59E0B' : petId === 'panda' ? '#0F172A' : bodyColor} />
+        <ellipse cx="160" cy="202" rx="20" ry="13" fill={petId === 'penguin' ? '#F59E0B' : petId === 'panda' ? '#0F172A' : bodyColor} />
 
-        {/* Species Ears / Horns */}
-        {earType === 'bunnyEars' && (
+        {/* EARS BY SPECIES */}
+        {petId === 'bunny' && (
           <g>
-            {/* Left Bunny Ear */}
             <path d="M 75 60 C 55 -5, 80 -15, 95 60 Z" fill={bodyColor} stroke="#BE185D" strokeWidth="2.5" />
             <path d="M 80 50 C 68 10, 85 5, 92 50 Z" fill="#FCE7F3" />
-            {/* Right Bunny Ear */}
             <path d="M 165 60 C 185 -5, 160 -15, 145 60 Z" fill={bodyColor} stroke="#BE185D" strokeWidth="2.5" />
             <path d="M 160 50 C 172 10, 155 5, 148 50 Z" fill="#FCE7F3" />
           </g>
         )}
 
-        {earType === 'pupEars' && (
+        {petId === 'puppy' && (
           <g>
-            {/* Left Floppy Pup Ear */}
             <path d="M 65 60 Q 25 75 35 115 Q 55 110 70 85 Z" fill="#B45309" />
-            {/* Right Floppy Pup Ear */}
             <path d="M 175 60 Q 215 75 205 115 Q 185 110 170 85 Z" fill="#B45309" />
           </g>
         )}
 
-        {earType === 'catEars' && (
+        {petId === 'kitten' && (
           <g>
-            {/* Triangular Cat Ears */}
             <polygon points="60,65 75,20 100,55" fill={bodyColor} stroke="#581C87" strokeWidth="2" />
             <polygon points="68,60 76,32 94,54" fill="#FCE7F3" />
             <polygon points="180,65 165,20 140,55" fill={bodyColor} stroke="#581C87" strokeWidth="2" />
@@ -490,43 +464,67 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
           </g>
         )}
 
-        {earType === 'horns' && (
+        {petId === 'dino' && (
           <g>
             <path d="M 65 52 Q 40 20 52 14 Q 72 26 78 44 Z" fill="#FBBF24" stroke="#B45309" strokeWidth="1.5" />
             <path d="M 175 52 Q 200 20 188 14 Q 168 26 162 44 Z" fill="#FBBF24" stroke="#B45309" strokeWidth="1.5" />
           </g>
         )}
 
-        {/* Round Cute Main Body */}
+        {petId === 'panda' && (
+          <g>
+            <circle cx="70" cy="55" r="22" fill="#0F172A" />
+            <circle cx="170" cy="55" r="22" fill="#0F172A" />
+          </g>
+        )}
+
+        {petId === 'fox' && (
+          <g>
+            <polygon points="60,65 70,15 100,55" fill="#EA580C" stroke="#7C2D12" strokeWidth="2" />
+            <polygon points="68,58 72,26 94,52" fill="#FFFFFF" />
+            <polygon points="180,65 170,15 140,55" fill="#EA580C" stroke="#7C2D12" strokeWidth="2" />
+            <polygon points="172,58 168,26 146,52" fill="#FFFFFF" />
+          </g>
+        )}
+
+        {petId === 'penguin' && (
+          <g>
+            <ellipse cx="60" cy="140" rx="14" ry="32" fill="#0F172A" transform="rotate(-15 60 140)" />
+            <ellipse cx="180" cy="140" rx="14" ry="32" fill="#0F172A" transform="rotate(15 180 140)" />
+          </g>
+        )}
+
+        {petId === 'hamster' && (
+          <g>
+            <circle cx="68" cy="55" r="18" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+            <circle cx="68" cy="55" r="10" fill="#FCE7F3" />
+            <circle cx="172" cy="55" r="18" fill="#F59E0B" stroke="#B45309" strokeWidth="2" />
+            <circle cx="172" cy="55" r="10" fill="#FCE7F3" />
+          </g>
+        )}
+
+        {/* Main Body */}
         <path
           d="M 120 35 C 180 35, 210 75, 210 135 C 210 195, 175 210, 120 210 C 65 210, 30 195, 30 135 C 30 75, 60 35, 120 35 Z"
           fill={bodyColor}
+          stroke={petId === 'panda' ? '#0F172A' : '#1E293B'}
+          strokeWidth="3.5"
         />
 
-        {/* Creamy Tummy */}
+        {/* Tummy */}
         <ellipse cx="120" cy="155" rx="54" ry="42" fill={tummyColor} opacity="0.9" />
 
-        {/* Baby Bib if Baby */}
-        {isBaby && (
+        {/* Panda Eye Patches */}
+        {petId === 'panda' && (
           <g>
-            <path d="M 90 140 C 90 140, 120 175, 150 140 L 140 128 L 100 128 Z" fill="#FEF08A" stroke="#EAB308" strokeWidth="2" />
-            <circle cx="120" cy="148" r="3.5" fill="#EF4444" />
+            <ellipse cx="85" cy="100" rx="20" ry="16" fill="#0F172A" transform="rotate(-15 85 100)" />
+            <ellipse cx="155" cy="100" rx="20" ry="16" fill="#0F172A" transform="rotate(15 155 100)" />
           </g>
         )}
 
         {/* Cheeks */}
         <circle cx="65" cy="130" r="14" fill="#F472B6" opacity="0.75" />
         <circle cx="175" cy="130" r="14" fill="#F472B6" opacity="0.75" />
-
-        {/* Kitten Whiskers */}
-        {petId === 'kitten' && (
-          <g stroke="#4C1D95" strokeWidth="2" strokeLinecap="round">
-            <line x1="45" y1="125" x2="68" y2="128" />
-            <line x1="42" y1="135" x2="68" y2="134" />
-            <line x1="195" y1="125" x2="172" y2="128" />
-            <line x1="198" y1="135" x2="172" y2="134" />
-          </g>
-        )}
 
         {/* Eyes */}
         {isHappy ? (
@@ -548,16 +546,14 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
           </g>
         )}
 
-        {/* Cute Species Nose */}
-        {petId === 'puppy' && (
+        {/* Noses / Beaks */}
+        {petId === 'penguin' ? (
+          <polygon points="120,115 110,126 130,126" fill="#F59E0B" stroke="#B45309" strokeWidth="1.5" />
+        ) : petId === 'puppy' ? (
           <ellipse cx="120" cy="118" rx="8" ry="6" fill="#3B1C0B" />
-        )}
-        {petId === 'bunny' && (
-          <polygon points="120,122 115,116 125,116" fill="#DB2777" />
-        )}
-        {petId === 'kitten' && (
-          <polygon points="120,121 116,117 124,117" fill="#DB2777" />
-        )}
+        ) : petId === 'bunny' || petId === 'kitten' || petId === 'fox' || petId === 'hamster' ? (
+          <polygon points="120,121 115,116 125,116" fill="#DB2777" />
+        ) : null}
 
         {/* Mouth */}
         {mouthOpen ? (
@@ -573,7 +569,7 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
           <path d="M 102 128 Q 120 144 138 128" fill="none" stroke="#1E293B" strokeWidth="4" strokeLinecap="round" />
         )}
 
-        {/* Accessories Rendering */}
+        {/* Accessories */}
         {accessories.includes('party_hat') && (
           <g className="animate-pulse-glow origin-bottom">
             <polygon points="120,4 88,48 152,48" fill="#EC4899" stroke="#BE185D" strokeWidth="2" />
@@ -625,9 +621,9 @@ function PetAvatar({ petId, stageIndex, feedCount, expression, accessories, isNe
 }
 
 // ==========================================
-// 6. SHAPES RENDERER
+// 5. 10 SHAPES SVG RENDERER
 // ==========================================
-function ShapeIcon({ shape, color, size = 56 }) {
+function ShapeIcon({ shape, color, size = 52 }) {
   const fill = color.fill;
   switch (shape.id) {
     case 'star':
@@ -654,6 +650,40 @@ function ShapeIcon({ shape, color, size = 56 }) {
           <rect x="3" y="3" width="18" height="18" rx="4" />
         </svg>
       );
+    case 'diamond':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} className="drop-shadow-md">
+          <polygon points="12,2 22,12 12,22 2,12" />
+        </svg>
+      );
+    case 'moon':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} className="drop-shadow-md">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      );
+    case 'oval':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} className="drop-shadow-md">
+          <ellipse cx="12" cy="12" rx="7" ry="10" />
+        </svg>
+      );
+    case 'flower':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} className="drop-shadow-md">
+          <circle cx="12" cy="7" r="4" />
+          <circle cx="17" cy="12" r="4" />
+          <circle cx="12" cy="17" r="4" />
+          <circle cx="7" cy="12" r="4" />
+          <circle cx="12" cy="12" r="3.5" fill="#FEF08A" />
+        </svg>
+      );
+    case 'cloud':
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} className="drop-shadow-md">
+          <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+        </svg>
+      );
     case 'circle':
     default:
       return (
@@ -665,7 +695,7 @@ function ShapeIcon({ shape, color, size = 56 }) {
 }
 
 // ==========================================
-// 7. CONFETTI PARTICLES
+// 6. CONFETTI CANVAS
 // ==========================================
 function ConfettiCanvas({ active }) {
   const canvasRef = useRef(null);
@@ -750,7 +780,7 @@ function ConfettiCanvas({ active }) {
 }
 
 // ==========================================
-// 8. MAIN GAME COMPONENT (PAGE 3)
+// 7. MAIN GAME COMPONENT (PAGE 3)
 // ==========================================
 export default function MagicPetFeeder({
   playerName,
@@ -758,6 +788,9 @@ export default function MagicPetFeeder({
   selectedPetId,
   initialFeedCount = 0,
   initialAccessories = [],
+  unlockedBadges = [],
+  onUnlockBadge,
+  onOpenBadges,
   onSwitchPet,
   onChangeProfile,
   onSaveProgress,
@@ -774,6 +807,7 @@ export default function MagicPetFeeder({
   // Modals
   const [evolutionModal, setEvolutionModal] = useState(null);
   const [accessoryModal, setAccessoryModal] = useState(null);
+  const [newBadgeModal, setNewBadgeModal] = useState(null);
 
   // States
   const [petExpression, setPetExpression] = useState('idle');
@@ -795,15 +829,76 @@ export default function MagicPetFeeder({
     return () => clearTimeout(timer);
   }, [round, currentPet]);
 
-  // Persist whenever feedCount or accessories change
+  // Sync initial props when switching pets
+  useEffect(() => {
+    setFeedCount(initialFeedCount);
+    const newStage = getStageFromFeeds(initialFeedCount);
+    setStageIndex(newStage);
+    setUnlockedAccessories(initialAccessories);
+    setRound(generateRound(currentMode, newStage, petDisplayName));
+  }, [selectedPetId, initialFeedCount, initialAccessories, petDisplayName]);
+
+  // Persist progress
   useEffect(() => {
     if (onSaveProgress) {
       onSaveProgress({
         feedCount,
+        stageIndex,
         unlockedAccessories,
       });
     }
-  }, [feedCount, unlockedAccessories, onSaveProgress]);
+  }, [feedCount, stageIndex, unlockedAccessories, onSaveProgress]);
+
+  // Check and award badges based on milestones
+  const checkBadgeAwards = useCallback(
+    (newFeeds, newStage, lastMode) => {
+      const awarded = [];
+
+      // First snack
+      if (newFeeds >= 1 && !unlockedBadges.includes('first_snack')) {
+        awarded.push('first_snack');
+      }
+      // Egg hatched
+      if (newStage >= 1 && !unlockedBadges.includes('egg_cracker')) {
+        awarded.push('egg_cracker');
+      }
+      // Kid stage
+      if (newStage >= 2 && !unlockedBadges.includes('kid_growth')) {
+        awarded.push('kid_growth');
+      }
+      // Adult stage
+      if (newStage >= 3 && !unlockedBadges.includes('adult_majesty')) {
+        awarded.push('adult_majesty');
+      }
+      // 10 snacks
+      if (newFeeds >= 10 && !unlockedBadges.includes('super_feeder')) {
+        awarded.push('super_feeder');
+      }
+      // Mode badges
+      if (lastMode === 'numbers' && !unlockedBadges.includes('number_whiz')) {
+        awarded.push('number_whiz');
+      }
+      if (lastMode === 'phonics' && !unlockedBadges.includes('alphabet_champ')) {
+        awarded.push('alphabet_champ');
+      }
+      if (lastMode === 'shapes' && !unlockedBadges.includes('shape_master')) {
+        awarded.push('shape_master');
+      }
+
+      if (awarded.length > 0) {
+        awarded.forEach((bId) => {
+          if (onUnlockBadge) onUnlockBadge(bId);
+        });
+        const badgeObj = BADGES.find((b) => b.id === awarded[0]);
+        if (badgeObj) {
+          setNewBadgeModal(badgeObj);
+          sfx.fanfare();
+          speakPetText(`Hooray! You earned the ${badgeObj.title} trophy!`, currentPet.voice);
+        }
+      }
+    },
+    [unlockedBadges, onUnlockBadge, currentPet]
+  );
 
   const checkCollisionWithPet = useCallback((x, y) => {
     if (!petZoneRef.current) return false;
@@ -835,6 +930,9 @@ export default function MagicPetFeeder({
       const newStageIndex = getStageFromFeeds(newFeedCount);
       setFeedCount(newFeedCount);
 
+      // Check badge awards
+      checkBadgeAwards(newFeedCount, newStageIndex, currentMode);
+
       if (newStageIndex > stageIndex) {
         setStageIndex(newStageIndex);
         const nextStageObj = STAGES[newStageIndex];
@@ -854,7 +952,7 @@ export default function MagicPetFeeder({
       } else {
         const praises =
           stageIndex === 0
-            ? ['Crack crack!', 'The egg is hungry!', 'Keep going!', 'Almost hatching!']
+            ? ['Crack crack!', 'The egg loves it!', 'Keep going!', 'Almost hatching!']
             : [currentPet.voice.nomSound, 'So yummy!', 'Delicious!', 'Super job!', 'Nom nom nom!'];
         const randomPraise = praises[Math.floor(Math.random() * praises.length)];
         setTimeout(() => speakPetText(randomPraise, currentPet.voice), 300);
@@ -882,7 +980,6 @@ export default function MagicPetFeeder({
         setTimeout(() => {
           setFlyingFoodId(null);
           setPetExpression('idle');
-          // Automatically cycle between modes: numbers -> phonics -> shapes -> numbers
           const nextMode =
             currentMode === 'numbers'
               ? 'phonics'
@@ -894,7 +991,7 @@ export default function MagicPetFeeder({
         }, 700);
       }, 900);
     },
-    [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName]
+    [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName, checkBadgeAwards]
   );
 
   const handleGentleMiss = useCallback(
@@ -986,12 +1083,12 @@ export default function MagicPetFeeder({
       <ConfettiCanvas active={showConfetti} />
 
       {/* ------------------------------------ */}
-      {/* TOP HEADER: PLAYERS, PETS, & MODES   */}
+      {/* TOP HEADER: PLAYERS, PETS, TROPHIES  */}
       {/* ------------------------------------ */}
       <header className="w-full max-w-md flex flex-col items-center gap-1.5 pt-1 z-20">
-        {/* Profile & Pet Tag */}
         <div className="w-full flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
+          {/* Switch Pet / Profile */}
+          <div className="flex items-center gap-1.5">
             <button
               onClick={onChangeProfile}
               title="Change Player Name"
@@ -1003,7 +1100,7 @@ export default function MagicPetFeeder({
 
             <button
               onClick={onSwitchPet}
-              title="Change Pet Species"
+              title="Switch Pet"
               className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-purple-900 border border-purple-200 shadow-sm active:scale-95 transition-transform"
             >
               <span>{currentPet.icon}</span>
@@ -1011,30 +1108,42 @@ export default function MagicPetFeeder({
             </button>
           </div>
 
-          {/* Mode Switcher Button (Numbers ➔ Letters ➔ Shapes) */}
-          <button
-            onClick={() => {
-              sfx.pop();
-              const nextMode =
-                currentMode === 'numbers'
-                  ? 'phonics'
+          <div className="flex items-center gap-1.5">
+            {/* Badges Trophy Button */}
+            <button
+              onClick={onOpenBadges}
+              title="View Badges & Trophies"
+              className="flex items-center gap-1 bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-xs font-black shadow-md border-2 border-amber-500 active:scale-95 transition-transform"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              <span>{unlockedBadges.length}</span>
+            </button>
+
+            {/* Mode Switcher Button */}
+            <button
+              onClick={() => {
+                sfx.pop();
+                const nextMode =
+                  currentMode === 'numbers'
+                    ? 'phonics'
+                    : currentMode === 'phonics'
+                    ? 'shapes'
+                    : 'numbers';
+                setCurrentMode(nextMode);
+                setRound(generateRound(nextMode, stageIndex, petDisplayName));
+              }}
+              className="flex items-center gap-1 bg-white/90 active:scale-95 px-2.5 py-1 rounded-full text-xs font-black text-amber-900 shadow-md border-2 border-amber-300 transition-transform"
+            >
+              <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+              <span>
+                {currentMode === 'numbers'
+                  ? '🔢 Numbers'
                   : currentMode === 'phonics'
-                  ? 'shapes'
-                  : 'numbers';
-              setCurrentMode(nextMode);
-              setRound(generateRound(nextMode, stageIndex, petDisplayName));
-            }}
-            className="flex items-center gap-1 bg-white/90 active:scale-95 px-3 py-1 rounded-full text-xs font-black text-amber-900 shadow-md border-2 border-amber-300 transition-transform"
-          >
-            <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
-            <span>
-              {currentMode === 'numbers'
-                ? '🔢 Numbers'
-                : currentMode === 'phonics'
-                ? '🔤 Letters'
-                : '🎨 Shapes'}
-            </span>
-          </button>
+                  ? '🔤 Letters'
+                  : '🎨 Shapes'}
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Growth Timeline Bar */}
@@ -1051,7 +1160,6 @@ export default function MagicPetFeeder({
             </span>
           </div>
 
-          {/* 4 Stages Icons */}
           <div className="flex items-center justify-between px-2 pt-0.5">
             {STAGES.map((st, idx) => {
               const isCurrent = stageIndex === idx;
@@ -1077,7 +1185,6 @@ export default function MagicPetFeeder({
             })}
           </div>
 
-          {/* Progress Bar */}
           <div className="w-full bg-purple-100 h-2 rounded-full overflow-hidden border border-purple-200 mt-0.5">
             <div
               className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 transition-all duration-500 rounded-full"
@@ -1172,7 +1279,7 @@ export default function MagicPetFeeder({
               >
                 <div className="absolute top-2 left-3 w-4 h-2 bg-white/70 rounded-full rotate-[-20deg]" />
 
-                {/* NUMBER DISPLAY WITH ALL COUNTING DOTS (NO +5 TRUNCATION) */}
+                {/* NUMBER DISPLAY WITH ALL 10 COUNTING DOTS (NO +5 TRUNCATION) */}
                 {choice.type === 'number' && (
                   <div className="flex flex-col items-center justify-center">
                     <span className={`text-4xl sm:text-5xl font-black leading-none ${choice.color?.text || 'text-amber-600'}`}>
@@ -1180,7 +1287,6 @@ export default function MagicPetFeeder({
                     </span>
                     {/* Counting Sprinkle Dots - Ten-Frame Layout */}
                     <div className="flex flex-col items-center gap-1 mt-1.5">
-                      {/* Top Row: up to 5 dots */}
                       <div className="flex gap-1 justify-center">
                         {Array.from({ length: Math.min(choice.count, 5) }).map((_, dotIdx) => (
                           <div
@@ -1190,7 +1296,6 @@ export default function MagicPetFeeder({
                           />
                         ))}
                       </div>
-                      {/* Bottom Row: remaining dots for 6 to 10 */}
                       {choice.count > 5 && (
                         <div className="flex gap-1 justify-center">
                           {Array.from({ length: choice.count - 5 }).map((_, dotIdx) => (
@@ -1206,7 +1311,7 @@ export default function MagicPetFeeder({
                   </div>
                 )}
 
-                {/* PHONICS LETTER DISPLAY */}
+                {/* PHONICS LETTER DISPLAY (ALL 26 ALPHABET) */}
                 {choice.type === 'letter' && (
                   <div className="flex flex-col items-center justify-center">
                     <span className={`text-4xl sm:text-5xl font-black ${choice.color?.text || 'text-indigo-600'}`}>
@@ -1218,7 +1323,7 @@ export default function MagicPetFeeder({
                   </div>
                 )}
 
-                {/* SHAPE DISPLAY */}
+                {/* SHAPE DISPLAY (10 VIBRANT SHAPES) */}
                 {choice.type === 'shape' && (
                   <div className="flex flex-col items-center justify-center">
                     <ShapeIcon shape={choice.shape} color={choice.color} size={46} />
@@ -1323,6 +1428,51 @@ export default function MagicPetFeeder({
             >
               WEAR IT & PLAY! 🥳
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------ */}
+      {/* NEW BADGE CELEBRATION MODAL 🏆       */}
+      {/* ------------------------------------ */}
+      {newBadgeModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-amber-400 animate-fly-in flex flex-col items-center">
+            <div className="w-20 h-20 rounded-3xl bg-amber-100 flex items-center justify-center text-5xl my-2 shadow-inner border-2 border-amber-300 animate-bounce">
+              {newBadgeModal.icon}
+            </div>
+            <span className="text-xs font-black text-amber-600 uppercase tracking-widest">
+              🏆 TROPHY UNLOCKED! 🏆
+            </span>
+            <h2 className="text-2xl font-black text-slate-800 mt-1 mb-2">
+              {newBadgeModal.title}
+            </h2>
+            <p className="text-sm font-semibold text-slate-600 mb-6">
+              {newBadgeModal.description}
+            </p>
+
+            <div className="flex flex-col gap-2 w-full">
+              <button
+                onClick={() => {
+                  sfx.pop();
+                  setNewBadgeModal(null);
+                }}
+                className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base shadow-lg active:scale-95 transition-transform"
+              >
+                KEEP FEEDING! 🍪
+              </button>
+
+              <button
+                onClick={() => {
+                  sfx.pop();
+                  setNewBadgeModal(null);
+                  if (onOpenBadges) onOpenBadges();
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95 transition-transform"
+              >
+                View Trophy Room 🏆
+              </button>
+            </div>
           </div>
         </div>
       )}
