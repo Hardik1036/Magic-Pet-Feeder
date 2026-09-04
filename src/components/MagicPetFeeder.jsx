@@ -1442,7 +1442,9 @@ export default function MagicPetFeeder({
       {newBadgeModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-amber-400 animate-fly-in flex flex-col items-center">
-            <div className="w-20 h-20 rounded-3xl bg-amber-100 flex items-center justify-center text-5xl my-2 shadow-inner border-2 border-amber-300 animate-bounce">
+            {/* Circular Gold Medallion */}
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-amber-300 via-yellow-100 to-amber-400 flex items-center justify-center text-5xl my-2 shadow-xl border-4 border-amber-500 ring-4 ring-yellow-200 animate-bounce">
+              <div className="absolute top-1.5 left-4 w-10 h-4 bg-white/70 rounded-full blur-[0.5px] -rotate-12 pointer-events-none" />
               {newBadgeModal.icon}
             </div>
             <span className="text-xs font-black text-amber-600 uppercase tracking-widest">

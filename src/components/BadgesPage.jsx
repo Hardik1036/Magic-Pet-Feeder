@@ -1,5 +1,5 @@
-import React from 'react';
-import { ArrowLeft, Award, Sparkles, Volume2, Star, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Award, Volume2, Check, Lock } from 'lucide-react';
 import { BADGES } from '../data/badges.js';
 
 export default function BadgesPage({
@@ -7,7 +7,10 @@ export default function BadgesPage({
   onBack,
   petVoice,
 }) {
+  const [selectedBadge, setSelectedBadge] = useState(null);
+
   const speakBadge = (badge, isUnlocked) => {
+    setSelectedBadge(badge);
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const text = isUnlocked
@@ -37,7 +40,7 @@ export default function BadgesPage({
           <span>Back to Game</span>
         </button>
 
-        <div className="flex items-center gap-1.5 bg-white/85 px-3 py-1 rounded-full shadow-md border-2 border-amber-300">
+        <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-full shadow-md border-2 border-amber-300">
           <Award className="w-4 h-4 text-amber-600" />
           <span className="text-xs font-black text-amber-900">
             {unlockedCount} / {BADGES.length} BADGES
@@ -46,73 +49,96 @@ export default function BadgesPage({
       </header>
 
       {/* Header Banner */}
-      <div className="w-full max-w-md text-center my-2">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400 text-amber-950 text-3xl shadow-lg border-2 border-amber-500 mb-1 animate-bounce">
+      <div className="w-full max-w-md text-center my-1.5">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 text-2xl shadow-lg border-2 border-amber-500 mb-1 animate-bounce">
           🏆
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
-          My Badges & Trophies!
+          Round Badge Showcase!
         </h1>
         <p className="text-xs font-semibold text-slate-600">
-          Tap any badge to hear what you accomplished!
+          Tap any round medal to hear your achievement!
         </p>
       </div>
 
-      {/* Badges Grid */}
-      <main className="w-full max-w-md my-auto grid grid-cols-2 gap-2.5 z-10 max-h-[58vh] overflow-y-auto pr-1 pb-1">
+      {/* 3-Column Round Medallions Grid */}
+      <main className="w-full max-w-md my-auto grid grid-cols-3 gap-3 z-10 max-h-[58vh] overflow-y-auto p-2">
         {BADGES.map((badge) => {
           const isUnlocked = unlockedBadges.includes(badge.id);
+          const isInspected = selectedBadge?.id === badge.id;
 
           return (
             <div
               key={badge.id}
               onClick={() => speakBadge(badge, isUnlocked)}
-              className={`
-                relative rounded-3xl p-3 flex flex-col items-center justify-between text-center
-                cursor-pointer shadow-md border-3 transition-all duration-200 active:scale-95
-                ${
-                  isUnlocked
-                    ? `${badge.bg} border-2 shadow-lg hover:scale-105 ring-2 ring-amber-300/50`
-                    : 'bg-white/60 border-slate-200 opacity-60'
-                }
-              `}
+              className="flex flex-col items-center cursor-pointer group active:scale-95 transition-transform"
             >
-              {/* Star Badge Icon */}
+              {/* Circular Medallion */}
               <div
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center text-3xl shadow-inner ${
-                  isUnlocked ? 'bg-white/80 animate-pulse' : 'bg-slate-100 grayscale'
-                }`}
+                className={`
+                  relative w-22 h-22 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center
+                  shadow-lg transition-all duration-300
+                  ${
+                    isUnlocked
+                      ? 'bg-gradient-to-tr from-amber-200 via-white to-amber-100 border-4 border-amber-400 ring-4 ring-amber-200/70 hover:scale-105 shadow-amber-300/50'
+                      : 'bg-slate-200/70 border-4 border-dashed border-slate-300 opacity-55'
+                  }
+                  ${isInspected ? 'ring-4 ring-purple-400 scale-105' : ''}
+                `}
               >
-                {isUnlocked ? badge.icon : '🔒'}
-              </div>
+                {/* Shiny Curved Gloss Highlight on Top Edge */}
+                {isUnlocked && (
+                  <div className="absolute top-1.5 left-3 w-10 h-4 bg-white/70 rounded-full blur-[0.5px] -rotate-12 pointer-events-none" />
+                )}
 
-              {/* Title & Description */}
-              <div className="mt-1.5 w-full">
-                <h3 className="text-sm font-black text-slate-800 leading-tight">
-                  {badge.title}
-                </h3>
-                <p className="text-[10px] font-medium text-slate-600 mt-0.5 leading-snug">
-                  {isUnlocked ? badge.description : 'Mystery Badge! Keep feeding!'}
-                </p>
-              </div>
+                {/* Main Medallion Icon */}
+                <div
+                  className={`text-3xl sm:text-4xl filter ${
+                    isUnlocked ? 'drop-shadow-md animate-pulse' : 'grayscale'
+                  }`}
+                >
+                  {isUnlocked ? badge.icon : '🔒'}
+                </div>
 
-              {/* Status Badge */}
-              <div className="mt-2">
-                {isUnlocked ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full border border-emerald-300">
-                    <Check className="w-3 h-3" />
-                    <span>Unlocked</span>
-                  </span>
-                ) : (
-                  <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                    Locked
-                  </span>
+                {/* Small Checkmark Seal on bottom edge */}
+                {isUnlocked && (
+                  <div className="absolute -bottom-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow">
+                    <Check className="w-3 h-3 stroke-[3]" />
+                  </div>
                 )}
               </div>
+
+              {/* Badge Title Under Medallion */}
+              <span className="text-[11px] font-black text-slate-800 text-center leading-tight mt-1.5 line-clamp-2 max-w-[85px]">
+                {badge.title}
+              </span>
             </div>
           );
         })}
       </main>
+
+      {/* Inspected Badge Details Drawer */}
+      {selectedBadge && (
+        <div className="w-full max-w-md bg-white/95 rounded-2xl p-2.5 shadow-md border-2 border-amber-300 flex items-center justify-between gap-2 mt-1">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{selectedBadge.icon}</span>
+            <div className="text-left">
+              <h4 className="text-xs font-black text-slate-800 leading-tight">
+                {selectedBadge.title}
+              </h4>
+              <p className="text-[10px] font-semibold text-slate-600 leading-snug">
+                {selectedBadge.description}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => speakBadge(selectedBadge, unlockedBadges.includes(selectedBadge.id))}
+            className="w-8 h-8 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center shrink-0 active:scale-90"
+          >
+            <Volume2 className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Back to Game button */}
       <footer className="w-full max-w-md pt-2 pb-1">
