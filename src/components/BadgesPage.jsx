@@ -63,18 +63,30 @@ export default function BadgesPage({
         </p>
 
         {/* Live Quest Progress Chips */}
-        <div className="flex items-center justify-center gap-1.5 flex-wrap mt-2">
-          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-sky-300 text-sky-800 shadow-xs">
+        <div className="flex items-center justify-center gap-1.5 flex-wrap mt-2 max-w-sm mx-auto">
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-sky-300 text-sky-800 shadow-xs">
             🔥 Streak: {playerStats.streak || 0}
           </span>
-          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-blue-300 text-blue-800 shadow-xs">
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-blue-300 text-blue-800 shadow-xs">
             🔢 Math: {playerStats.numbersFed || 0}/10
           </span>
-          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
             🔤 Letters: {playerStats.lettersFed || 0}/12
           </span>
-          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-pink-300 text-pink-800 shadow-xs">
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-pink-300 text-pink-800 shadow-xs">
             🎨 Shapes: {playerStats.shapesFed || 0}/12
+          </span>
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-cyan-300 text-cyan-800 shadow-xs">
+            🫧 Bubbles: {playerStats.bubblesPopped || 0}/15
+          </span>
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
+            ⚽ Bounces: {playerStats.ballsBounced || 0}/10
+          </span>
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-indigo-300 text-indigo-800 shadow-xs">
+            ⭐ Stars: {playerStats.starsCounted || 0}/5
+          </span>
+          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-rose-300 text-rose-800 shadow-xs">
+            📸 Photos: {playerStats.photosTaken || 0}/3
           </span>
         </div>
       </div>

@@ -4,6 +4,10 @@ import PetSelectPage from './components/PetSelectPage.jsx';
 import PetNamingPage from './components/PetNamingPage.jsx';
 import MagicPetFeeder from './components/MagicPetFeeder.jsx';
 import BadgesPage from './components/BadgesPage.jsx';
+import BathSpaPage from './components/BathSpaPage.jsx';
+import PlayroomPage from './components/PlayroomPage.jsx';
+import BedroomPage from './components/BedroomPage.jsx';
+import DressUpPage from './components/DressUpPage.jsx';
 import { PETS } from './data/pets.js';
 
 const STORAGE_KEY = 'magic_pet_feeder_save_v2';
@@ -17,6 +21,10 @@ const DEFAULT_STATS = {
   shapesFed: 0,
   rareShapesFed: [],
   colorsFed: [],
+  bubblesPopped: 0,
+  ballsBounced: 0,
+  starsCounted: 0,
+  photosTaken: 0,
 };
 
 export default function App() {
@@ -166,6 +174,31 @@ export default function App() {
     }
   };
 
+  // Update accessories across pet save
+  const handleUpdateAccessories = (unlockedAccessories) => {
+    const currentPetData = petsProgress[selectedPetId] || {};
+    const updatedPets = {
+      ...petsProgress,
+      [selectedPetId]: {
+        ...currentPetData,
+        unlockedAccessories,
+      },
+    };
+    setPetsProgress(updatedPets);
+    saveToStorage({ petsProgress: updatedPets });
+  };
+
+  // Navigate between rooms and activities
+  const handleNavigateActivity = (activityId) => {
+    if (activityId === 'kitchen') {
+      setCurrentPage('game');
+      saveToStorage({ currentPage: 'game' });
+    } else {
+      setCurrentPage(activityId);
+      saveToStorage({ currentPage: activityId });
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center text-white font-bold text-lg">
@@ -226,7 +259,7 @@ export default function App() {
           />
         )}
 
-        {/* PAGE 3: THE MAIN FEEDING GAME */}
+        {/* ACTIVITY 1: FEEDING KITCHEN */}
         {currentPage === 'game' && (
           <MagicPetFeeder
             playerName={playerName}
@@ -240,20 +273,98 @@ export default function App() {
             totalFeeds={totalFeeds}
             onUnlockBadge={handleUnlockBadge}
             onOpenBadges={() => setCurrentPage('badges')}
+            onNavigate={handleNavigateActivity}
             onSwitchPet={() => setCurrentPage('select_pet')}
             onChangeProfile={() => setCurrentPage('welcome')}
             onSaveProgress={handleSaveGameProgress}
           />
         )}
 
-        {/* PAGE 4: BADGES & TROPHIES ROOM */}
+        {/* ACTIVITY 2: BUBBLE BATH SPA */}
+        {currentPage === 'bath' && (
+          <BathSpaPage
+            playerName={playerName}
+            petNickname={activePetData.customName}
+            selectedPetId={selectedPetId}
+            stageIndex={activePetData.stageIndex}
+            feedCount={activePetData.feedCount}
+            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            onUpdateStats={handleUpdateStats}
+            onUnlockBadge={handleUnlockBadge}
+            onNavigate={handleNavigateActivity}
+            onSwitchPet={() => setCurrentPage('select_pet')}
+            onChangeProfile={() => setCurrentPage('welcome')}
+          />
+        )}
+
+        {/* ACTIVITY 3: TOY PLAYROOM */}
+        {currentPage === 'playroom' && (
+          <PlayroomPage
+            playerName={playerName}
+            petNickname={activePetData.customName}
+            selectedPetId={selectedPetId}
+            stageIndex={activePetData.stageIndex}
+            feedCount={activePetData.feedCount}
+            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            onUpdateStats={handleUpdateStats}
+            onUnlockBadge={handleUnlockBadge}
+            onNavigate={handleNavigateActivity}
+            onSwitchPet={() => setCurrentPage('select_pet')}
+            onChangeProfile={() => setCurrentPage('welcome')}
+          />
+        )}
+
+        {/* ACTIVITY 4: COZY BEDROOM BEDTIME */}
+        {currentPage === 'bedroom' && (
+          <BedroomPage
+            playerName={playerName}
+            petNickname={activePetData.customName}
+            selectedPetId={selectedPetId}
+            stageIndex={activePetData.stageIndex}
+            feedCount={activePetData.feedCount}
+            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            onUpdateStats={handleUpdateStats}
+            onUnlockBadge={handleUnlockBadge}
+            onNavigate={handleNavigateActivity}
+            onSwitchPet={() => setCurrentPage('select_pet')}
+            onChangeProfile={() => setCurrentPage('welcome')}
+          />
+        )}
+
+        {/* ACTIVITY 5: DRESS-UP SALON */}
+        {currentPage === 'dressup' && (
+          <DressUpPage
+            playerName={playerName}
+            petNickname={activePetData.customName}
+            selectedPetId={selectedPetId}
+            stageIndex={activePetData.stageIndex}
+            feedCount={activePetData.feedCount}
+            unlockedAccessories={activePetData.unlockedAccessories}
+            onUpdateAccessories={handleUpdateAccessories}
+            unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            onUpdateStats={handleUpdateStats}
+            onUnlockBadge={handleUnlockBadge}
+            onNavigate={handleNavigateActivity}
+            onSwitchPet={() => setCurrentPage('select_pet')}
+            onChangeProfile={() => setCurrentPage('welcome')}
+          />
+        )}
+
+        {/* PAGE 6: BADGES & TROPHIES ROOM */}
         {currentPage === 'badges' && (
           <BadgesPage
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
             totalFeeds={totalFeeds}
             petVoice={activePet.voice}
-            onBack={() => setCurrentPage(activePetData.feedCount > 0 ? 'game' : 'select_pet')}
+            onBack={() => setCurrentPage('game')}
           />
         )}
       </div>

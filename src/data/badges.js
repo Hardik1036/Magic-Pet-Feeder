@@ -226,4 +226,43 @@ export const BADGES = [
     requirement: 'Rare festival drop',
     bg: 'bg-amber-100 border-amber-300 text-amber-800',
   },
+
+  // --- NEW ROOMS & ACTIVITIES QUESTS ---
+  {
+    id: 'bubble_champ',
+    title: 'Bubble Champion',
+    description: 'Pop 15 floating soap bubbles in the Bubble Bath Spa!',
+    icon: '🫧',
+    category: 'spa',
+    requirement: '15 bubbles popped',
+    bg: 'bg-cyan-100 border-cyan-300 text-cyan-800',
+  },
+  {
+    id: 'ball_juggler',
+    title: 'Ball Juggler',
+    description: 'Play catch and bounce the playroom ball 10 times!',
+    icon: '⚽',
+    category: 'play',
+    requirement: '10 balls bounced',
+    bg: 'bg-emerald-100 border-emerald-300 text-emerald-800',
+  },
+  {
+    id: 'starlight_dreamer',
+    title: 'Starlight Dreamer',
+    description: 'Count all 5 window stars to sing a bedtime lullaby!',
+    icon: '⭐',
+    category: 'sleep',
+    requirement: 'Count 5 window stars',
+    bg: 'bg-indigo-100 border-indigo-300 text-indigo-800',
+  },
+  {
+    id: 'glamour_star',
+    title: 'Glamour Superstar',
+    description: 'Dress up your pet and take 3 photo snapshots in the Salon!',
+    icon: '📸',
+    category: 'salon',
+    requirement: '3 photo snapshots',
+    bg: 'bg-rose-100 border-rose-300 text-rose-800',
+  },
 ];
+
