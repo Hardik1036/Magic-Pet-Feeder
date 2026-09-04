@@ -61,12 +61,11 @@ export default function ActivityNavBar({
 
   return (
     <nav
-      className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-3xl p-1.5 shadow-xl border-2 border-slate-200 flex items-center justify-around gap-1 z-30 select-none"
+      className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-1 sm:p-1.5 shadow-xl border-2 border-slate-200 flex items-center justify-around gap-0.5 sm:gap-1 z-30 select-none flex-shrink-0"
       style={{ touchAction: 'manipulation' }}
     >
       {activities.map((act) => {
         const isActive = currentActivity === act.id;
-        const IconComponent = act.icon;
 
         return (
           <button
@@ -76,20 +75,20 @@ export default function ActivityNavBar({
               if (onSelectActivity) onSelectActivity(act.id);
             }}
             className={`
-              relative flex flex-col items-center justify-center py-1.5 px-2 rounded-2xl flex-1
+              relative flex flex-col items-center justify-center py-1 px-1 sm:py-1.5 sm:px-2 rounded-xl sm:rounded-2xl flex-1
               transition-all duration-200 active:scale-90
               ${isActive ? `${act.activeBg} font-black scale-105 shadow-md` : `${act.idleBg} font-bold opacity-80`}
             `}
           >
             {/* Medals Count Badge */}
             {act.badgeCount !== undefined && act.badgeCount > 0 && (
-              <span className="absolute -top-1.5 -right-1 bg-rose-500 text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow">
+              <span className="absolute -top-1 -right-0.5 sm:-top-1.5 sm:-right-1 bg-rose-500 text-white text-[9px] font-black w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full flex items-center justify-center border border-white shadow">
                 {act.badgeCount}
               </span>
             )}
 
-            <span className="text-base sm:text-lg leading-none mb-0.5">{act.emoji}</span>
-            <span className="text-[10px] tracking-tight leading-tight">{act.label}</span>
+            <span className="text-sm sm:text-base leading-none mb-0.5">{act.emoji}</span>
+            <span className="text-[9px] sm:text-[10px] tracking-tight leading-tight">{act.label}</span>
           </button>
         );
       })}

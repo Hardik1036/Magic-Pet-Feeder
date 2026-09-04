@@ -29,11 +29,11 @@ export default function BadgesPage({
 
   return (
     <div
-      className="relative w-full min-h-screen bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center p-3 sm:p-5 select-none font-sans"
+      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center p-2.5 sm:p-4 select-none font-sans overflow-hidden"
       style={{ touchAction: 'manipulation' }}
     >
       {/* Top Navigation */}
-      <header className="w-full max-w-md flex items-center justify-between pt-1">
+      <header className="w-full max-w-md flex items-center justify-between pt-0.5 flex-shrink-0">
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 bg-white/85 active:scale-95 px-3 py-1.5 rounded-full text-xs font-bold text-slate-700 shadow-md border-2 border-slate-200 transition-transform"
@@ -51,48 +51,48 @@ export default function BadgesPage({
       </header>
 
       {/* Header Banner & Live Quest Progress */}
-      <div className="w-full max-w-md text-center my-1.5">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 text-2xl shadow-lg border-2 border-amber-500 mb-1 animate-bounce">
+      <div className="w-full max-w-md text-center my-1 flex-shrink-0">
+        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 text-xl shadow-lg border-2 border-amber-500 mb-0.5 animate-bounce">
           🏆
         </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+        <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight leading-tight">
           Round Badge Showcase!
         </h1>
-        <p className="text-xs font-semibold text-slate-600">
+        <p className="text-[11px] font-semibold text-slate-600">
           Tap any round medal to hear your achievement or quest!
         </p>
 
         {/* Live Quest Progress Chips */}
-        <div className="flex items-center justify-center gap-1.5 flex-wrap mt-2 max-w-sm mx-auto">
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-sky-300 text-sky-800 shadow-xs">
+        <div className="flex items-center justify-center gap-1 flex-wrap mt-1.5 max-w-sm mx-auto">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-sky-300 text-sky-800 shadow-xs">
             🔥 Streak: {playerStats.streak || 0}
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-blue-300 text-blue-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-blue-300 text-blue-800 shadow-xs">
             🔢 Math: {playerStats.numbersFed || 0}/10
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
             🔤 Letters: {playerStats.lettersFed || 0}/12
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-pink-300 text-pink-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-pink-300 text-pink-800 shadow-xs">
             🎨 Shapes: {playerStats.shapesFed || 0}/12
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-cyan-300 text-cyan-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-cyan-300 text-cyan-800 shadow-xs">
             🫧 Bubbles: {playerStats.bubblesPopped || 0}/15
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
             ⚽ Bounces: {playerStats.ballsBounced || 0}/10
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-indigo-300 text-indigo-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-indigo-300 text-indigo-800 shadow-xs">
             ⭐ Stars: {playerStats.starsCounted || 0}/5
           </span>
-          <span className="text-[10px] font-black bg-white/85 px-2 py-0.5 rounded-full border border-rose-300 text-rose-800 shadow-xs">
+          <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-rose-300 text-rose-800 shadow-xs">
             📸 Photos: {playerStats.photosTaken || 0}/3
           </span>
         </div>
       </div>
 
       {/* 3-Column Round Medallions Grid */}
-      <main className="w-full max-w-md my-auto grid grid-cols-3 gap-3 z-10 max-h-[58vh] overflow-y-auto p-2">
+      <main className="w-full max-w-md flex-1 min-h-0 grid grid-cols-3 gap-2.5 z-10 overflow-y-auto p-1 my-1">
         {BADGES.map((badge) => {
           const isUnlocked = unlockedBadges.includes(badge.id);
           const isInspected = selectedBadge?.id === badge.id;
@@ -106,24 +106,24 @@ export default function BadgesPage({
               {/* Circular Medallion */}
               <div
                 className={`
-                  relative w-22 h-22 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center
+                  relative w-18 h-18 sm:w-22 sm:h-22 rounded-full flex flex-col items-center justify-center
                   shadow-lg transition-all duration-300
                   ${
                     isUnlocked
-                      ? 'bg-gradient-to-tr from-amber-200 via-white to-amber-100 border-4 border-amber-400 ring-4 ring-amber-200/70 hover:scale-105 shadow-amber-300/50'
-                      : 'bg-slate-200/70 border-4 border-dashed border-slate-300 opacity-55'
+                      ? 'bg-gradient-to-tr from-amber-200 via-white to-amber-100 border-3 border-amber-400 ring-3 ring-amber-200/70 hover:scale-105 shadow-amber-300/50'
+                      : 'bg-slate-200/70 border-3 border-dashed border-slate-300 opacity-55'
                   }
                   ${isInspected ? 'ring-4 ring-purple-400 scale-105' : ''}
                 `}
               >
                 {/* Shiny Curved Gloss Highlight on Top Edge */}
                 {isUnlocked && (
-                  <div className="absolute top-1.5 left-3 w-10 h-4 bg-white/70 rounded-full blur-[0.5px] -rotate-12 pointer-events-none" />
+                  <div className="absolute top-1 left-2.5 w-8 h-3 bg-white/70 rounded-full blur-[0.5px] -rotate-12 pointer-events-none" />
                 )}
 
                 {/* Main Medallion Icon */}
                 <div
-                  className={`text-3xl sm:text-4xl filter ${
+                  className={`text-2xl sm:text-3xl filter ${
                     isUnlocked ? 'drop-shadow-md animate-pulse' : 'grayscale'
                   }`}
                 >
@@ -132,14 +132,14 @@ export default function BadgesPage({
 
                 {/* Small Checkmark Seal on bottom edge */}
                 {isUnlocked && (
-                  <div className="absolute -bottom-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-black border-2 border-white shadow">
-                    <Check className="w-3 h-3 stroke-[3]" />
+                  <div className="absolute -bottom-1 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-black border border-white shadow">
+                    <Check className="w-2.5 h-2.5 stroke-[3]" />
                   </div>
                 )}
               </div>
 
               {/* Badge Title Under Medallion */}
-              <span className="text-[11px] font-black text-slate-800 text-center leading-tight mt-1.5 line-clamp-2 max-w-[85px]">
+              <span className="text-[10px] font-black text-slate-800 text-center leading-tight mt-1 line-clamp-2 max-w-[80px]">
                 {badge.title}
               </span>
             </div>
@@ -149,9 +149,9 @@ export default function BadgesPage({
 
       {/* Inspected Badge Details Drawer */}
       {selectedBadge && (
-        <div className="w-full max-w-md bg-white/95 rounded-2xl p-2.5 shadow-md border-2 border-amber-300 flex items-center justify-between gap-2 mt-1">
+        <div className="w-full max-w-md bg-white/95 rounded-xl p-2 shadow-md border-2 border-amber-300 flex items-center justify-between gap-2 my-0.5 flex-shrink-0">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">{selectedBadge.icon}</span>
+            <span className="text-xl">{selectedBadge.icon}</span>
             <div className="text-left">
               <h4 className="text-xs font-black text-slate-800 leading-tight">
                 {selectedBadge.title}
@@ -160,7 +160,7 @@ export default function BadgesPage({
                 {selectedBadge.description}
               </p>
               {selectedBadge.requirement && (
-                <span className="inline-block mt-0.5 text-[9px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                <span className="inline-block mt-0.5 text-[8px] font-extrabold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded-full border border-amber-200">
                   🎯 Goal: {selectedBadge.requirement}
                 </span>
               )}
@@ -168,18 +168,18 @@ export default function BadgesPage({
           </div>
           <button
             onClick={() => speakBadge(selectedBadge, unlockedBadges.includes(selectedBadge.id))}
-            className="w-8 h-8 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center shrink-0 active:scale-90"
+            className="w-7 h-7 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center shrink-0 active:scale-90"
           >
-            <Volume2 className="w-4 h-4" />
+            <Volume2 className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
       {/* Back to Game button */}
-      <footer className="w-full max-w-md pt-2 pb-1">
+      <footer className="w-full max-w-md pt-1 pb-0.5 flex-shrink-0">
         <button
           onClick={onBack}
-          className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white font-black text-base shadow-lg active:scale-95 transition-transform"
+          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white font-black text-sm shadow-md active:scale-95 transition-transform"
         >
           KEEP PLAYING & COLLECTING! 🎉
         </button>

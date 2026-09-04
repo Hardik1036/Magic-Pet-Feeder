@@ -313,11 +313,12 @@ export default function MagicPetFeeder({
 
   // Auto-speak on round change using selected pet's voice!
   useEffect(() => {
+    if (evolutionModal || accessoryModal || newBadgeModal) return;
     const timer = setTimeout(() => {
       speakPetText(round.spokenPrompt, currentPet.voice);
-    }, 200);
+    }, 400);
     return () => clearTimeout(timer);
-  }, [round, currentPet]);
+  }, [round, currentPet, evolutionModal, accessoryModal, newBadgeModal]);
 
   // Sync initial props when switching pets
   useEffect(() => {
@@ -459,14 +460,30 @@ export default function MagicPetFeeder({
           if (onUnlockBadge) onUnlockBadge(bId);
         });
         const badgeObj = BADGES.find((b) => b.id === awarded[0]);
-        if (badgeObj) {
-          setNewBadgeModal(badgeObj);
-          sfx.fanfare();
-          speakPetText(`Hooray! You earned the ${badgeObj.title} trophy!`, currentPet.voice);
-        }
+        return badgeObj || null;
       }
+      return null;
     },
-    [unlockedBadges, onUnlockBadge, currentPet, selectedPetId]
+    [unlockedBadges, onUnlockBadge]
+  );
+
+  const advanceToNextRound = useCallback(
+    (targetStage = stageIndex) => {
+      setPetExpression('happy');
+      setFlyingFoodId(null);
+      const nextMode =
+        currentMode === 'numbers'
+          ? 'phonics'
+          : currentMode === 'phonics'
+          ? 'shapes'
+          : 'numbers';
+      setCurrentMode(nextMode);
+      setRound(generateRound(nextMode, targetStage, petDisplayName));
+      setTimeout(() => {
+        setPetExpression('idle');
+      }, 450);
+    },
+    [currentMode, stageIndex, petDisplayName]
   );
 
   const checkCollisionWithPet = useCallback((x, y) => {
@@ -551,7 +568,7 @@ export default function MagicPetFeeder({
       }
 
       // Check badge awards with updated challenging milestones
-      checkBadgeAwards({
+      const awardedBadge = checkBadgeAwards({
         newFeeds: newFeedCount,
         newStage: newStageIndex,
         allPetsFeeds: (totalFeeds || 0) + 1,
@@ -559,11 +576,16 @@ export default function MagicPetFeeder({
         currentAccessories: unlockedAccessories,
       });
 
-      if (newStageIndex > stageIndex) {
+      const willEvolve = newStageIndex > stageIndex;
+      const willUnlockAccessory = !willEvolve && newFeedCount % 4 === 0;
+      const willUnlockBadge = !willEvolve && !willUnlockAccessory && Boolean(awardedBadge);
+
+      if (willEvolve) {
         setStageIndex(newStageIndex);
         const nextStageObj = STAGES[newStageIndex];
 
         setTimeout(() => {
+          setFlyingFoodId(null);
           sfx.grow();
           sfx.fanfare();
           setEvolutionModal(nextStageObj);
@@ -574,52 +596,45 @@ export default function MagicPetFeeder({
           } else {
             speakPetText(`AMAZING! ${petDisplayName} is now a full grown adult!`, currentPet.voice);
           }
-        }, 500);
+        }, 550);
+      } else if (willUnlockAccessory) {
+        const remaining = ACCESSORIES.filter((acc) => !unlockedAccessories.includes(acc.id));
+        const accessoryToUnlock =
+          remaining.length > 0
+            ? remaining[0]
+            : ACCESSORIES[Math.floor(Math.random() * ACCESSORIES.length)];
+
+        setTimeout(() => {
+          setFlyingFoodId(null);
+          setUnlockedAccessories((accs) =>
+            accs.includes(accessoryToUnlock.id) ? accs : [...accs, accessoryToUnlock.id]
+          );
+          setAccessoryModal(accessoryToUnlock);
+          sfx.fanfare();
+          speakPetText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`, currentPet.voice);
+        }, 550);
+      } else if (willUnlockBadge) {
+        setTimeout(() => {
+          setFlyingFoodId(null);
+          setNewBadgeModal(awardedBadge);
+          sfx.fanfare();
+          speakPetText(`Hooray! You earned the ${awardedBadge.title} trophy!`, currentPet.voice);
+        }, 550);
       } else {
         const praises =
           stageIndex === 0
             ? ['Crack crack!', 'The egg loves it!', 'Keep going!', 'Almost hatching!']
             : [currentPet.voice.nomSound, 'So yummy!', 'Delicious!', 'Super job!', 'Nom nom nom!'];
         const randomPraise = praises[Math.floor(Math.random() * praises.length)];
-        setTimeout(() => speakPetText(randomPraise, currentPet.voice), 150);
+        setTimeout(() => speakPetText(randomPraise, currentPet.voice), 180);
 
-        if (newFeedCount % 4 === 0) {
-          const remaining = ACCESSORIES.filter((acc) => !unlockedAccessories.includes(acc.id));
-          const accessoryToUnlock =
-            remaining.length > 0
-              ? remaining[0]
-              : ACCESSORIES[Math.floor(Math.random() * ACCESSORIES.length)];
-
-          setTimeout(() => {
-            setUnlockedAccessories((accs) =>
-              accs.includes(accessoryToUnlock.id) ? accs : [...accs, accessoryToUnlock.id]
-            );
-            setAccessoryModal(accessoryToUnlock);
-            sfx.fanfare();
-            speakPetText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`, currentPet.voice);
-          }, 500);
-        }
-      }
-
-      // Snappy and fast round transition: 280ms!
-      setTimeout(() => {
-        setPetExpression('happy');
-        setFlyingFoodId(null);
-        const nextMode =
-          currentMode === 'numbers'
-            ? 'phonics'
-            : currentMode === 'phonics'
-            ? 'shapes'
-            : 'numbers';
-        setCurrentMode(nextMode);
-        setRound(generateRound(nextMode, newStageIndex, petDisplayName));
-
+        // Smooth and comfortable round transition at 750ms:
         setTimeout(() => {
-          setPetExpression('idle');
-        }, 350);
-      }, 280);
+          advanceToNextRound(newStageIndex);
+        }, 750);
+      }
     },
-    [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName, checkBadgeAwards, playerStats, onUpdateStats, totalFeeds]
+    [currentMode, feedCount, stageIndex, unlockedAccessories, currentPet, petDisplayName, checkBadgeAwards, playerStats, onUpdateStats, totalFeeds, advanceToNextRound]
   );
 
   const handleGentleMiss = useCallback(
@@ -713,7 +728,7 @@ export default function MagicPetFeeder({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
-      className="relative w-full min-h-screen bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center p-3 sm:p-5 select-none overflow-hidden font-sans"
+      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center px-2 py-1.5 sm:px-4 sm:py-3 select-none overflow-hidden font-sans"
       style={{ touchAction: 'manipulation' }}
     >
       <ConfettiCanvas active={showConfetti} />
@@ -721,7 +736,7 @@ export default function MagicPetFeeder({
       {/* ------------------------------------ */}
       {/* TOP HEADER: PLAYERS, PETS, TROPHIES  */}
       {/* ------------------------------------ */}
-      <header className="w-full max-w-md flex flex-col items-center gap-1.5 pt-1 z-20">
+      <header className="w-full max-w-md flex flex-col items-center gap-1 pt-0.5 z-20 flex-shrink-0">
         <div className="w-full flex items-center justify-between px-1">
           {/* Switch Pet / Profile */}
           <div className="flex items-center gap-1.5">
@@ -740,16 +755,16 @@ export default function MagicPetFeeder({
               className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-purple-900 border border-purple-200 shadow-sm active:scale-95 transition-transform"
             >
               <span>{currentPet.icon}</span>
-              <span>{petDisplayName}</span>
+              <span className="font-extrabold">{petDisplayName}</span>
             </button>
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Badges Trophy Button */}
+            {/* Trophies Button */}
             <button
               onClick={onOpenBadges}
-              title="View Badges & Trophies"
-              className="flex items-center gap-1 bg-amber-400 text-amber-950 px-2.5 py-1 rounded-full text-xs font-black shadow-md border-2 border-amber-500 active:scale-95 transition-transform"
+              title="View Trophies & Badges"
+              className="flex items-center gap-1 bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950 font-black text-xs px-2.5 py-1 rounded-full shadow-sm border border-amber-400 active:scale-95 transition-transform"
             >
               <Trophy className="w-3.5 h-3.5" />
               <span>{unlockedBadges.length}</span>
@@ -768,30 +783,30 @@ export default function MagicPetFeeder({
                 setCurrentMode(nextMode);
                 setRound(generateRound(nextMode, stageIndex, petDisplayName));
               }}
-              className="flex items-center gap-1 bg-white/90 active:scale-95 px-2.5 py-1 rounded-full text-xs font-black text-amber-900 shadow-md border-2 border-amber-300 transition-transform"
+              className="flex items-center gap-1 bg-white/90 active:scale-95 px-2 py-1 rounded-full text-[11px] font-black text-amber-900 shadow-sm border-2 border-amber-300 transition-transform"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-amber-600" />
+              <RefreshCw className="w-3 h-3 text-amber-600" />
               <span>
                 {currentMode === 'numbers'
-                  ? '🔢 Numbers'
+                  ? '🔢'
                   : currentMode === 'phonics'
-                  ? '🔤 Letters'
-                  : '🎨 Shapes'}
+                  ? '🔤'
+                  : '🎨'}
               </span>
             </button>
           </div>
         </div>
 
         {/* Growth Timeline Bar */}
-        <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl p-2.5 shadow-lg border-2 border-purple-300 flex flex-col gap-1">
+        <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl p-1.5 sm:p-2 shadow-md border-2 border-purple-300 flex flex-col gap-0.5">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1">
-              <span className="text-base">{currentStage.icon}</span>
-              <span className="text-xs font-black text-purple-900 uppercase tracking-wider">
+              <span className="text-sm sm:text-base">{currentStage.icon}</span>
+              <span className="text-[10px] sm:text-xs font-black text-purple-900 uppercase tracking-wider">
                 STAGE: {currentStage.name}
               </span>
             </div>
-            <span className="text-[11px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] sm:text-[11px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
               Feeds: {feedCount}
             </span>
           </div>
@@ -803,9 +818,9 @@ export default function MagicPetFeeder({
               return (
                 <div key={st.id} className="flex flex-col items-center">
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm sm:text-base transition-all duration-300 ${
+                    className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-base transition-all duration-300 ${
                       isCurrent
-                        ? 'bg-amber-400 text-white ring-4 ring-amber-200 scale-110 shadow-md'
+                        ? 'bg-amber-400 text-white ring-2 sm:ring-4 ring-amber-200 scale-110 shadow-md'
                         : isPassed
                         ? 'bg-emerald-500 text-white scale-95'
                         : 'bg-slate-200 text-slate-400 opacity-60'
@@ -813,7 +828,7 @@ export default function MagicPetFeeder({
                   >
                     {st.icon}
                   </div>
-                  <span className="text-[9px] font-bold text-slate-600 mt-0.5">
+                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-600 mt-0.5">
                     {st.name.split(' ')[0]}
                   </span>
                 </div>
@@ -821,7 +836,7 @@ export default function MagicPetFeeder({
             })}
           </div>
 
-          <div className="w-full bg-purple-100 h-2 rounded-full overflow-hidden border border-purple-200 mt-0.5">
+          <div className="w-full bg-purple-100 h-1.5 sm:h-2 rounded-full overflow-hidden border border-purple-200 mt-0.5">
             <div
               className="h-full bg-gradient-to-r from-purple-400 via-pink-400 to-amber-400 transition-all duration-500 rounded-full"
               style={{ width: `${stageIndex === 3 ? 100 : stageProgress}%` }}
@@ -833,15 +848,15 @@ export default function MagicPetFeeder({
       {/* ------------------------------------ */}
       {/* TARGET PROMPT BANNER                 */}
       {/* ------------------------------------ */}
-      <section className="w-full max-w-md my-1 z-20">
-        <div className="bg-white/95 rounded-3xl p-3.5 shadow-xl border-4 border-amber-400 flex items-center justify-between gap-2">
+      <section className="w-full max-w-md my-0.5 sm:my-1 z-20 flex-shrink-0">
+        <div className="bg-white/95 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-lg border-2 sm:border-4 border-amber-400 flex items-center justify-between gap-2">
           <div className="flex-1 text-left">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
+            <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-600">
               {stageIndex === 0 ? 'Help The Egg Hatch:' : `Feed ${petDisplayName}:`}
             </p>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl sm:text-3xl font-black text-slate-800 tracking-tight flex items-center gap-1.5 sm:gap-2">
               <span>{round.targetLabel}</span>
-              <span className="text-2xl animate-pulse">
+              <span className="text-xl sm:text-2xl animate-pulse">
                 {stageIndex === 0 ? '✨' : currentPet.icon}
               </span>
             </h1>
@@ -853,9 +868,9 @@ export default function MagicPetFeeder({
               speakPetText(round.spokenPrompt, currentPet.voice);
             }}
             aria-label="Repeat Prompt"
-            className="w-13 h-13 p-3 bg-gradient-to-tr from-amber-400 to-yellow-300 active:scale-90 hover:scale-105 rounded-2xl shadow-lg border-2 border-amber-500 flex items-center justify-center text-amber-900 transition-transform"
+            className="w-10 h-10 sm:w-12 sm:h-12 p-2 sm:p-2.5 bg-gradient-to-tr from-amber-400 to-yellow-300 active:scale-90 hover:scale-105 rounded-xl sm:rounded-2xl shadow-md border border-amber-500 flex items-center justify-center text-amber-900 transition-transform flex-shrink-0"
           >
-            <Volume2 className="w-7 h-7" />
+            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       </section>
@@ -863,7 +878,7 @@ export default function MagicPetFeeder({
       {/* ------------------------------------ */}
       {/* PET DROP ZONE & AVATAR               */}
       {/* ------------------------------------ */}
-      <main ref={petZoneRef} className="relative my-auto flex flex-col items-center justify-center z-10">
+      <main ref={petZoneRef} className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full">
         <PetAvatar
           petId={currentPet.id}
           stageIndex={stageIndex}
@@ -874,9 +889,9 @@ export default function MagicPetFeeder({
         />
 
         <div
-          className={`absolute -bottom-3 px-4 py-1.5 rounded-full text-xs font-black transition-all duration-300 shadow-md ${
+          className={`absolute -bottom-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-black transition-all duration-300 shadow-md ${
             isNearPet
-              ? 'bg-rose-500 text-white scale-110 ring-4 ring-rose-300 animate-bounce'
+              ? 'bg-rose-500 text-white scale-110 ring-2 sm:ring-4 ring-rose-300 animate-bounce'
               : 'bg-emerald-600/85 text-white backdrop-blur-sm'
           }`}
         >
@@ -889,7 +904,7 @@ export default function MagicPetFeeder({
       {/* ------------------------------------ */}
       {/* CHOICES: NUMBERS, LETTERS OR SHAPES  */}
       {/* ------------------------------------ */}
-      <footer className="w-full max-w-md pb-3 pt-1 z-20">
+      <footer className="w-full max-w-md pb-1 sm:pb-2 pt-0.5 z-20 flex-shrink-0">
         <div className="flex justify-around items-center gap-2 px-1">
           {round.choices.map((choice) => {
             const isWobbling = wobbleId === choice.id;
@@ -904,40 +919,40 @@ export default function MagicPetFeeder({
                 style={{ touchAction: 'none' }}
                 className={`
                   relative flex flex-col items-center justify-center
-                  w-24 h-24 sm:w-28 sm:h-28 rounded-3xl
+                  w-20 h-20 sm:w-26 sm:h-26 rounded-2xl sm:rounded-3xl
                   cursor-grab active:cursor-grabbing select-none
-                  shadow-xl border-4 transition-all duration-200
+                  shadow-lg sm:shadow-xl border-3 sm:border-4 transition-all duration-200
                   ${choice.color?.border || 'border-indigo-300'}
                   ${isWobbling ? 'animate-wobble bg-rose-50 border-rose-400' : 'bg-white hover:scale-105 active:scale-95'}
                   ${isBeingDragged ? 'opacity-30 scale-90' : 'opacity-100'}
-                  ${isFlying ? 'scale-0 translate-y-[-180px] transition-all duration-250 ease-out' : ''}
+                  ${isFlying ? 'scale-0 translate-y-[-140px] sm:translate-y-[-180px] transition-all duration-250 ease-out' : ''}
                 `}
               >
-                <div className="absolute top-2 left-3 w-4 h-2 bg-white/70 rounded-full rotate-[-20deg]" />
+                <div className="absolute top-1.5 left-2.5 w-3 h-1.5 bg-white/70 rounded-full rotate-[-20deg]" />
 
                 {/* NUMBER DISPLAY WITH ALL 10 COUNTING DOTS (NO +5 TRUNCATION) */}
                 {choice.type === 'number' && (
                   <div className="flex flex-col items-center justify-center">
-                    <span className={`text-4xl sm:text-5xl font-black leading-none ${choice.color?.text || 'text-amber-600'}`}>
+                    <span className={`text-3xl sm:text-4xl font-black leading-none ${choice.color?.text || 'text-amber-600'}`}>
                       {choice.label}
                     </span>
                     {/* Counting Sprinkle Dots - Ten-Frame Layout */}
-                    <div className="flex flex-col items-center gap-1 mt-1.5">
-                      <div className="flex gap-1 justify-center">
+                    <div className="flex flex-col items-center gap-0.5 mt-1">
+                      <div className="flex gap-0.5 justify-center">
                         {Array.from({ length: Math.min(choice.count, 5) }).map((_, dotIdx) => (
                           <div
                             key={`row1-${dotIdx}`}
-                            className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm"
+                            className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-xs"
                             style={{ backgroundColor: choice.color.fill }}
                           />
                         ))}
                       </div>
                       {choice.count > 5 && (
-                        <div className="flex gap-1 justify-center">
+                        <div className="flex gap-0.5 justify-center">
                           {Array.from({ length: choice.count - 5 }).map((_, dotIdx) => (
                             <div
                               key={`row2-${dotIdx}`}
-                              className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shadow-sm"
+                              className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shadow-xs"
                               style={{ backgroundColor: choice.color.fill }}
                             />
                           ))}
@@ -950,10 +965,10 @@ export default function MagicPetFeeder({
                 {/* PHONICS LETTER DISPLAY (ALL 26 ALPHABET) */}
                 {choice.type === 'letter' && (
                   <div className="flex flex-col items-center justify-center">
-                    <span className={`text-4xl sm:text-5xl font-black ${choice.color?.text || 'text-indigo-600'}`}>
+                    <span className={`text-3xl sm:text-4xl font-black ${choice.color?.text || 'text-indigo-600'}`}>
                       {choice.label}
                     </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
                       Cookie
                     </span>
                   </div>
@@ -962,8 +977,8 @@ export default function MagicPetFeeder({
                 {/* SHAPE DISPLAY (10 VIBRANT SHAPES) */}
                 {choice.type === 'shape' && (
                   <div className="flex flex-col items-center justify-center">
-                    <ShapeIcon shape={choice.shape} color={choice.color} size={46} />
-                    <span className="text-[10px] font-extrabold text-slate-600 capitalize mt-1 text-center leading-tight">
+                    <ShapeIcon shape={choice.shape} color={choice.color} size={36} />
+                    <span className="text-[9px] font-extrabold text-slate-600 capitalize mt-0.5 text-center leading-tight">
                       {choice.color.name}
                     </span>
                   </div>
@@ -974,7 +989,7 @@ export default function MagicPetFeeder({
         </div>
 
         {/* Activity Navigation Dock */}
-        <div className="w-full mt-2">
+        <div className="w-full mt-1.5">
           <ActivityNavBar
             currentActivity="kitchen"
             onSelectActivity={onNavigate}
@@ -1036,7 +1051,7 @@ export default function MagicPetFeeder({
               onClick={() => {
                 sfx.pop();
                 setEvolutionModal(null);
-                setRound(generateRound(currentMode, stageIndex, petDisplayName));
+                advanceToNextRound(stageIndex);
               }}
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform"
             >
@@ -1068,6 +1083,7 @@ export default function MagicPetFeeder({
               onClick={() => {
                 sfx.pop();
                 setAccessoryModal(null);
+                advanceToNextRound(stageIndex);
               }}
               className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-lg shadow-lg active:scale-95 transition-transform"
             >
@@ -1103,6 +1119,7 @@ export default function MagicPetFeeder({
                 onClick={() => {
                   sfx.pop();
                   setNewBadgeModal(null);
+                  advanceToNextRound(stageIndex);
                 }}
                 className="w-full py-3 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-base shadow-lg active:scale-95 transition-transform"
               >
@@ -1113,6 +1130,7 @@ export default function MagicPetFeeder({
                 onClick={() => {
                   sfx.pop();
                   setNewBadgeModal(null);
+                  advanceToNextRound(stageIndex);
                   if (onOpenBadges) onOpenBadges();
                 }}
                 className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95 transition-transform"

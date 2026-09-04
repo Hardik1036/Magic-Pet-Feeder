@@ -19,8 +19,8 @@ export const PETS = [
       stroke: '#064E3B',
     },
     voice: {
-      pitch: 1.15,
-      rate: 1.08,
+      pitch: 1.10,
+      rate: 0.96,
       soundType: 'chomp',
       greeting: "Roar! Let's eat tasty snacks!",
       nomSound: "Nom nom roar!",
@@ -43,8 +43,8 @@ export const PETS = [
       stroke: '#831843',
     },
     voice: {
-      pitch: 1.48, // High cute squeaky voice
-      rate: 1.12,
+      pitch: 1.35, // High cute squeaky voice
+      rate: 0.97,
       soundType: 'squeak',
       greeting: "Hop hop! I love yummy treats!",
       nomSound: "Munch munch squeak!",
@@ -67,8 +67,8 @@ export const PETS = [
       stroke: '#78350F',
     },
     voice: {
-      pitch: 1.25,
-      rate: 1.10,
+      pitch: 1.18,
+      rate: 0.96,
       soundType: 'bark',
       greeting: "Woof woof! Ready to snack with you!",
       nomSound: "Slurp munch woof!",
@@ -91,8 +91,8 @@ export const PETS = [
       stroke: '#3B0764',
     },
     voice: {
-      pitch: 1.35,
-      rate: 1.08,
+      pitch: 1.28,
+      rate: 0.96,
       soundType: 'purr',
       greeting: "Meow! Can we find my favorite snack?",
       nomSound: "Purr purr yummy!",
@@ -115,8 +115,8 @@ export const PETS = [
       stroke: '#0F172A',
     },
     voice: {
-      pitch: 1.08, // Cute chubby baby voice
-      rate: 1.06,
+      pitch: 1.02, // Cute chubby baby voice
+      rate: 0.94,
       soundType: 'chomp',
       greeting: "Hello! I am hungry for green snacks!",
       nomSound: "Chomp chomp yum!",
@@ -139,8 +139,8 @@ export const PETS = [
       stroke: '#7C2D12',
     },
     voice: {
-      pitch: 1.38,
-      rate: 1.10,
+      pitch: 1.25,
+      rate: 0.96,
       soundType: 'chirp',
       greeting: "Yip yip! Let's find yummy shapes!",
       nomSound: "Yip munch nom!",
@@ -163,8 +163,8 @@ export const PETS = [
       stroke: '#164E63',
     },
     voice: {
-      pitch: 1.3,
-      rate: 1.08,
+      pitch: 1.22,
+      rate: 0.96,
       soundType: 'quack',
       greeting: "Waddle waddle! Can you feed me please?",
       nomSound: "Flap munch yummy!",
@@ -187,8 +187,8 @@ export const PETS = [
       stroke: '#92400E',
     },
     voice: {
-      pitch: 1.55, // Extra squeaky cute voice!
-      rate: 1.14,
+      pitch: 1.38, // Extra squeaky cute voice!
+      rate: 0.98,
       soundType: 'squeak',
       greeting: "Squeeeak! So many crunchy treats!",
       nomSound: "Nibble nibble squeak!",

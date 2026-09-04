@@ -1,9 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { User, Volume2, Moon, Sun } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Volume2, Moon, Sun, RefreshCw, Check } from 'lucide-react';
 import PetAvatar from './PetAvatar.jsx';
 import ActivityNavBar from './ActivityNavBar.jsx';
 import { PETS } from '../data/pets.js';
 import { sfx, speakPetText } from '../utils/audio.js';
+
+// 4-Step Bedtime Routine:
+// 1. 'teddy': Give pet cuddly teddy bear to snuggle
+// 2. 'milk': Feed pet warm bedtime milk cup
+// 3. 'stars': Count 5 twinkling window stars for a lullaby
+// 4. 'tuck': Pull up cozy blanket & switch off lamp for sweet dreams
 
 export default function BedroomPage({
   playerName,
@@ -23,21 +29,86 @@ export default function BedroomPage({
   const currentPet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
   const petDisplayName = petNickname || currentPet.defaultName;
 
-  const [isNightMode, setIsNightMode] = useState(true);
-  const [isTuckedIn, setIsTuckedIn] = useState(false);
-  const [litStars, setLitStars] = useState([]); // array of lit star numbers 1..5
+  // Active step: 'teddy' | 'milk' | 'stars' | 'tuck'
+  const [activeBedStep, setActiveBedStep] = useState('teddy');
 
+  // Step 1: Teddy snuggle
+  const [hasTeddy, setHasTeddy] = useState(false);
+
+  // Step 2: Warm milk fed
+  const [milkSips, setMilkSips] = useState(0);
+
+  // Step 3: Stars counted (1..5)
+  const [litStars, setLitStars] = useState([]);
+
+  // Step 4: Blanket & lamp
+  const [isTuckedIn, setIsTuckedIn] = useState(false);
+  const [isNightMode, setIsNightMode] = useState(true);
+  const [isSleepCompleted, setIsSleepCompleted] = useState(false);
+
+  const [petExpression, setPetExpression] = useState('idle');
+  const [petSparkle, setPetSparkle] = useState(false);
+
+  // Welcome speech
   useEffect(() => {
     const timer = setTimeout(() => {
       speakPetText(
-        `Yawn! It's bedtime for ${petDisplayName}. Let's count 5 twinkling stars!`,
-        { ...currentPet.voice, rate: 1.05 }
+        `Yawn! It's cozy bedtime for ${petDisplayName}. Give ${petDisplayName} their soft teddy bear!`,
+        currentPet.voice
       );
-    }, 200);
+    }, 350);
     return () => clearTimeout(timer);
   }, [currentPet, petDisplayName]);
 
-  // Handle tapping a star (1 to 5)
+  // -------------------------------------------------------------
+  // STEP 1: CUDDLE TEDDY BEAR
+  // -------------------------------------------------------------
+  const handleGiveTeddy = () => {
+    if (hasTeddy) return;
+    setHasTeddy(true);
+    sfx.pop();
+    setPetExpression('happy');
+
+    setTimeout(() => {
+      sfx.chime(2);
+      speakPetText(
+        `My teddy is so soft and cuddly! Now let's drink a warm cup of milk!`,
+        currentPet.voice
+      );
+      setActiveBedStep('milk');
+      setPetExpression('idle');
+    }, 400);
+  };
+
+  // -------------------------------------------------------------
+  // STEP 2: WARM BEDTIME MILK
+  // -------------------------------------------------------------
+  const handleDrinkMilk = () => {
+    if (milkSips >= 3) return;
+    sfx.munch();
+    setPetExpression('happy');
+
+    const nextSips = milkSips + 1;
+    setMilkSips(nextSips);
+
+    if (nextSips >= 3) {
+      setTimeout(() => {
+        sfx.chime(4);
+        speakPetText(
+          `Yummy warm milk! Now let's count the 5 twinkling window stars!`,
+          currentPet.voice
+        );
+        setActiveBedStep('stars');
+        setPetExpression('idle');
+      }, 400);
+    } else {
+      setTimeout(() => setPetExpression('idle'), 300);
+    }
+  };
+
+  // -------------------------------------------------------------
+  // STEP 3: COUNT 5 WINDOW STARS
+  // -------------------------------------------------------------
   const handleTapStar = (starNum) => {
     sfx.chime(starNum - 1);
 
@@ -46,7 +117,7 @@ export default function BedroomPage({
       setLitStars(nextLit);
 
       const words = ['One', 'Two', 'Three', 'Four', 'Five'];
-      speakPetText(words[starNum - 1], { ...currentPet.voice, rate: 1.08 });
+      speakPetText(words[starNum - 1], { ...currentPet.voice, rate: 0.95 });
 
       // Track total stars counted in player stats
       const nextCount = (playerStats.starsCounted || 0) + 1;
@@ -58,43 +129,69 @@ export default function BedroomPage({
       }
 
       // If all 5 stars lit, award Starlight Dreamer badge!
-      if (nextLit.length >= 5 && !unlockedBadges.includes('starlight_dreamer')) {
+      if (nextLit.length >= 5) {
+        if (!unlockedBadges.includes('starlight_dreamer') && onUnlockBadge) {
+          onUnlockBadge('starlight_dreamer');
+        }
+
         setTimeout(() => {
-          if (onUnlockBadge) onUnlockBadge('starlight_dreamer');
           sfx.fanfare();
-          speakPetText(`Hooray! You counted all 5 stars and earned the Starlight Dreamer trophy!`, currentPet.voice);
-        }, 400);
+          speakPetText(
+            `Twinkle twinkle little star! Yawn... so sleepy... tuck me into bed and turn off the lamp!`,
+            currentPet.voice
+          );
+          setActiveBedStep('tuck');
+        }, 500);
       }
     }
   };
 
-  // Toggle blanket tuck
+  // -------------------------------------------------------------
+  // STEP 4: TUCK IN BLANKET & NIGHT LAMP
+  // -------------------------------------------------------------
   const handleToggleBlanket = () => {
     const nextState = !isTuckedIn;
     setIsTuckedIn(nextState);
 
     if (nextState) {
       sfx.snore();
-      speakPetText(`Shh... sweet dreams, ${petDisplayName}!`, {
+      setPetExpression('sleeping');
+      setIsSleepCompleted(true);
+      setPetSparkle(true);
+      speakPetText(`Shh... sweet dreams, ${petDisplayName}! Goodnight!`, {
         ...currentPet.voice,
         pitch: currentPet.voice.pitch * 0.9,
-        rate: 0.8,
+        rate: 0.88,
       });
     } else {
       sfx.pop();
+      setPetExpression('idle');
       speakPetText(`Good morning sunshine!`, currentPet.voice);
     }
   };
 
-  // Toggle lamp
   const handleToggleLamp = () => {
     sfx.pop();
     setIsNightMode((prev) => !prev);
   };
 
+  // Reset bedtime routine to play again
+  const handleResetBedtime = () => {
+    sfx.pop();
+    setHasTeddy(false);
+    setMilkSips(0);
+    setLitStars([]);
+    setIsTuckedIn(false);
+    setIsNightMode(false);
+    setIsSleepCompleted(false);
+    setPetSparkle(false);
+    setActiveBedStep('teddy');
+    speakPetText(`Good morning! Ready for another cozy bedtime routine!`, currentPet.voice);
+  };
+
   return (
     <div
-      className={`relative w-full min-h-screen flex flex-col justify-between items-center p-3 sm:p-5 select-none overflow-hidden font-sans transition-colors duration-700 ${
+      className={`relative w-full h-full max-h-[100dvh] flex flex-col justify-between items-center px-2 py-1 sm:px-4 sm:py-2.5 select-none overflow-hidden font-sans transition-colors duration-700 ${
         isNightMode
           ? 'bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 text-white'
           : 'bg-gradient-to-b from-indigo-300 via-purple-100 to-pink-200 text-slate-800'
@@ -102,7 +199,7 @@ export default function BedroomPage({
       style={{ touchAction: 'manipulation' }}
     >
       {/* Top Header */}
-      <header className="w-full max-w-md flex items-center justify-between px-1 pt-1 z-20">
+      <header className="w-full max-w-md flex items-center justify-between px-1 pt-0.5 z-20 flex-shrink-0">
         <div className="flex items-center gap-1.5">
           <button
             onClick={onChangeProfile}
@@ -121,18 +218,18 @@ export default function BedroomPage({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Lamp Toggle */}
+          {/* Night Lamp Switch */}
           <button
             onClick={handleToggleLamp}
-            className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform ${
+            className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform ${
               isNightMode ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-300' : 'bg-slate-700 text-white'
             }`}
             title="Toggle Night Lamp"
           >
-            {isNightMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {isNightMode ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
 
-          <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-full shadow-md border-2 border-indigo-300">
+          <div className="flex items-center gap-1.5 bg-white/90 px-2.5 py-0.5 rounded-full shadow-md border-2 border-indigo-300">
             <span className="text-xs">⭐</span>
             <span className="text-xs font-black text-indigo-900">
               {litStars.length} / 5 Stars
@@ -141,37 +238,46 @@ export default function BedroomPage({
         </div>
       </header>
 
-      {/* Task Prompt Banner */}
-      <section className="w-full max-w-md my-1 z-20">
-        <div className="bg-white/95 rounded-3xl p-3 shadow-xl border-4 border-indigo-400 flex items-center justify-between text-slate-800">
+      {/* Bedtime Step & Mission Banner */}
+      <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
+        <div className="bg-white/95 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-md border-2 sm:border-3 border-indigo-400 flex items-center justify-between text-slate-800">
           <div className="text-left">
-            <p className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700">
-              🌙 Cozy Bedtime:
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700">
+              🌙 Cozy Bedtime Routine:
             </p>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              {isTuckedIn ? '😴 Sweet Dreams, Shh...' : 'Count the 5 Window Stars!'}
+            <h2 className="text-sm sm:text-lg font-black tracking-tight leading-tight">
+              {isSleepCompleted
+                ? '😴 Sweet Dreams, Shh... Goodnight! 💤'
+                : activeBedStep === 'teddy'
+                ? '1. Give Plush Teddy to Cuddle'
+                : activeBedStep === 'milk'
+                ? `2. Drink Warm Milk: ${milkSips} / 3 Sips`
+                : activeBedStep === 'stars'
+                ? `3. Count Window Stars: ${litStars.length} / 5 Lit`
+                : '4. Pull Up Cozy Blanket to Tuck In'}
             </h2>
           </div>
 
           <button
             onClick={() => {
               sfx.pop();
-              speakPetText(
-                isTuckedIn
-                  ? `${petDisplayName} is sound asleep dreaming of yummy treats!`
-                  : `Tap each of the 5 window stars to hear sweet chime notes, then tuck ${petDisplayName} into bed!`,
-                currentPet.voice
-              );
+              const hints = {
+                teddy: `Tap the soft teddy bear to give it to ${petDisplayName}!`,
+                milk: `Tap the warm cup of milk to drink bedtime sips!`,
+                stars: `Tap all 5 twinkling window stars to play a lullaby!`,
+                tuck: `Pull up the warm quilt blanket to tuck ${petDisplayName} in for sweet dreams!`,
+              };
+              speakPetText(hints[activeBedStep] || hints.teddy, currentPet.voice);
             }}
-            className="w-11 h-11 bg-gradient-to-tr from-indigo-500 to-purple-400 rounded-2xl shadow-md border-2 border-indigo-600 flex items-center justify-center text-white active:scale-90"
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-indigo-500 to-purple-400 rounded-xl shadow-md border border-indigo-600 flex items-center justify-center text-white active:scale-90 flex-shrink-0"
           >
-            <Volume2 className="w-6 h-6" />
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </section>
 
-      {/* Bedroom Window with 5 Twinkling Stars */}
-      <div className="w-full max-w-sm flex items-center justify-around py-1 px-3 z-15">
+      {/* Bedroom Window with 5 Twinkling Stars (Step 3) */}
+      <div className="w-full max-w-sm flex items-center justify-around py-0.5 px-2 z-15 flex-shrink-0">
         {[1, 2, 3, 4, 5].map((starNum) => {
           const isLit = litStars.includes(starNum);
           return (
@@ -179,97 +285,219 @@ export default function BedroomPage({
               key={starNum}
               onClick={() => handleTapStar(starNum)}
               className={`
-                flex flex-col items-center justify-center w-12 h-12 rounded-2xl
+                flex flex-col items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl
                 transition-all duration-300 active:scale-90 cursor-pointer
                 ${
                   isLit
-                    ? 'bg-amber-300 text-amber-950 scale-110 shadow-lg ring-4 ring-amber-200/80 animate-pulse'
+                    ? 'bg-amber-300 text-amber-950 scale-105 shadow-md ring-2 ring-amber-200 animate-pulse'
                     : 'bg-white/15 text-white/60 border border-white/25 hover:bg-white/25'
                 }
               `}
+              title={`Star ${starNum}`}
             >
-              <span className="text-xl leading-none">⭐</span>
-              <span className="text-[10px] font-black">{starNum}</span>
+              <span className="text-lg leading-none">⭐</span>
+              <span className="text-[9px] font-black">{starNum}</span>
             </button>
           );
         })}
       </div>
 
       {/* Bed Area & Sleeping Pet */}
-      <main className="relative my-auto flex flex-col items-center justify-center z-10 w-full max-w-sm h-64 sm:h-72">
-        {/* Sleeping Pet Avatar */}
-        <div className="relative z-10">
+      <main className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm">
+        {/* Night Constellation Glow */}
+        {isNightMode && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+            <div className="w-48 h-48 bg-indigo-500/15 rounded-full blur-3xl" />
+          </div>
+        )}
+
+        {/* Golden Dream Sparkles */}
+        {petSparkle && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40 animate-pulse">
+            <span className="text-4xl animate-bounce">💤</span>
+            <span className="text-4xl -mt-16 ml-12 animate-ping">✨</span>
+            <span className="text-4xl mt-20 -ml-14 animate-bounce">🌙</span>
+            <span className="text-3xl -mt-12 -ml-16 animate-ping">💖</span>
+          </div>
+        )}
+
+        {/* Pet Avatar in Bed */}
+        <div className="relative z-15">
           <PetAvatar
             petId={currentPet.id}
             stageIndex={stageIndex}
             feedCount={feedCount}
-            expression={isTuckedIn ? 'sleeping' : 'idle'}
+            expression={isTuckedIn ? 'sleeping' : petExpression}
             accessories={unlockedAccessories}
           />
+
+          {/* 1. PLUSH TEDDY BEAR (Step 1) */}
+          {hasTeddy && (
+            <div className="absolute left-1 bottom-6 w-14 h-14 bg-amber-600 rounded-full border-2 border-amber-800 shadow-md flex items-center justify-center text-2xl z-25 animate-bounce">
+              🧸
+            </div>
+          )}
         </div>
 
-        {/* Cozy Blanket Graphic */}
+        {/* 2. WARM MILK CUP (Step 2) */}
+        {activeBedStep === 'milk' && (
+          <button
+            onClick={handleDrinkMilk}
+            className="absolute left-6 sm:left-10 bottom-12 w-16 h-16 rounded-2xl bg-white border-3 border-sky-300 shadow-xl flex flex-col items-center justify-center text-2xl active:scale-90 transition-transform animate-bounce z-30 cursor-pointer"
+            title="Drink Warm Milk!"
+          >
+            <span>🥛</span>
+            <span className="text-[9px] font-black text-sky-800 -mt-1">
+              {milkSips}/3 Sips
+            </span>
+          </button>
+        )}
+
+        {/* 1. CUDDLE TEDDY BUTTON (Step 1) */}
+        {activeBedStep === 'teddy' && !hasTeddy && (
+          <button
+            onClick={handleGiveTeddy}
+            className="absolute right-6 sm:right-10 bottom-12 w-16 h-16 rounded-full bg-amber-500 border-3 border-amber-300 shadow-xl flex items-center justify-center text-3xl active:scale-80 transition-transform animate-bounce z-30 cursor-pointer"
+            title="Give Teddy Bear!"
+          >
+            🧸
+          </button>
+        )}
+
+        {/* 4. COZY BLANKET TUCK (Step 4) */}
         <div
           onClick={handleToggleBlanket}
           className={`
-            w-60 sm:w-68 rounded-t-3xl border-4 border-indigo-400 shadow-2xl
-            cursor-pointer active:scale-95 transition-all duration-500 z-20 -mt-16 sm:-mt-20
-            flex flex-col items-center justify-center p-3
+            w-52 sm:w-68 rounded-t-2xl sm:rounded-t-3xl border-3 sm:border-4 border-indigo-400 shadow-xl
+            cursor-pointer active:scale-95 transition-all duration-500 z-20 -mt-12 sm:-mt-18
+            flex flex-col items-center justify-center p-2
             ${
               isTuckedIn
-                ? 'h-28 bg-gradient-to-tr from-indigo-600 via-purple-500 to-pink-500 ring-4 ring-indigo-300'
-                : 'h-14 bg-gradient-to-tr from-indigo-500 to-purple-400 opacity-90'
+                ? 'h-22 sm:h-26 bg-gradient-to-tr from-indigo-600 via-purple-500 to-pink-500 ring-3 ring-indigo-300'
+                : 'h-11 sm:h-13 bg-gradient-to-tr from-indigo-500 to-purple-400 opacity-90'
             }
           `}
         >
-          <div className="flex items-center gap-2 text-white font-black text-xs sm:text-sm">
-            <span>{isTuckedIn ? '🛌 TUCKED IN (TAP TO WAKE)' : '🛏️ PULL UP BLANKET!'}</span>
+          <div className="flex items-center gap-1.5 text-white font-black text-xs sm:text-sm">
+            <span>{isTuckedIn ? '🛌 TUCKED IN (SWEET DREAMS)' : '🛏️ PULL UP BLANKET!'}</span>
           </div>
           {isTuckedIn && (
-            <p className="text-[10px] font-bold text-pink-200 mt-1">
-              💤 Snoozing happily...
+            <p className="text-[9px] font-bold text-pink-200 mt-0.5">
+              💤 Snoozing soundly...
             </p>
           )}
         </div>
+
+        {/* Wake Up & Reset Button when Finished */}
+        {isSleepCompleted && (
+          <div className="mt-2 z-30 flex-shrink-0">
+            <button
+              onClick={handleResetBedtime}
+              className="flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 font-black text-xs px-4 py-2 rounded-full shadow-lg active:scale-95 transition-transform"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>☀️ WAKE UP & PLAY!</span>
+            </button>
+          </div>
+        )}
       </main>
 
-      {/* Bedtime Controls */}
-      <footer className="w-full max-w-md flex flex-col gap-2 z-20">
-        <div className="flex items-center justify-around gap-2 bg-white/95 rounded-3xl p-2 shadow-lg border-2 border-indigo-300 text-slate-800">
-          <button
-            onClick={handleToggleBlanket}
-            className={`flex-1 flex flex-col items-center py-2 px-1 rounded-2xl transition-all active:scale-90 ${
-              isTuckedIn
-                ? 'bg-purple-500 text-white font-black ring-2 ring-purple-300'
-                : 'bg-indigo-600 text-white font-black'
-            }`}
-          >
-            <span className="text-2xl">{isTuckedIn ? '💤' : '🛌'}</span>
-            <span className="text-[11px]">{isTuckedIn ? 'Wake Pet' : 'Tuck Pet In'}</span>
-          </button>
-
+      {/* 4-Step Bedtime Selector Bar */}
+      <footer className="w-full max-w-md flex flex-col gap-1 z-20 pb-0.5 flex-shrink-0">
+        <div className="flex items-center justify-around gap-1 bg-white/95 rounded-2xl p-1.5 shadow-md border-2 border-indigo-300 text-slate-800">
+          {/* Step 1: Teddy */}
           <button
             onClick={() => {
-              sfx.chime(0);
-              setTimeout(() => sfx.chime(2), 200);
-              setTimeout(() => sfx.chime(4), 400);
-              speakPetText(`Twinkle, twinkle, little star! Goodnight!`, {
-                ...currentPet.voice,
-                rate: 0.85,
-              });
+              sfx.pop();
+              setActiveBedStep('teddy');
+              if (!hasTeddy) handleGiveTeddy();
             }}
-            className="flex-1 flex flex-col items-center py-2 px-1 rounded-2xl bg-amber-400 text-amber-950 font-black ring-2 ring-amber-300 active:scale-90"
+            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
+              activeBedStep === 'teddy'
+                ? 'bg-amber-400 text-amber-950 font-black shadow-md ring-2 ring-amber-300 scale-105'
+                : 'bg-slate-100 text-slate-700 font-bold'
+            }`}
           >
-            <span className="text-2xl">🎵</span>
-            <span className="text-[11px]">Lullaby</span>
+            <div className="relative">
+              <span className="text-xl">🧸</span>
+              {hasTeddy && (
+                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
+                  ✓
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] mt-0.5">1. Teddy</span>
           </button>
 
+          {/* Step 2: Milk */}
           <button
-            onClick={handleToggleLamp}
-            className="flex-1 flex flex-col items-center py-2 px-1 rounded-2xl bg-slate-200 text-slate-800 font-bold active:scale-90"
+            onClick={() => {
+              sfx.pop();
+              setActiveBedStep('milk');
+              speakPetText(`Drink warm bedtime milk!`, currentPet.voice);
+            }}
+            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
+              activeBedStep === 'milk'
+                ? 'bg-sky-400 text-sky-950 font-black shadow-md ring-2 ring-sky-300 scale-105'
+                : 'bg-slate-100 text-slate-700 font-bold'
+            }`}
           >
-            <span className="text-2xl">{isNightMode ? '💡' : '🌙'}</span>
-            <span className="text-[11px]">{isNightMode ? 'Night Lamp' : 'Day Light'}</span>
+            <div className="relative">
+              <span className="text-xl">🥛</span>
+              {milkSips >= 3 && (
+                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
+                  ✓
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] mt-0.5">2. Milk</span>
+          </button>
+
+          {/* Step 3: Stars */}
+          <button
+            onClick={() => {
+              sfx.pop();
+              setActiveBedStep('stars');
+              speakPetText(`Count the 5 window stars for a lullaby!`, currentPet.voice);
+            }}
+            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
+              activeBedStep === 'stars'
+                ? 'bg-amber-300 text-amber-950 font-black shadow-md ring-2 ring-amber-200 scale-105'
+                : 'bg-slate-100 text-slate-700 font-bold'
+            }`}
+          >
+            <div className="relative">
+              <span className="text-xl">⭐</span>
+              {litStars.length >= 5 && (
+                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
+                  ✓
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] mt-0.5">3. Stars</span>
+          </button>
+
+          {/* Step 4: Blanket Tuck */}
+          <button
+            onClick={() => {
+              setActiveBedStep('tuck');
+              handleToggleBlanket();
+            }}
+            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
+              activeBedStep === 'tuck' || isTuckedIn
+                ? 'bg-purple-600 text-white font-black shadow-md ring-2 ring-purple-300 scale-105'
+                : 'bg-slate-100 text-slate-700 font-bold'
+            }`}
+          >
+            <div className="relative">
+              <span className="text-xl">{isTuckedIn ? '💤' : '🛌'}</span>
+              {isTuckedIn && (
+                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
+                  ✓
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] mt-0.5">{isTuckedIn ? 'Sleeping' : '4. Tuck In'}</span>
           </button>
         </div>
 

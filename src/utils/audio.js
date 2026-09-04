@@ -205,6 +205,43 @@ class SoundFX {
     });
   }
 
+  showerStream() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    [0, 0.05, 0.1, 0.15, 0.2].forEach((offset, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const t = now + offset;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(320 + idx * 30, t);
+      osc.frequency.exponentialRampToValueAtTime(180, t + 0.18);
+      gain.gain.setValueAtTime(0.12, t);
+      gain.gain.exponentialRampToValueAtTime(0.005, t + 0.18);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(t);
+      osc.stop(t + 0.18);
+    });
+  }
+
+  scrub() {
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(450, now);
+    osc.frequency.linearRampToValueAtTime(320, now + 0.08);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
   squeak() {
     this.init();
     if (!this.ctx) return;
@@ -384,8 +421,8 @@ export function speakPetText(text, petVoice) {
     setTimeout(() => {
       try {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.pitch = petVoice?.pitch || 1.25;
-        utterance.rate = petVoice?.rate || 1.08;
+        utterance.pitch = petVoice?.pitch || 1.2;
+        utterance.rate = petVoice?.rate || 0.96;
         utterance.lang = 'en-US';
 
         if (cachedVoice) {

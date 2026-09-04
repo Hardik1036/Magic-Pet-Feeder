@@ -53,6 +53,40 @@ export default function App() {
   // Global unlocked badges list
   const [unlockedBadges, setUnlockedBadges] = useState([]);
 
+  // Dressed pet photos scrapbook album
+  const [savedPhotos, setSavedPhotos] = useState(() => {
+    try {
+      const raw = localStorage.getItem('magic_pet_feeder_photos_v1');
+      return raw ? JSON.parse(raw) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleSavePhoto = (photoData) => {
+    setSavedPhotos((prev) => {
+      const updated = [photoData, ...prev];
+      try {
+        localStorage.setItem('magic_pet_feeder_photos_v1', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Could not save photo to storage:', e);
+      }
+      return updated;
+    });
+  };
+
+  const handleDeletePhoto = (photoId) => {
+    setSavedPhotos((prev) => {
+      const updated = prev.filter((p) => p.id !== photoId);
+      try {
+        localStorage.setItem('magic_pet_feeder_photos_v1', JSON.stringify(updated));
+      } catch (e) {
+        console.warn('Could not update photos storage:', e);
+      }
+      return updated;
+    });
+  };
+
   // Navigation: 'welcome' | 'select_pet' | 'name_pet' | 'game' | 'badges'
   const [currentPage, setCurrentPage] = useState('welcome');
   const [hasExistingSave, setHasExistingSave] = useState(false);
@@ -218,8 +252,8 @@ export default function App() {
   const totalFeeds = Object.values(petsProgress).reduce((acc, p) => acc + (p.feedCount || 0), 0);
 
   return (
-    <div className="w-full min-h-screen flex items-center justify-center bg-slate-900">
-      <div className="w-full h-full max-w-md mx-auto relative overflow-hidden shadow-2xl">
+    <div className="w-full h-[100dvh] flex items-center justify-center bg-slate-950 overflow-hidden select-none">
+      <div className="w-full h-full max-h-[100dvh] max-w-md mx-auto relative overflow-hidden flex flex-col shadow-2xl bg-slate-900">
         {/* PAGE 1: WELCOME & PLAYER NAME */}
         {currentPage === 'welcome' && (
           <WelcomePage
@@ -354,6 +388,9 @@ export default function App() {
             onNavigate={handleNavigateActivity}
             onSwitchPet={() => setCurrentPage('select_pet')}
             onChangeProfile={() => setCurrentPage('welcome')}
+            savedPhotos={savedPhotos}
+            onSavePhoto={handleSavePhoto}
+            onDeletePhoto={handleDeletePhoto}
           />
         )}
 
