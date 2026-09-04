@@ -4,6 +4,8 @@ import { BADGES } from '../data/badges.js';
 
 export default function BadgesPage({
   unlockedBadges = [],
+  playerStats = {},
+  totalFeeds = 0,
   onBack,
   petVoice,
 }) {
@@ -15,7 +17,7 @@ export default function BadgesPage({
       window.speechSynthesis.cancel();
       const text = isUnlocked
         ? `Badge Unlocked: ${badge.title}! ${badge.description}`
-        : `Locked Badge: ${badge.title}. Feed your pet snacks to earn this badge!`;
+        : `Locked Badge: ${badge.title}. Goal: ${badge.requirement || badge.description}`;
       const u = new SpeechSynthesisUtterance(text);
       u.pitch = petVoice?.pitch || 1.25;
       u.rate = petVoice?.rate || 0.9;
@@ -48,7 +50,7 @@ export default function BadgesPage({
         </div>
       </header>
 
-      {/* Header Banner */}
+      {/* Header Banner & Live Quest Progress */}
       <div className="w-full max-w-md text-center my-1.5">
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-300 text-amber-950 text-2xl shadow-lg border-2 border-amber-500 mb-1 animate-bounce">
           🏆
@@ -57,8 +59,24 @@ export default function BadgesPage({
           Round Badge Showcase!
         </h1>
         <p className="text-xs font-semibold text-slate-600">
-          Tap any round medal to hear your achievement!
+          Tap any round medal to hear your achievement or quest!
         </p>
+
+        {/* Live Quest Progress Chips */}
+        <div className="flex items-center justify-center gap-1.5 flex-wrap mt-2">
+          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-sky-300 text-sky-800 shadow-xs">
+            🔥 Streak: {playerStats.streak || 0}
+          </span>
+          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-blue-300 text-blue-800 shadow-xs">
+            🔢 Math: {playerStats.numbersFed || 0}/10
+          </span>
+          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-emerald-300 text-emerald-800 shadow-xs">
+            🔤 Letters: {playerStats.lettersFed || 0}/12
+          </span>
+          <span className="text-[10px] font-black bg-white/80 px-2 py-0.5 rounded-full border border-pink-300 text-pink-800 shadow-xs">
+            🎨 Shapes: {playerStats.shapesFed || 0}/12
+          </span>
+        </div>
       </div>
 
       {/* 3-Column Round Medallions Grid */}
@@ -129,6 +147,11 @@ export default function BadgesPage({
               <p className="text-[10px] font-semibold text-slate-600 leading-snug">
                 {selectedBadge.description}
               </p>
+              {selectedBadge.requirement && (
+                <span className="inline-block mt-0.5 text-[9px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                  🎯 Goal: {selectedBadge.requirement}
+                </span>
+              )}
             </div>
           </div>
           <button

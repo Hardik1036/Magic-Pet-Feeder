@@ -8,10 +8,24 @@ import { PETS } from './data/pets.js';
 
 const STORAGE_KEY = 'magic_pet_feeder_save_v2';
 
+const DEFAULT_STATS = {
+  streak: 0,
+  numbersFed: 0,
+  tensFed: 0,
+  lettersFed: 0,
+  vowelsFed: [],
+  shapesFed: 0,
+  rareShapesFed: [],
+  colorsFed: [],
+};
+
 export default function App() {
   // Global player profile
   const [playerName, setPlayerName] = useState('Emma');
   const [selectedPetId, setSelectedPetId] = useState('dino');
+
+  // Gameplay challenge stats
+  const [playerStats, setPlayerStats] = useState(() => ({ ...DEFAULT_STATS }));
 
   // Independent per-pet progress dictionary!
   // { [petId]: { customName: '', feedCount: 0, stageIndex: 0, unlockedAccessories: [] } }
@@ -54,6 +68,12 @@ export default function App() {
           if (saved.unlockedBadges) {
             setUnlockedBadges(saved.unlockedBadges);
           }
+          if (saved.playerStats) {
+            setPlayerStats((prev) => ({
+              ...prev,
+              ...saved.playerStats,
+            }));
+          }
           setHasExistingSave(true);
 
           if (saved.currentPage === 'game') {
@@ -75,6 +95,7 @@ export default function App() {
         selectedPetId: updates.selectedPetId ?? selectedPetId,
         petsProgress: updates.petsProgress ?? petsProgress,
         unlockedBadges: updates.unlockedBadges ?? unlockedBadges,
+        playerStats: updates.playerStats ?? playerStats,
         currentPage: updates.currentPage ?? currentPage,
         lastPlayed: new Date().toISOString(),
       };
@@ -82,6 +103,14 @@ export default function App() {
     } catch (e) {
       console.warn('Could not save to localStorage:', e);
     }
+  };
+
+  const handleUpdateStats = (updater) => {
+    setPlayerStats((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      saveToStorage({ playerStats: next });
+      return next;
+    });
   };
 
   // Step 1: Welcome page -> Choose Pet
@@ -153,6 +182,8 @@ export default function App() {
     unlockedAccessories: [],
   };
 
+  const totalFeeds = Object.values(petsProgress).reduce((acc, p) => acc + (p.feedCount || 0), 0);
+
   return (
     <div className="w-full min-h-screen flex items-center justify-center bg-slate-900">
       <div className="w-full h-full max-w-md mx-auto relative overflow-hidden shadow-2xl">
@@ -204,6 +235,9 @@ export default function App() {
             initialFeedCount={activePetData.feedCount}
             initialAccessories={activePetData.unlockedAccessories}
             unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            onUpdateStats={handleUpdateStats}
+            totalFeeds={totalFeeds}
             onUnlockBadge={handleUnlockBadge}
             onOpenBadges={() => setCurrentPage('badges')}
             onSwitchPet={() => setCurrentPage('select_pet')}
@@ -216,6 +250,8 @@ export default function App() {
         {currentPage === 'badges' && (
           <BadgesPage
             unlockedBadges={unlockedBadges}
+            playerStats={playerStats}
+            totalFeeds={totalFeeds}
             petVoice={activePet.voice}
             onBack={() => setCurrentPage(activePetData.feedCount > 0 ? 'game' : 'select_pet')}
           />
