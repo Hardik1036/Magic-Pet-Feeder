@@ -190,14 +190,14 @@ function speakPetText(text, petVoice) {
 // ==========================================
 // 3. EVOLUTION STAGES
 // ==========================================
-export const STAGES = [
+const STAGES = [
   { id: 'egg', name: 'Magic Egg', icon: '🥚', minFeeds: 0, targetFeeds: 3, description: 'Feed the egg to help it crack and hatch!' },
   { id: 'baby', name: 'Baby Pet', icon: '🐣', minFeeds: 3, targetFeeds: 7, description: 'So tiny and hungry! Give baby lots of treats!' },
   { id: 'kid', name: 'Playful Kid', icon: '🐾', minFeeds: 7, targetFeeds: 11, description: 'Running and bouncing! Getting so big!' },
   { id: 'adult', name: 'Majestic Adult', icon: '👑', minFeeds: 11, targetFeeds: 15, description: 'Full grown magic creature! Proud of you!' },
 ];
 
-export function getStageFromFeeds(feedCount) {
+function getStageFromFeeds(feedCount) {
   if (feedCount < 3) return 0;
   if (feedCount < 7) return 1;
   if (feedCount < 11) return 2;
