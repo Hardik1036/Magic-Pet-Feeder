@@ -664,14 +664,14 @@ export default function PlayroomPage({
               type="button"
               onClick={onToggleLanguage}
               className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
-                audioLanguage === 'hinglish'
+                audioLanguage === 'hi' || audioLanguage === 'hinglish'
                   ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
                   : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
               }`}
-              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+              title={audioLanguage === 'hi' || audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hindi audio"}
             >
-              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
-              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'हिंदी' : 'English'}</span>
             </button>
           )}
 
@@ -1006,16 +1006,16 @@ export default function PlayroomPage({
           </p>
           <p className="text-xs font-black text-slate-800 leading-tight mt-0.5 truncate sm:whitespace-normal">
             {petExpression === 'happy'
-              ? (audioLanguage === 'hinglish' ? '🌟 Waah! Kamaal kar diya!' : '🌟 Woohoo! Great job!')
+              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🌟 वाह! कमाल कर दिया!' : '🌟 Woohoo! Great job!')
               : activeGame === 'detective'
-              ? (audioLanguage === 'hinglish' ? `Box mein se letter ${detectiveData.targetLetter} dhoondo!` : `Find letter ${detectiveData.targetLetter} in the box!`)
+              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `डिब्बे में से अक्षर ${detectiveData.targetLetter} ढूंढो!` : `Find letter ${detectiveData.targetLetter} in the box!`)
               : activeGame === 'word'
-              ? (audioLanguage === 'hinglish' ? `Letter ${activeWordObj.word[spelledLetters.length]} ko dhoondo!` : `Look for letter ${activeWordObj.word[spelledLetters.length]}!`)
+              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `अक्षर ${activeWordObj.word[spelledLetters.length]} को ढूंढो!` : `Look for letter ${activeWordObj.word[spelledLetters.length]}!`)
               : activeGame === 'count'
-              ? (audioLanguage === 'hinglish' ? `Ab balloon #${countTarget} pop karo!` : `Pop balloon #${countTarget} next!`)
+              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `अब गुब्बारा #${countTarget} फोड़ो!` : `Pop balloon #${countTarget} next!`)
               : activeGame === 'shape'
-              ? (audioLanguage === 'hinglish' ? `${shapeTarget.shape} ko chest mein daalo!` : `Put the ${shapeTarget.shape} into the chest!`)
-              : (audioLanguage === 'hinglish' ? `Ball tap karke mere saath khelo! ⚽` : `Tap ball to play catch with me!`)}
+              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `${shapeTarget.shape} को खिलौनों के डिब्बे में डालो!` : `Put the ${shapeTarget.shape} into the chest!`)
+              : (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `बीच बॉल पर टैप करके मेरे साथ खेलो! ⚽` : `Tap ball to play catch with me!`)}
           </p>
         </div>
 
@@ -1059,7 +1059,7 @@ export default function PlayroomPage({
             />
           </div>
           <span className="text-[9px] font-extrabold text-teal-800 mt-0.5">
-            {audioLanguage === 'hinglish' ? 'Pyar karne ke liye tap karo! ✨' : 'Tap to pet! ✨'}
+            {audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'प्यार करने के लिए टैप करो! ✨' : 'Tap to pet! ✨'}
           </span>
         </div>
       </div>

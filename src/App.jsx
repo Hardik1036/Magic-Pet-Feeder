@@ -278,18 +278,18 @@ function AppContent() {
     saveToStorage({ petsProgress: updatedPets });
   };
 
-  // Audio language: 'en' | 'hinglish'
+  // Audio language: 'en' | 'hi'
   const [audioLanguage, setAudioLanguageState] = useState(() => getAudioLanguage());
 
   const activePet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
 
   const handleToggleLanguage = useCallback(() => {
-    const nextLang = audioLanguage === 'hinglish' ? 'en' : 'hinglish';
+    const nextLang = audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'en' : 'hi';
     setAudioLanguage(nextLang);
     setAudioLanguageState(nextLang);
     sfx.pop();
-    if (nextLang === 'hinglish') {
-      speakPetText('Arre waah! Hinglish voice shuru ho gayi!', activePet.voice, 'hinglish');
+    if (nextLang === 'hi') {
+      speakPetText('अरे वाह! हिंदी आवाज़ शुरू हो गई!', activePet.voice, 'hi');
     } else {
       speakPetText('Awesome! English voice is on!', activePet.voice, 'en');
     }
