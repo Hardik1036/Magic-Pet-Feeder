@@ -293,9 +293,7 @@ export default function MagicPetFeeder({
   const [round, setRound] = useState(() => generateRound('numbers', getStageFromFeeds(initialFeedCount), petDisplayName));
   const [unlockedAccessories, setUnlockedAccessories] = useState(initialAccessories);
 
-  // Modals
-  const [evolutionModal, setEvolutionModal] = useState(null);
-  const [accessoryModal, setAccessoryModal] = useState(null);
+  // Modals - ONLY badge unlocks trigger a popup
   const [newBadgeModal, setNewBadgeModal] = useState(null);
 
   // States
@@ -616,13 +614,11 @@ export default function MagicPetFeeder({
 
       if (willEvolve) {
         setStageIndex(newStageIndex);
-        const nextStageObj = STAGES[newStageIndex];
 
         setTimeout(() => {
           setFlyingFoodId(null);
           sfx.grow();
           sfx.fanfare();
-          setEvolutionModal(nextStageObj);
           if (newStageIndex === 1) {
             speakPetText(`WOW! The egg hatched! Welcome ${petDisplayName}!`, currentPet.voice);
           } else if (newStageIndex === 2) {
@@ -630,6 +626,10 @@ export default function MagicPetFeeder({
           } else {
             speakPetText(`AMAZING! ${petDisplayName} is now a full grown adult!`, currentPet.voice);
           }
+          // Automatically keep the game running smoothly without asking in a popup
+          setTimeout(() => {
+            advanceToNextRound(newStageIndex);
+          }, 850);
         }, 550);
       } else if (willUnlockAccessory) {
         const remaining = ACCESSORIES.filter((acc) => !unlockedAccessories.includes(acc.id));
@@ -643,11 +643,15 @@ export default function MagicPetFeeder({
           setUnlockedAccessories((accs) =>
             accs.includes(accessoryToUnlock.id) ? accs : [...accs, accessoryToUnlock.id]
           );
-          setAccessoryModal(accessoryToUnlock);
           sfx.fanfare();
-          speakPetText(`Yay! You unlocked the silly ${accessoryToUnlock.name}!`, currentPet.voice);
+          speakPetText(`Yay! You unlocked the ${accessoryToUnlock.name}!`, currentPet.voice);
+          // Automatically keep the game running smoothly without asking in a popup
+          setTimeout(() => {
+            advanceToNextRound(newStageIndex);
+          }, 850);
         }, 550);
       } else if (willUnlockBadge) {
+        // ONLY badge earned shows a celebratory modal popup!
         setTimeout(() => {
           setFlyingFoodId(null);
           setNewBadgeModal(awardedBadge);
@@ -1069,69 +1073,6 @@ export default function MagicPetFeeder({
           ) : (
             <ShapeIcon shape={draggingItem.shape} color={draggingItem.color} size={50} />
           )}
-        </div>
-      )}
-
-      {/* ------------------------------------ */}
-      {/* EVOLUTION CELEBRATION MODAL          */}
-      {/* ------------------------------------ */}
-      {evolutionModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-amber-400 animate-fly-in flex flex-col items-center">
-            <span className="text-7xl my-2 animate-bounce">{evolutionModal.icon}</span>
-            <span className="text-xs font-black text-purple-600 uppercase tracking-widest">
-              🌟 MAGIC EVOLUTION! 🌟
-            </span>
-            <h2 className="text-2xl font-black text-slate-800 mt-1 mb-2">
-              {evolutionModal.name}!
-            </h2>
-            <p className="text-sm font-semibold text-slate-600 mb-6">
-              {evolutionModal.description}
-            </p>
-
-            <button
-              onClick={() => {
-                sfx.pop();
-                setEvolutionModal(null);
-                advanceToNextRound(stageIndex);
-              }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white font-black text-lg shadow-lg active:scale-95 transition-transform"
-            >
-              YAY! KEEP FEEDING! 🎉
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ------------------------------------ */}
-      {/* ACCESSORY REWARD MODAL               */}
-      {/* ------------------------------------ */}
-      {accessoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-yellow-400 animate-fly-in flex flex-col items-center">
-            <span className="text-6xl my-2 animate-bounce">{accessoryModal.icon}</span>
-            <div className="flex items-center gap-1 text-xs font-black text-amber-600 uppercase tracking-widest">
-              <Award className="w-4 h-4" />
-              <span>Silly Reward Unlocked!</span>
-            </div>
-            <h2 className="text-2xl font-black text-slate-800 mt-1 mb-2">
-              {accessoryModal.name}
-            </h2>
-            <p className="text-sm font-semibold text-slate-600 mb-6">
-              {petDisplayName} loves dressing up! Look at that style!
-            </p>
-
-            <button
-              onClick={() => {
-                sfx.pop();
-                setAccessoryModal(null);
-                advanceToNextRound(stageIndex);
-              }}
-              className="w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black text-lg shadow-lg active:scale-95 transition-transform"
-            >
-              WEAR IT & PLAY! 🥳
-            </button>
-          </div>
         </div>
       )}
 

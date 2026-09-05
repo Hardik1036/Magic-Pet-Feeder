@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PETS } from '../data/pets.js';
-import ThreePetCanvas from './ThreePetCanvas.jsx';
 
 export default function PetAvatar({
   petId,
@@ -12,60 +11,12 @@ export default function PetAvatar({
   onPet,
   onTease,
 }) {
-  const [is3DMode, setIs3DMode] = useState(true);
-  const [webglError, setWebglError] = useState(false);
-
   const mouthOpen = isNearFood || expression === 'hungry';
   const isChewing = expression === 'chewing';
   const isHappy = expression === 'happy' || expression === 'sparkle';
   const isSleeping = expression === 'sleeping';
 
   const petConfig = PETS.find((p) => p.id === petId) || PETS[0];
-
-  // ------------------------------------------
-  // 3D INTERACTIVE PET AVATAR (ALL 8 PETS & ALL STAGES)
-  // ------------------------------------------
-  if (is3DMode && !webglError) {
-    return (
-      <div className="relative w-48 h-48 sm:w-64 sm:h-64 max-h-[32dvh] flex items-center justify-center select-none">
-        {/* Ambient 3D Glow Aura */}
-        <div
-          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-65 pointer-events-none ${
-            isNearFood
-              ? 'bg-amber-400 scale-110'
-              : expression === 'happy' || expression === 'sparkle'
-              ? 'bg-rose-400 scale-105'
-              : 'bg-emerald-400 scale-95'
-          }`}
-        />
-
-        {/* 3D Interactive Three.js Pet Canvas with Proper Limbs */}
-        <ThreePetCanvas
-          petId={petId}
-          isNearFood={isNearFood}
-          expression={expression}
-          accessories={accessories}
-          onPet={onPet}
-          onTease={onTease}
-          onError={() => setWebglError(true)}
-          className="w-full h-full relative z-10 drop-shadow-2xl"
-        />
-
-        {/* 3D Mode Switcher Pill */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setIs3DMode(false);
-          }}
-          className="absolute -top-1 -right-1 z-20 px-2 py-0.5 rounded-full bg-emerald-700/90 hover:bg-emerald-600 text-white text-[9px] font-black shadow border border-emerald-300 transition active:scale-95 flex items-center gap-1"
-          title="Switch to 2D view"
-        >
-          <span>3D ✨</span>
-        </button>
-      </div>
-    );
-  }
 
   // ------------------------------------------
   // STAGE 0: SPECIES MAGIC EGG (3D SHADED 2D FALLBACK)

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Sparkles, Volume2, Check, Heart, Trophy, Hand } from 'lucide-react';
 import { PETS } from '../data/pets.js';
-import ThreePetCanvas from './ThreePetCanvas.jsx';
+import PetAvatar from './PetAvatar.jsx';
 import { sfx } from '../utils/audio.js';
 
 export default function PetSelectPage({
@@ -102,23 +102,25 @@ export default function PetSelectPage({
           {/* Ambient Spotlight Aura */}
           <div className="absolute inset-0 bg-gradient-to-t from-amber-100/60 via-transparent to-sky-100/50 pointer-events-none" />
 
-          {/* 3D Interactive Canvas */}
-          <div className="relative w-full h-full flex items-center justify-center">
-            <ThreePetCanvas
-              key="select_pet_canvas"
+          {/* 2D Interactive Pet Avatar */}
+          <div
+            className="relative w-full h-full flex items-center justify-center cursor-pointer transition-transform active:scale-95"
+            onClick={handlePetAvatar}
+          >
+            <PetAvatar
               petId={activePetId}
-              expression="idle"
-              isNearFood={false}
-              accessories={['crown', 'sunglasses']}
+              stageIndex={petProg?.stageIndex ?? 1}
+              feedCount={petProg?.feedCount || 0}
+              expression={pettingReact ? 'happy' : 'idle'}
+              accessories={petProg?.unlockedAccessories || []}
               onPet={handlePetAvatar}
-              className="w-full h-full"
             />
           </div>
 
-          {/* Top-Left: Live 3D Badge */}
-          <div className="absolute top-2 left-2.5 flex items-center gap-1 bg-slate-900/80 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-400/30 backdrop-blur-md shadow pointer-events-none">
-            <Sparkles className="w-3 h-3 text-emerald-400 animate-spin" />
-            <span>3D LIVE AVATAR</span>
+          {/* Top-Left: Pet Badge */}
+          <div className="absolute top-2 left-2.5 flex items-center gap-1 bg-slate-900/80 text-amber-300 text-[10px] font-black px-2.5 py-0.5 rounded-full border border-amber-400/30 backdrop-blur-md shadow pointer-events-none">
+            <Sparkles className="w-3 h-3 text-amber-400 animate-spin" />
+            <span>PET COMPANION</span>
           </div>
 
           {/* Top-Right: Hear Voice Button */}
