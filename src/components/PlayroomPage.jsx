@@ -42,55 +42,47 @@ const NUMBER_PALETTE = [
   'from-fuchsia-400 to-pink-500 border-fuchsia-300 text-white',
 ];
 
-// Helper: Generate Letter Detective swarm
+// Helper: Generate Letter Detective swarm with multiple letters & numbers
 function generateDetectiveRound() {
   const targetLetter = ALL_LETTERS[Math.floor(Math.random() * ALL_LETTERS.length)];
-  const decoyLetter = ALL_LETTERS.find((l) => l !== targetLetter) || 'Z';
+  
+  // Pick 7 distinct decoy letters from the alphabet so kids must scan multiple letters!
+  const otherLetters = ALL_LETTERS.filter((l) => l !== targetLetter);
+  const pickedDecoyLetters = [...otherLetters].sort(() => 0.5 - Math.random()).slice(0, 7);
 
-  // Pick 7 unique numbers
+  // Pick 7 numbers to mix into the floating swarm
   const pickedNumbers = [...ALL_NUMBERS].sort(() => 0.5 - Math.random()).slice(0, 7);
 
-  const items = [];
+  const rawList = [
+    { type: 'letter', value: targetLetter, isTarget: true },
+    ...pickedDecoyLetters.map((l) => ({ type: 'letter', value: l, isTarget: false })),
+    ...pickedNumbers.map((n) => ({ type: 'number', value: n, isTarget: false })),
+  ];
 
-  // Target letter (sparkling target)
-  items.push({
-    id: `target_${targetLetter}_${Date.now()}`,
-    type: 'letter',
-    value: targetLetter,
-    isTarget: true,
-    x: 20 + Math.random() * 60,
-    y: 18 + Math.random() * 62,
-    vx: (Math.random() - 0.5) * 0.35 || 0.2,
-    vy: (Math.random() - 0.5) * 0.35 || -0.2,
-    color: 'from-amber-300 via-yellow-400 to-amber-500 border-yellow-200 text-amber-950 ring-4 ring-yellow-300/80 shadow-lg shadow-amber-500/50 scale-110 font-black',
-  });
+  // Shuffle all items so target letter has no predictable position or index
+  const shuffled = rawList.sort(() => 0.5 - Math.random());
 
-  // Decoy letter
-  items.push({
-    id: `decoy_${decoyLetter}`,
-    type: 'letter',
-    value: decoyLetter,
-    isTarget: false,
-    x: 18 + Math.random() * 64,
-    y: 18 + Math.random() * 64,
-    vx: (Math.random() - 0.5) * 0.35 || -0.2,
-    vy: (Math.random() - 0.5) * 0.35 || 0.2,
-    color: 'from-violet-400 to-purple-600 border-purple-300 text-white shadow-md font-black',
-  });
+  const items = shuffled.map((item, idx) => {
+    const col = idx % 4;
+    const row = Math.floor(idx / 4);
+    const baseX = 14 + col * 23 + (Math.random() - 0.5) * 6;
+    const baseY = 14 + row * 21 + (Math.random() - 0.5) * 6;
 
-  // Numbers in the moving swarm
-  pickedNumbers.forEach((num, idx) => {
-    items.push({
-      id: `num_${num}_${idx}`,
-      type: 'number',
-      value: num,
-      isTarget: false,
-      x: 14 + Math.random() * 72,
-      y: 14 + Math.random() * 72,
-      vx: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? 0.25 : -0.25),
-      vy: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? -0.25 : 0.25),
+    const vxDir = (idx % 2 === 0 ? 1 : -1) * (0.16 + Math.random() * 0.16);
+    const vyDir = (idx % 3 === 0 ? 1 : -1) * (0.16 + Math.random() * 0.16);
+
+    return {
+      id: `${item.type}_${item.value}_${idx}`,
+      type: item.type,
+      value: item.value,
+      isTarget: item.isTarget,
+      x: Math.max(10, Math.min(90, baseX)),
+      y: Math.max(12, Math.min(88, baseY)),
+      vx: vxDir,
+      vy: vyDir,
+      // Uniform styling for ALL letters and numbers without giving away the target letter
       color: `${NUMBER_PALETTE[idx % NUMBER_PALETTE.length]} shadow-md font-black`,
-    });
+    };
   });
 
   return { targetLetter, items };
@@ -189,7 +181,7 @@ export default function PlayroomPage({
     const timer = setTimeout(() => {
       if (activeGame === 'detective') {
         speakPetText(
-          `Detective ${playerName}! Search through the moving numbers to find letter ${detectiveData.targetLetter}!`,
+          `Detective ${playerName}! Search through all the moving letters and numbers to find letter ${detectiveData.targetLetter}!`,
           currentPet.voice
         );
       } else if (activeGame === 'word') {
@@ -204,7 +196,7 @@ export default function PlayroomPage({
         );
       } else if (activeGame === 'shape') {
         speakPetText(
-          `Find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box!`,
+          `Can you find the ${shapeTarget.color} ${shapeTarget.shape}? Look for the ${shapeTarget.color} color with the ${shapeTarget.shape} shape, then tap it for the toy box!`,
           currentPet.voice
         );
       } else if (activeGame === 'ball') {
@@ -555,7 +547,7 @@ export default function PlayroomPage({
     } else {
       sfx.squeak();
       speakPetText(
-        `That's a ${item.color} ${item.shape}! Look for the ${shapeTarget.color} ${shapeTarget.shape}!`,
+        `That is a ${item.color} ${item.shape}! Try looking for the ${shapeTarget.color} color with the ${shapeTarget.shape} shape!`,
         currentPet.voice
       );
     }
@@ -606,7 +598,7 @@ export default function PlayroomPage({
     sfx.pop();
     if (activeGame === 'detective') {
       speakPetText(
-        `Detective ${playerName}! Search the moving numbers to find letter ${detectiveData.targetLetter}!`,
+        `Detective ${playerName}! Search through all the moving letters and numbers to spot letter ${detectiveData.targetLetter}!`,
         currentPet.voice
       );
     } else if (activeGame === 'word') {
@@ -621,7 +613,7 @@ export default function PlayroomPage({
       );
     } else if (activeGame === 'shape') {
       speakPetText(
-        `Find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box!`,
+        `We are looking for the ${shapeTarget.color} ${shapeTarget.shape}! Tap the matching ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
         currentPet.voice
       );
     } else if (activeGame === 'ball') {
@@ -700,11 +692,11 @@ export default function PlayroomPage({
                   <span className="text-xs sm:text-sm font-black text-slate-800">
                     Find Letter:
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base sm:text-lg shadow-sm border border-yellow-300 ring-2 ring-amber-300/60 animate-bounce">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-teal-500 text-white font-black text-base sm:text-lg shadow-sm border border-teal-600">
                     {detectiveData.targetLetter}
                   </span>
                   <span className="text-[10px] text-slate-500 font-bold hidden sm:inline">
-                    (hiding among moving numbers!)
+                    (hidden among moving letters & numbers!)
                   </span>
                 </div>
               </div>
@@ -782,15 +774,18 @@ export default function PlayroomPage({
                     Shape & Color Match:
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5">
+                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                   <span className="text-xs sm:text-sm font-black text-slate-800">
-                    Find Shape:
+                    Target:
                   </span>
-                  <span className="px-2 py-0.5 rounded-lg bg-rose-100 border border-rose-300 text-rose-900 font-black text-xs sm:text-sm flex items-center gap-1 shadow-sm">
+                  <span className="px-2.5 py-0.5 rounded-lg bg-rose-500 text-white font-black text-xs sm:text-sm flex items-center gap-1 shadow-sm border border-rose-600">
                     <span>{shapeTarget.icon}</span>
                     <span>
                       {shapeTarget.color} {shapeTarget.shape}
                     </span>
+                  </span>
+                  <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                    Find {shapeTarget.color} color + {shapeTarget.shape} shape!
                   </span>
                 </div>
               </div>
@@ -875,11 +870,6 @@ export default function PlayroomPage({
                 className={`absolute w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-gradient-to-tr ${item.color} border-2 flex items-center justify-center text-lg sm:text-xl active:scale-125 transition-transform duration-100 select-none cursor-pointer drop-shadow-md`}
               >
                 <span>{item.value}</span>
-                {item.isTarget && (
-                  <span className="absolute -top-1 -right-1 text-[10px] animate-ping">
-                    ✨
-                  </span>
-                )}
               </button>
             ))}
           </div>
@@ -960,11 +950,14 @@ export default function PlayroomPage({
             )}
 
             {/* Toy Box graphic on the floor */}
-            <div className="absolute right-2.5 bottom-2.5 bg-gradient-to-tr from-amber-600 to-amber-700 text-white rounded-2xl p-2 shadow-lg border-2 border-amber-300 flex items-center gap-1.5 z-20">
-              <span className="text-2xl">📦</span>
+            <div className="absolute right-2.5 bottom-2.5 bg-gradient-to-tr from-amber-600 to-amber-700 text-white rounded-2xl px-3 py-1.5 shadow-lg border-2 border-amber-300 flex items-center gap-2 z-20">
+              <span className="text-2xl animate-bounce">📦</span>
               <div className="text-left leading-tight">
-                <p className="text-[9px] font-bold text-amber-200 uppercase">Toy Chest</p>
-                <p className="text-[11px] font-black">{shapeTarget.shape}</p>
+                <p className="text-[9px] font-bold text-amber-200 uppercase tracking-wide">Put in Toy Box:</p>
+                <p className="text-xs font-black flex items-center gap-1">
+                  <span>{shapeTarget.icon}</span>
+                  <span>{shapeTarget.color} {shapeTarget.shape}</span>
+                </p>
               </div>
             </div>
           </div>
