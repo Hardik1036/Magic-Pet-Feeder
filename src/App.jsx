@@ -9,7 +9,7 @@ import PlayroomPage from './components/PlayroomPage.jsx';
 import BedroomPage from './components/BedroomPage.jsx';
 import DressUpPage from './components/DressUpPage.jsx';
 import { PETS } from './data/pets.js';
-import { setAudioLanguage, getAudioLanguage, speakPetText, sfx } from './utils/audio.js';
+import { speakPetText, sfx } from './utils/audio.js';
 
 const STORAGE_KEY = 'magic_pet_feeder_save_v2';
 
@@ -278,22 +278,7 @@ function AppContent() {
     saveToStorage({ petsProgress: updatedPets });
   };
 
-  // Audio language: 'en' | 'hi'
-  const [audioLanguage, setAudioLanguageState] = useState(() => getAudioLanguage());
-
   const activePet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
-
-  const handleToggleLanguage = useCallback(() => {
-    const nextLang = audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'en' : 'hi';
-    setAudioLanguage(nextLang);
-    setAudioLanguageState(nextLang);
-    sfx.pop();
-    if (nextLang === 'hi') {
-      speakPetText('अरे वाह! हिंदी आवाज़ शुरू हो गई!', activePet.voice, 'hi');
-    } else {
-      speakPetText('Awesome! English voice is on!', activePet.voice, 'en');
-    }
-  }, [audioLanguage, activePet.voice]);
 
   // Navigate between rooms and activities
   const handleNavigateActivity = (activityId) => {
@@ -337,8 +322,6 @@ function AppContent() {
             hasExistingSave={hasExistingSave}
             savedPetName={activePetData.customName || activePet.defaultName}
             unlockedBadgesCount={unlockedBadges.length}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onOpenBadges={() => setCurrentPage('badges')}
             onResumeExisting={() => {
               setCurrentPage('game');
@@ -354,8 +337,6 @@ function AppContent() {
             playerName={playerName}
             petsProgress={petsProgress}
             selectedPetId={selectedPetId}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onSelectPet={handleSelectPet}
             onOpenBadges={() => setCurrentPage('badges')}
             onBack={() => setCurrentPage('welcome')}
@@ -368,8 +349,6 @@ function AppContent() {
             selectedPetId={selectedPetId}
             currentPetName={activePetData.customName}
             playerName={playerName}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onConfirmName={handleConfirmPetName}
             onBack={() => setCurrentPage('select_pet')}
           />
@@ -386,8 +365,6 @@ function AppContent() {
             initialAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onUpdateStats={handleUpdateStats}
             totalFeeds={totalFeeds}
             onUnlockBadge={handleUnlockBadge}
@@ -410,8 +387,6 @@ function AppContent() {
             unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onUpdateStats={handleUpdateStats}
             onUnlockBadge={handleUnlockBadge}
             onNavigate={handleNavigateActivity}
@@ -431,8 +406,6 @@ function AppContent() {
             unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onUpdateStats={handleUpdateStats}
             onUnlockBadge={handleUnlockBadge}
             onNavigate={handleNavigateActivity}
@@ -452,8 +425,6 @@ function AppContent() {
             unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onUpdateStats={handleUpdateStats}
             onUnlockBadge={handleUnlockBadge}
             onNavigate={handleNavigateActivity}
@@ -474,8 +445,6 @@ function AppContent() {
             onUpdateAccessories={handleUpdateAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onUpdateStats={handleUpdateStats}
             onUnlockBadge={handleUnlockBadge}
             onNavigate={handleNavigateActivity}
@@ -491,8 +460,6 @@ function AppContent() {
             playerStats={playerStats}
             totalFeeds={totalFeeds}
             petVoice={activePet.voice}
-            audioLanguage={audioLanguage}
-            onToggleLanguage={handleToggleLanguage}
             onBack={() => setCurrentPage('game')}
           />
         )}
