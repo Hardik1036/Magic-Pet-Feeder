@@ -312,7 +312,8 @@ export default function MagicPetFeeder({
   // Auto-speak on round change using selected pet's voice!
   const lastSpokenPromptRef = useRef('');
   useEffect(() => {
-    if (evolutionModal || accessoryModal || newBadgeModal) return;
+    // Do not speak prompt while a modal is showing
+    if (newBadgeModal) return;
     if (!round?.spokenPrompt || lastSpokenPromptRef.current === round.spokenPrompt) return;
     lastSpokenPromptRef.current = round.spokenPrompt;
 
@@ -320,7 +321,7 @@ export default function MagicPetFeeder({
       speakPetText(round.spokenPrompt, currentPet.voice);
     }, 400);
     return () => clearTimeout(timer);
-  }, [round?.spokenPrompt, currentPet.voice, evolutionModal, accessoryModal, newBadgeModal]);
+  }, [round?.spokenPrompt, currentPet.voice, newBadgeModal]);
 
   // Sync initial props ONLY when switching to a DIFFERENT pet (never on re-renders)
   const prevPetIdRef = useRef(selectedPetId);

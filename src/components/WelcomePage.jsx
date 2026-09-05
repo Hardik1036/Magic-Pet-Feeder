@@ -77,7 +77,7 @@ export default function WelcomePage({
               <span className="text-4xl sm:text-5xl">🦖</span>
             </div>
             <span className="absolute -bottom-2 -right-2 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow">
-              3D ✨
+              PETS ✨
             </span>
           </div>
 
@@ -86,10 +86,10 @@ export default function WelcomePage({
           </h1>
           <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 px-3 py-0.5 rounded-full text-xs font-black mt-1 border border-emerald-300">
             <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
-            <span>8 Interactive 3D Pet Avatars!</span>
+            <span>8 Interactive Pet Companions!</span>
           </div>
           <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
-            Feed, play, groom & care for your 3D animal companions!
+            Feed, play, groom & care for your animal friends!
           </p>
         </div>
 

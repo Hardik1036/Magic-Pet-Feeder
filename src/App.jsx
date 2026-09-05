@@ -61,11 +61,12 @@ class ErrorBoundary extends React.Component {
             <span className="text-5xl animate-bounce">🦖</span>
             <h2 className="text-xl font-black text-slate-800">Magic Pet World</h2>
             <p className="text-xs text-slate-600 font-semibold leading-relaxed">
-              Your 3D pet companions are ready! Tap below to jump straight in!
+              Your pet companions are ready! Tap below to jump straight in!
             </p>
             <button
               type="button"
               onClick={() => {
+                this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
               className="w-full py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black rounded-2xl shadow-lg active:scale-95 transition text-base"
