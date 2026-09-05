@@ -27,13 +27,13 @@ export default function PetAvatar({
     return (
       <div className="relative w-48 h-56 flex items-center justify-center select-none">
         <div
-          className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
+          className={`absolute inset-0 rounded-full blur-md transition-all duration-500 opacity-50 ${
             isNearFood ? 'bg-amber-300 scale-110' : 'bg-purple-300 scale-95'
           }`}
         />
         <svg
           viewBox="0 0 200 240"
-          className={`w-full h-full relative z-10 drop-shadow-2xl transition-transform duration-300 ${
+          className={`w-full h-full relative z-10 transform-gpu will-change-transform transition-transform duration-300 ${
             isNearFood ? 'animate-bounce' : isChewing ? 'animate-chew' : 'animate-float'
           }`}
         >
@@ -154,7 +154,7 @@ export default function PetAvatar({
       className={`relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center select-none ${scaleClass} transition-transform duration-500 cursor-pointer`}
     >
       <div
-        className={`absolute inset-0 rounded-full blur-2xl transition-all duration-500 opacity-60 ${
+        className={`absolute inset-0 rounded-full blur-md transition-all duration-500 opacity-50 ${
           isHappy ? 'bg-amber-300 scale-110' : mouthOpen ? 'bg-rose-300 scale-105' : isSleeping ? 'bg-indigo-300 scale-90' : 'bg-emerald-200 scale-95'
         }`}
       />
@@ -170,10 +170,13 @@ export default function PetAvatar({
 
       <svg
         viewBox="0 0 240 240"
-        className={`w-full h-full relative z-10 drop-shadow-xl transition-transform duration-300 ${
+        className={`w-full h-full relative z-10 transform-gpu will-change-transform transition-transform duration-300 ${
           isChewing ? 'animate-chew' : isHappy ? 'animate-bounce' : isSleeping ? 'opacity-95' : 'animate-float'
         }`}
       >
+        {/* Crisp vector ground shadow with 0 CPU filter overhead */}
+        <ellipse cx="120" cy="225" rx="55" ry="10" fill="#0F172A" opacity="0.16" />
+
         {/* Super Cape (Under Body) */}
         {accessories.includes('super_cape') && (
           <path

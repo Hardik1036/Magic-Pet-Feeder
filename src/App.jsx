@@ -278,29 +278,10 @@ function AppContent() {
     saveToStorage({ petsProgress: updatedPets });
   };
 
-  // Navigate between rooms and activities
-  const handleNavigateActivity = (activityId) => {
-    if (activityId === 'kitchen') {
-      setCurrentPage('game');
-      saveToStorage({ currentPage: 'game' });
-    } else {
-      setCurrentPage(activityId);
-      saveToStorage({ currentPage: activityId });
-    }
-  };
-
-  if (!isLoaded) {
-    return (
-      <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center text-white font-bold text-lg">
-        Loading Magic World...
-      </div>
-    );
-  }
-
-  const activePet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
-
   // Audio language: 'en' | 'hinglish'
   const [audioLanguage, setAudioLanguageState] = useState(() => getAudioLanguage());
+
+  const activePet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
 
   const handleToggleLanguage = useCallback(() => {
     const nextLang = audioLanguage === 'hinglish' ? 'en' : 'hinglish';
@@ -314,6 +295,17 @@ function AppContent() {
     }
   }, [audioLanguage, activePet.voice]);
 
+  // Navigate between rooms and activities
+  const handleNavigateActivity = (activityId) => {
+    if (activityId === 'kitchen') {
+      setCurrentPage('game');
+      saveToStorage({ currentPage: 'game' });
+    } else {
+      setCurrentPage(activityId);
+      saveToStorage({ currentPage: activityId });
+    }
+  };
+
   const activePetData = petsProgress[selectedPetId] || {
     customName: activePet.defaultName,
     feedCount: 0,
@@ -326,6 +318,14 @@ function AppContent() {
   const effectivePage = VALID_PAGES.includes(currentPage)
     ? currentPage
     : (hasExistingSave ? 'game' : 'welcome');
+
+  if (!isLoaded) {
+    return (
+      <div className="w-full min-h-screen bg-slate-900 flex items-center justify-center text-white font-bold text-lg">
+        Loading Magic World...
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-[100dvh] flex items-center justify-center bg-slate-950 overflow-hidden select-none">

@@ -305,9 +305,10 @@ export default function MagicPetFeeder({
   const [flyingFoodId, setFlyingFoodId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Dragging
+  // Dragging with direct GPU acceleration
   const [draggingItem, setDraggingItem] = useState(null);
-  const [dragPos, setDragPos] = useState({ x: 0, y: 0 });
+  const dragCloneRef = useRef(null);
+  const isNearPetRef = useRef(false);
   const petZoneRef = useRef(null);
   const petZoneRectRef = useRef(null);
 
@@ -709,9 +710,17 @@ export default function MagicPetFeeder({
       petZoneRectRef.current = petZoneRef.current.getBoundingClientRect();
     }
     const touch = e.touches ? e.touches[0] : e;
+    const x = touch.clientX;
+    const y = touch.clientY;
+    isNearPetRef.current = false;
     setDraggingItem(choice);
-    setDragPos({ x: touch.clientX, y: touch.clientY });
     setPetExpression('hungry');
+    // Position drag clone on next frame
+    requestAnimationFrame(() => {
+      if (dragCloneRef.current) {
+        dragCloneRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(1.15)`;
+      }
+    });
   };
 
   const handlePointerMove = (e) => {
@@ -719,8 +728,16 @@ export default function MagicPetFeeder({
     const touch = e.touches ? e.touches[0] : e;
     const x = touch.clientX;
     const y = touch.clientY;
-    setDragPos({ x, y });
-    setIsNearPet(checkCollisionWithPet(x, y));
+
+    if (dragCloneRef.current) {
+      dragCloneRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%) scale(1.15)`;
+    }
+
+    const near = checkCollisionWithPet(x, y);
+    if (near !== isNearPetRef.current) {
+      isNearPetRef.current = near;
+      setIsNearPet(near);
+    }
   };
 
   const handlePointerUp = (e) => {
@@ -730,6 +747,7 @@ export default function MagicPetFeeder({
     const y = touch.clientY;
 
     const fed = checkCollisionWithPet(x, y);
+    isNearPetRef.current = false;
     setIsNearPet(false);
 
     if (fed) {
@@ -856,7 +874,7 @@ export default function MagicPetFeeder({
         </div>
 
         {/* Growth Timeline Bar */}
-        <div className="w-full bg-white/95 backdrop-blur-md rounded-2xl p-1.5 sm:p-2 shadow-md border-2 border-purple-300 flex flex-col gap-0.5">
+        <div className="w-full bg-white/98 rounded-2xl p-1.5 sm:p-2 shadow-md border-2 border-purple-300 flex flex-col gap-0.5">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-1">
               <span className="text-sm sm:text-base">{currentStage.icon}</span>
@@ -958,7 +976,7 @@ export default function MagicPetFeeder({
           className={`absolute -bottom-2 px-3 py-1 rounded-full text-[10px] sm:text-xs font-black transition-all duration-300 shadow-md ${
             isNearPet
               ? 'bg-rose-500 text-white scale-110 ring-2 sm:ring-4 ring-rose-300 animate-bounce'
-              : 'bg-emerald-600/85 text-white backdrop-blur-sm'
+              : 'bg-emerald-600 text-white shadow-sm'
           }`}
         >
           {isNearPet
@@ -1065,15 +1083,17 @@ export default function MagicPetFeeder({
       </footer>
 
       {/* ------------------------------------ */}
-      {/* DRAG POINTER CLONE                   */}
+      {/* DRAG POINTER CLONE (Hardware Accelerated) */}
       {/* ------------------------------------ */}
       {draggingItem && (
         <div
+          ref={dragCloneRef}
           style={{
             position: 'fixed',
-            left: `${dragPos.x}px`,
-            top: `${dragPos.y}px`,
-            transform: 'translate(-50%, -50%) scale(1.15)',
+            left: 0,
+            top: 0,
+            transform: 'translate3d(-9999px, -9999px, 0)',
+            willChange: 'transform',
             touchAction: 'none',
             pointerEvents: 'none',
             zIndex: 9999,
@@ -1100,7 +1120,7 @@ export default function MagicPetFeeder({
       {/* NEW BADGE CELEBRATION MODAL 🏆       */}
       {/* ------------------------------------ */}
       {newBadgeModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/65 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-xs w-full text-center shadow-2xl border-4 border-amber-400 animate-fly-in flex flex-col items-center">
             {/* Circular Gold Medallion */}
             <div className="relative w-24 h-24 rounded-full bg-gradient-to-tr from-amber-300 via-yellow-100 to-amber-400 flex items-center justify-center text-5xl my-2 shadow-xl border-4 border-amber-500 ring-4 ring-yellow-200 animate-bounce">

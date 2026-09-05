@@ -61,7 +61,7 @@ export default function ActivityNavBar({
 
   return (
     <nav
-      className="w-full max-w-md bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-1 sm:p-1.5 shadow-xl border-2 border-slate-200 flex items-center justify-around gap-0.5 sm:gap-1 z-30 select-none flex-shrink-0"
+      className="w-full max-w-md bg-white/98 rounded-2xl sm:rounded-3xl p-1 sm:p-1.5 shadow-xl border-2 border-slate-200 flex items-center justify-around gap-0.5 sm:gap-1 z-30 select-none flex-shrink-0"
       style={{ touchAction: 'manipulation' }}
     >
       {activities.map((act) => {

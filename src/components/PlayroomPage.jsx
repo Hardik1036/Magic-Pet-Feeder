@@ -170,9 +170,15 @@ export default function PlayroomPage({
   const [ballCatches, setBallCatches] = useState(0);
   const [ballPos, setBallPos] = useState({ x: 50, y: 68 });
   const [isBallFlying, setIsBallFlying] = useState(false);
-
+  
   // Animation Frame ref for continuous smooth drifting of moving items
   const animFrameRef = useRef(null);
+  const detectiveItemsRef = useRef(detectiveData.items);
+  const detectiveItemEls = useRef({});
+
+  useEffect(() => {
+    detectiveItemsRef.current = detectiveData.items;
+  }, [detectiveData]);
 
   // Auto-speak on game change
   const lastSpokenGameRef = useRef('');
@@ -183,27 +189,27 @@ export default function PlayroomPage({
     const timer = setTimeout(() => {
       if (activeGame === 'detective') {
         speakPetText(
-          `Detective ${playerName}! Can you find the secret letter ${detectiveData.targetLetter} hiding among the moving numbers?`,
+          `Detective ${playerName}! Search through the moving numbers to find letter ${detectiveData.targetLetter}!`,
           currentPet.voice
         );
       } else if (activeGame === 'word') {
         speakPetText(
-          `Let's spell ${activeWordObj.word}! Find the letter ${activeWordObj.word[spelledLetters.length]}!`,
+          `Let's spell the word ${activeWordObj.word}! Find letter ${activeWordObj.word[spelledLetters.length]}!`,
           currentPet.voice
         );
       } else if (activeGame === 'count') {
         speakPetText(
-          `Let's count balloons in order! Tap number ${countTarget}!`,
+          `Pop the number balloons in order from 1 to 5! Tap number ${countTarget}!`,
           currentPet.voice
         );
       } else if (activeGame === 'shape') {
         speakPetText(
-          `Can you find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box?`,
+          `Find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box!`,
           currentPet.voice
         );
       } else if (activeGame === 'ball') {
         speakPetText(
-          `Yay, catch! Tap the bouncy beach ball to toss it to ${petDisplayName}!`,
+          `Tap the beach ball to play catch with ${petDisplayName}!`,
           currentPet.voice
         );
       }
@@ -212,7 +218,7 @@ export default function PlayroomPage({
     return () => clearTimeout(timer);
   }, [activeGame, playerName, petDisplayName, currentPet.voice, detectiveData.targetLetter, activeWordObj.word, spelledLetters.length, countTarget, shapeTarget]);
 
-  // Continuous smooth physics loop for Letter Detective moving numbers
+  // Continuous smooth physics loop for Letter Detective moving numbers (60 FPS direct DOM update, 0 React re-renders)
   useEffect(() => {
     if (activeGame !== 'detective') return;
 
@@ -221,8 +227,10 @@ export default function PlayroomPage({
     const updatePhysics = () => {
       if (!isRunning) return;
 
-      setDetectiveData((prev) => {
-        const nextItems = prev.items.map((item) => {
+      const items = detectiveItemsRef.current;
+      if (items && items.length > 0) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
           let nx = item.x + item.vx;
           let ny = item.y + item.vy;
           let nvx = item.vx;
@@ -246,11 +254,18 @@ export default function PlayroomPage({
             nvy = -Math.abs(nvy);
           }
 
-          return { ...item, x: nx, y: ny, vx: nvx, vy: nvy };
-        });
+          item.x = nx;
+          item.y = ny;
+          item.vx = nvx;
+          item.vy = nvy;
 
-        return { ...prev, items: nextItems };
-      });
+          const el = detectiveItemEls.current[item.id];
+          if (el) {
+            el.style.left = `${nx}%`;
+            el.style.top = `${ny}%`;
+          }
+        }
+      }
 
       animFrameRef.current = requestAnimationFrame(updatePhysics);
     };
@@ -847,6 +862,9 @@ export default function PlayroomPage({
             {detectiveData.items.map((item) => (
               <button
                 key={item.id}
+                ref={(el) => {
+                  if (el) detectiveItemEls.current[item.id] = el;
+                }}
                 type="button"
                 onClick={() => handleTapDetectiveItem(item)}
                 style={{

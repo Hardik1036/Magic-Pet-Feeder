@@ -1,19 +1,29 @@
 # 🌟 Magic Pet Feeder 🐾
 
-A vibrant, positive-reinforcement, multi-room educational web game built with **React**, **Vite**, and **Tailwind CSS**, designed specifically for a 4-year-old child! 
+A vibrant, positive-reinforcement, multi-room educational web game built with **React**, **Vite**, and **Tailwind CSS**, designed specifically for toddlers and preschoolers!
 
 [![Designed for Toddlers](https://img.shields.io/badge/Designed%20For-Toddlers%20%26%20Preschoolers-pink?style=for-the-badge&logo=heart)](https://github.com/Hardik1036/Magic-Pet-Feeder)
 [![8 Pets](https://img.shields.io/badge/Pets-8%20Unique%20Species-emerald?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
-[![5 Rooms](https://img.shields.io/badge/Rooms-5%20Interactive%20Tasks-cyan?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
+[![5 Rooms](https://img.shields.io/badge/Rooms-5%20Interactive%20Activities-cyan?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
+[![Hinglish Audio](https://img.shields.io/badge/Audio-English%20%2B%20Hinglish%20Voices-indigo?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
 [![28 Badges](https://img.shields.io/badge/Trophies-28%20Round%20Medals-amber?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
-[![Speech Synthesis](https://img.shields.io/badge/Audio-Web%20Audio%20%2B%20Speech-indigo?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
-[![Independent Saves](https://img.shields.io/badge/Progress-Independent%20Pet%20Saves-orange?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
+[![Zero Popups](https://img.shields.io/badge/UX-Zero%20Disruptive%20Popups-purple?style=for-the-badge)](https://github.com/Hardik1036/Magic-Pet-Feeder)
 
 ---
 
-## 🗺️ Quick Room & Feature Overview
+## 🌟 What's New & Highlights
 
-Click on any room below to explore interactive mechanics, audio feedback, and learning goals:
+- 🇮🇳 **Bilingual Hinglish Voice Audio**: Full audio voice synthesis in both **English** and **Hinglish** (Hindi-English blend) with a persistent in-game language toggle (`🇮🇳 Hinglish` / `🇬🇧 English`) across every room.
+- 🎨 **100% Classic 2D Cartoon Art**: Vibrant vector graphics for all 8 pets—including Rexy the Dino with cute horns, dorsal crest, tail, and foot claws.
+- 📦 **Playroom Play Box & Peeking Pet**: Moving letters, numbers, and balloons stay inside an unobstructed framed arena while the pet peeks and cheers from below.
+- 🛁 **Interactive Bubble Bath Spa**: Scrub mud spots with generous hit areas, lather foam, rinse with cascading shower streams, pop floating bubbles, dry off with a towel, and squeak the floating rubber ducky (`🦆`).
+- 🌙 **Cozy Bedroom Routine**: Count stars in an arched night sky window, toggle a warm bedside night lamp, drink 3 sips of warm milk, snuggle a plush teddy bear, and tuck into bed with sweet-dreams snoring bubbles.
+- 👗 **Fashion Runway Dress-Up**: Mix and match costumes, hit **"Strike a Pose! 💃"** for runway twirls and star bursts, roll the **"Lucky Mix! 🎲"** surprise randomizer, and easily reset with **"Clear All 🧼"**.
+- 🚫 **Zero Disruptive Popups**: Play flows continuously without blocking popups after tasks; achievements appear naturally in the dedicated trophy room.
+
+---
+
+## 🗺️ Interactive Room & Activity Overview
 
 <details open>
 <summary><h3>🍽️ Room 1: Feeding Kitchen & Growth Stages</h3></summary>
@@ -30,7 +40,7 @@ The core learning hub where toddlers feed their magic creature letters, numbers,
   - 🔤 **Phonics & Letters (A to Z)**: Bold alphabet cookies across all 26 letters.
   - 🎨 **10 Geometric & Nature Shapes**: Star, Heart, Triangle, Square, Circle, Diamond, Crescent Moon, Oval, Flower, Cloud across 8 distinct colors.
 - **Child-Friendly Mechanics**:
-  - Large drag-and-drop or single direct tap (minimum 80x80px touch target).
+  - Large drag-and-drop or single direct tap (minimum 80x80px touch targets).
   - Gentle misses trigger playful wobble and encouraging voice reminders without red Xs or game overs.
 </details>
 
@@ -39,72 +49,82 @@ The core learning hub where toddlers feed their magic creature letters, numbers,
 
 A warm, soapy spa where toddlers care for their pet's hygiene:
 
-- **Interactive Tools**:
-  - 🧽 **Soapy Sponge**: Tap or scrub muddy spots on the pet to wash them with bubbly foam.
-  - 🚿 **Shower Sprayer**: Warm water splash effect (`sfx.splash()`) that rinses away dirt.
-  - 🫧 **Bubble Wand**: Blows floating iridescent soap bubbles that toddlers can tap to **POP** with realistic synthetic pop sounds (`sfx.bubblePop()`).
-  - 🧴 **Fluffy Towel**: Dries the pet, making them sparkle with star auras and giggles!
-- **Dedicated Quest**: **Bubble Champion (`bubble_champ`)** — Pop 15 floating soap bubbles in the spa!
+- **4-Step Spa Routine**:
+  - 1️⃣ 🧽 **Scrub Mud**: Tap or scrub muddy spots anywhere on the pet to wash away dirt.
+  - 2️⃣ 🧴 **Lather Shampoo**: Rub the pet to whip up thick, pillowy clouds of soap suds on head and tummy.
+  - 3️⃣ 🚿 **Cascading Shower**: Turn on the overhead shower to rinse soap, spawning floating rainbow bubbles to pop with custom pop sounds.
+  - 4️⃣ 🧺 **Fluffy Towel**: Pat dry to reveal a gleaming golden sparkle finish and joyful pet giggles!
+- **Interactive Bathtub Elements**:
+  - 🦆 **Squeaky Rubber Duck**: Sits on the tub rim. Tap to hear squeaks and watch it bob in the water!
+  - 🫧 **Bubble Pop Counter**: Pop 15 floating bubbles to unlock the **Bubble Champion** trophy.
+  - 🔄 **Spa Day Again**: Seamless instant replay without leaving the room.
 </details>
 
 <details>
-<summary><h3>⚽ Room 3: Toy Playroom & Catch Playground</h3></summary>
+<summary><h3>📦 Room 3: Toy Playroom & Letter Detective</h3></summary>
 
-An energetic playroom for motor-skill development and joyful bonding:
+An energetic playroom for motor-skill development, counting, spelling, and ball catch:
 
-- **Interactive Mini-Games**:
-  - ⚽ **Bouncy Beach Ball**: Tap or swipe the multi-color beach ball. The pet tracks it, jumps, and catches it with authentic bounce acoustics (`sfx.bounce()`) and cheerful cries.
-  - 🐥 **Squeaky Duck**: Tap the yellow rubber duck for funny squeaking sounds (`sfx.squeak()`).
-  - 🎈 **Star Balloons**: Floating star balloons that pop with confetti when tapped.
-- **Dedicated Quest**: **Ball Juggler (`ball_juggler`)** — Play catch and bounce the ball 10 times!
+- **Dedicated Play Box (Game Arena)**:
+  - Bounded play arena keeps moving letters, numbers, balloons, and toys completely visible.
+  - The pet peeks up from the shelf below, cheering with live speech bubbles and reacting when petted.
+- **4 Engaging Mini-Games**:
+  - 🔍 **Letter Detective**: Search the bouncing numbers to locate the secret alphabet letter!
+  - 🔤 **Word Speller**: Spell simple words (CAT, DOG, SUN, STAR, FISH, DUCK) with phonics audio feedback.
+  - 🎈 **Counting Balloon Pop**: Pop colorful balloons in order from 1 to 5.
+  - ⚽ **Beach Ball Catch**: Toss and bounce the beach ball back and forth with your peeking pet!
 </details>
 
 <details>
-<summary><h3>🌙 Room 4: Cozy Bedroom & Bedtime Lullaby</h3></summary>
+<summary><h3>🌙 Room 4: Cozy Bedroom & Bedtime Wind-Down</h3></summary>
 
-A calming, bedtime routine room designed for evening wind-down:
+A calming bedtime routine room designed for evening wind-down:
 
-- **Interactive Bedtime Steps**:
-  - 💡 **Nightstand Lamp**: Tap to toggle between day lighting and serene dark-purple starry night mode.
-  - ⭐ **5 Twinkling Window Stars**: Tap stars 1 to 5 to hear sweet melodic chime notes (`sfx.chime()`) and count along in speech ("One, Two, Three, Four, Five!").
-  - 🛌 **Blanket Tuck**: Pull up the cozy duvet; the pet closes its eyes, snores cute cartoon "Zzz" (`sfx.snore()`), and dreams of sweets.
-- **Dedicated Quest**: **Starlight Dreamer (`starlight_dreamer`)** — Count all 5 window stars and tuck pet into bed!
+- **4-Step Bedtime Routine**:
+  - 1️⃣ 🧸 **Plush Teddy Bear**: Tap the cuddly bear to snuggle it right into the pet's arms.
+  - 2️⃣ 🥛 **Warm Bedtime Milk**: Feed 3 warm sips with gulping sounds.
+  - 3️⃣ ⭐ **5 Twinkling Window Stars**: Count stars in an arched night sky window beside the crescent moon (`🌙`) to play melodic xylophone notes and sing a bedtime lullaby.
+  - 4️⃣ 🛌 **Quilt Blanket Tuck**: Pull up the quilt blanket; the pet closes its eyes, snores cute cartoon "Zzz", and dreams sweet dreams.
+- **Interactive Room Elements**:
+  - 💡 **Nightstand Lamp**: Smoothly toggle warm golden bedroom light vs peaceful starry night mode.
+  - ☀️ **Wake Up & Play**: Tap the blanket or wake-up button anytime to restart the day.
 </details>
 
 <details>
-<summary><h3>👗 Room 5: Dress-Up Salon & Photo Booth</h3></summary>
+<summary><h3>👗 Room 5: Fashion Runway Dress-Up Salon</h3></summary>
 
-A fashion runway for creative styling and memorable souvenirs:
+A runway stage for creative styling and silly outfits:
 
-- **Costume Accessories**:
+- **7 Cute Accessories**:
   - 🎉 Party Hat
   - 👑 Golden Crown
   - 🕶️ Cool Sunglasses
   - 🎀 Dapper Bowtie
-  - 🌸 Magic Flower Clip
+  - 🌸 Flower Clip
   - 🧙 Wizard Hat
-  - 🦸 Super Hero Cape
-- **Photo Booth**:
-  - Tap **SNAP PHOTO!** to trigger a camera flash animation, shutter click (`sfx.shutter()`), and celebratory fanfares.
-  - Generates a keepsake postcard featuring the player's name and styled pet!
-- **Dedicated Quest**: **Glamour Superstar (`glamour_star`)** — Style your pet and snap 3 photo postcards!
+  - 🦸 Hero Cape
+- **Interactive Runway Features**:
+  - 💃 **Strike a Pose!**: Pet does a jump-twirl with star bursts, fanfare, and spoken compliments.
+  - 🎲 **Lucky Mix!**: Surprise outfit randomizer button for unexpected styling.
+  - 🧼 **Clear All**: Convenient reset button to return to natural clean look.
+  - 🏆 **Glamour Superstar**: Wear 4 accessories to unlock the trophy!
 </details>
 
 <details>
 <summary><h3>🏆 Room 6: Round Medallion Trophy Showcase (28 Badges)</h3></summary>
 
-A 3-column trophy room of 3D-styled round gold medallions with glossy reflections and checkmark seals:
+A 3-column showcase of 28 round gold medallions:
 
-- **Challenging, Engaging Quests**: No more spamming badges after every feed. Children earn badges through genuine dedication (e.g. 5-streak without miss, feeding #10 three times, collecting all 5 vowels, raising pets to Kid stage).
-- **Live Progress Pills**: Displays live counters for Streak, Math (x/10), Letters (x/12), Shapes (x/12), Bubbles (x/15), Bounces (x/10), Stars (x/5), and Photos (x/3).
-- **Voice Goals**: Tapping any locked medal reads its exact quest goal aloud!
+- **Meaningful Milestones**: Children earn badges through genuine dedication (e.g. 5-streak without miss, feeding #10 three times, collecting all 5 vowels, raising pets to Kid stage, popping 15 bath bubbles).
+- **Live Progress Chips**: Real-time stats for Streak, Math (x/10), Letters (x/12), Shapes (x/12), Bubbles (x/15), Bounces (x/10), Stars (x/5), and Outfits.
+- **Voice Goals**: Tapping any locked medal reads its exact quest goal aloud in English or Hinglish!
 </details>
 
 ---
 
-## 🐾 8 Lovable Animals (Voice Profiles)
+## 🐾 8 Lovable Animals & Voice Profiles
 
-Every pet species features distinct color palettes, unique species eggs, and tuned browser Speech Synthesis profiles:
+Every pet species features distinct color palettes, unique eggs, and tuned browser Speech Synthesis profiles:
 
 | Animal | Species | Default Name | Voice Pitch | Speed | Sound Effect | Greeting Catchphrase |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
@@ -119,11 +139,12 @@ Every pet species features distinct color palettes, unique species eggs, and tun
 
 ---
 
-## 💾 Independent Per-Pet Persistence (Zero Lost Progress)
+## 💾 Independent Per-Pet Persistence
 
 Switching pets never wipes past achievements:
 - **Independent Records**: Each animal maintains its own custom nickname, feed count, evolution stage index, and equipped costumes in `localStorage`.
-- **Global Profile**: Player name, quest badges, and gameplay challenge stats are safely preserved across browser reloads and device reboots.
+- **Global Profile**: Player name, unlocked badges, and challenge stats are safely preserved across browser reloads.
+- **Language Preference**: Language selection (`en` / `hinglish`) persists across sessions.
 
 ---
 
@@ -161,7 +182,7 @@ Switching pets never wipes past achievements:
 | `bubble_champ` | Bubble Champion | 🫧 | Spa | Pop 15 floating soap bubbles in the Bubble Bath Spa |
 | `ball_juggler` | Ball Juggler | ⚽ | Play | Play catch and bounce the playroom ball 10 times |
 | `starlight_dreamer`| Starlight Dreamer | ⭐ | Sleep | Count all 5 window stars and tuck pet into bed |
-| `glamour_star` | Glamour Superstar | 📸 | Salon | Dress up your pet and take 3 photo snapshots |
+| `glamour_star` | Glamour Superstar | ✨ | Salon | Dress up your pet with 4 stylish accessories |
 
 </details>
 
@@ -169,10 +190,11 @@ Switching pets never wipes past achievements:
 
 ## 🧠 Toddler-First UX & Design Principles
 
-1. **Zero Negative Reinforcement**: No game-over screens, no countdown clocks, no buzzing error noises, and no red "X" icons.
-2. **Generous Touch Targets**: Minimum `80x80px` interactive hitboxes with `touch-action: manipulation` to eliminate unintended zooms or scrolling on mobile tablets.
-3. **Pure Synthetic Audio**: All sound effects (pops, munches, bounces, chimes, camera shutter) are generated on the fly via the **Web Audio API**—zero asset loading latency or missing file glitches.
-4. **Rich Multi-Sensory Feedback**: Speech synthesis, confetti particle cannons, bouncing animations, and glowing sparkles celebrate every toddler milestone.
+1. **Zero Negative Reinforcement**: No game-over screens, no countdown timers, no buzzing error sounds, and no red "X" icons.
+2. **Generous Touch Targets**: Minimum `80x80px` interactive hitboxes with `touch-action: manipulation` to eliminate accidental zooming or scrolling.
+3. **Pure Synthetic Audio**: All sound effects (pops, munches, bounces, chimes, squeaks) are generated on the fly via the **Web Audio API**—zero loading latency.
+4. **Bilingual Speech Synthesis**: Tuned Web Speech API profiles with native Indian/Hindi TTS voices (`hi-IN`, `en-IN`) for clear pronunciation.
+5. **No Disruptive Popups**: Play remains continuous after clearing tasks; achievement trophies appear in the trophy room.
 
 ---
 
@@ -207,4 +229,4 @@ npm run build
 
 ---
 
-Enjoy playing and caring with **Magic Pet Feeder**! 🐾✨
+Enjoy playing and learning with **Magic Pet Feeder**! 🐾✨

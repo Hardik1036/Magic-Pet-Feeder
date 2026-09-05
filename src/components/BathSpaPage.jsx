@@ -58,10 +58,6 @@ export default function BathSpaPage({
   // Floating rubber ducky squeak
   const [duckBounce, setDuckBounce] = useState(false);
 
-  // Tool dragging cursor follower
-  const [pointerPos, setPointerPos] = useState({ x: -100, y: -100 });
-  const [isPointerOverPet, setIsPointerOverPet] = useState(false);
-
   const showerIntervalRef = useRef(null);
 
   // Welcome speech
@@ -285,15 +281,10 @@ export default function BathSpaPage({
     }
   };
 
-  const handlePointerMove = (e) => {
-    setPointerPos({ x: e.clientX, y: e.clientY });
-  };
-
   const allSpotsCleaned = cleanedSpots.length === INITIAL_MUD_SPOTS.length;
 
   return (
     <div
-      onPointerMove={handlePointerMove}
       className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-cyan-300 via-sky-100 to-blue-200 flex flex-col justify-between items-center px-2 py-1 sm:px-4 sm:py-2.5 select-none overflow-hidden font-sans"
       style={{ touchAction: 'manipulation' }}
     >
@@ -385,11 +376,7 @@ export default function BathSpaPage({
       </section>
 
       {/* Main Bathtub & Interactive Pet Stage */}
-      <main
-        onMouseEnter={() => setIsPointerOverPet(true)}
-        onMouseLeave={() => setIsPointerOverPet(false)}
-        className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm cursor-pointer"
-      >
+      <main className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm cursor-pointer">
         {/* Overhead Shower Fixture & Water Streams */}
         {showerActive && (
           <div className="absolute top-0 inset-x-0 flex flex-col items-center pointer-events-none z-35 animate-fade">
@@ -444,7 +431,7 @@ export default function BathSpaPage({
               backgroundColor: `${b.color}44`,
               borderColor: b.color,
             }}
-            className="absolute rounded-full border-2 shadow-lg backdrop-blur-xs flex items-center justify-center active:scale-130 transition-transform duration-150 animate-float z-30 cursor-pointer"
+            className="absolute rounded-full border-2 shadow-lg flex items-center justify-center active:scale-130 transition-transform duration-150 animate-float z-30 cursor-pointer"
           >
             <div className="absolute top-1 left-2 w-3.5 h-2 bg-white/80 rounded-full -rotate-45" />
             <span className="text-xs font-bold text-white drop-shadow-sm">🫧</span>
@@ -500,7 +487,7 @@ export default function BathSpaPage({
               {/* Head Foam Crown */}
               <div
                 style={{ opacity: foamLevel / 100, transform: `scale(${0.7 + (foamLevel / 100) * 0.35})` }}
-                className="absolute top-2 w-36 h-18 bg-white/95 rounded-full shadow-lg border-2 border-sky-200 flex items-center justify-around px-2 transition-all duration-300"
+                className="absolute top-2 w-36 h-18 bg-white rounded-full shadow-lg border-2 border-sky-200 flex items-center justify-around px-2 transition-all duration-300"
               >
                 <span className="text-2xl animate-bounce">🫧</span>
                 <span className="text-xl animate-pulse">🧼</span>
@@ -510,7 +497,7 @@ export default function BathSpaPage({
               {/* Tummy / Body Foam Layer */}
               <div
                 style={{ opacity: foamLevel / 100, transform: `scale(${0.75 + (foamLevel / 100) * 0.3})` }}
-                className="absolute top-24 w-44 h-24 bg-white/90 rounded-full shadow-inner border-2 border-sky-100 flex items-center justify-center gap-2 transition-all duration-300"
+                className="absolute top-24 w-44 h-24 bg-white rounded-full shadow-inner border-2 border-sky-100 flex items-center justify-center gap-2 transition-all duration-300"
               >
                 <span className="text-2xl animate-pulse">🫧</span>
                 <span className="text-sm font-black text-sky-800 bg-sky-100 px-2.5 py-0.5 rounded-full">
@@ -526,7 +513,7 @@ export default function BathSpaPage({
             <div className="absolute inset-0 pointer-events-none z-25 flex items-center justify-center">
               <div
                 style={{ opacity: (100 - dryLevel) / 100 }}
-                className="w-40 h-40 bg-blue-400/20 rounded-full blur-md animate-pulse"
+                className="w-40 h-40 bg-blue-300/30 rounded-full animate-pulse"
               />
             </div>
           )}
