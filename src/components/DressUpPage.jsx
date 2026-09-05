@@ -15,6 +15,51 @@ const ALL_SALON_ACCESSORIES = [
   { id: 'super_cape', name: 'Hero Cape', icon: '🦸', color: 'bg-red-100 border-red-300' },
 ];
 
+const ACCESSORY_LESSONS = {
+  cool_sunglasses: {
+    title: 'Sun Safety',
+    fact: 'Sunglasses protect our delicate eyes from bright ultraviolet sun rays!',
+    icon: '☀️',
+  },
+  party_hat: {
+    title: 'Celebration & Joy',
+    fact: 'Party hats celebrate birthdays and milestones with our wonderful friends!',
+    icon: '🎉',
+  },
+  golden_crown: {
+    title: 'Leadership & Fairness',
+    fact: 'A crown reminds great leaders to always act with kindness, honesty, and empathy!',
+    icon: '👑',
+  },
+  dapper_bowtie: {
+    title: 'Neat Etiquette',
+    fact: 'Bowties are worn for concerts and grand celebrations to look tidy and polite!',
+    icon: '🎀',
+  },
+  flower_clip: {
+    title: 'Plant Science',
+    fact: 'Flowers use colorful petals to welcome bees and butterflies to help nature grow!',
+    icon: '🌸',
+  },
+  wizard_hat: {
+    title: 'Curiosity & Books',
+    fact: 'Wizards love learning! Real magic comes from reading books and discovering science!',
+    icon: '🧙',
+  },
+  super_cape: {
+    title: 'Courage & Helping',
+    fact: 'Superheroes always look out for others, protect nature, and lend a helping hand!',
+    icon: '🦸',
+  },
+};
+
+const WEATHER_THEMES = [
+  { id: 'sunny', name: 'Sunny Beach', icon: '☀️', required: 'cool_sunglasses', hint: 'Put on Shades to protect your eyes from the bright sun!' },
+  { id: 'party', name: 'Party Bash', icon: '🎂', required: 'party_hat', hint: 'Wear a Party Hat to celebrate with friends!' },
+  { id: 'royal', name: 'Royal Palace', icon: '👑', required: 'golden_crown', hint: 'Wear the Golden Crown to lead with kindness!' },
+  { id: 'hero', name: 'Hero Rescue', icon: '🦸', required: 'super_cape', hint: 'Put on the Hero Cape to help others!' },
+];
+
 export default function DressUpPage({
   playerName,
   petNickname,
@@ -25,8 +70,6 @@ export default function DressUpPage({
   onUpdateAccessories,
   unlockedBadges = [],
   playerStats = {},
-  audioLanguage = 'en',
-  onToggleLanguage,
   onUpdateStats,
   onUnlockBadge,
   onNavigate,
@@ -38,11 +81,13 @@ export default function DressUpPage({
 
   const [activeAccessories, setActiveAccessories] = useState(unlockedAccessories);
   const [isPosing, setIsPosing] = useState(false);
+  const [currentLesson, setCurrentLesson] = useState(ACCESSORY_LESSONS.cool_sunglasses);
+  const [activeTheme, setActiveTheme] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       speakPetText(
-        `Welcome to the Dress-Up Salon! Pick your favorite costume for ${petDisplayName}!`,
+        `Welcome to the Dress-Up Salon! Pick your favorite costume for ${petDisplayName}, or tap a weather theme to learn!`,
         currentPet.voice
       );
     }, 400);
@@ -53,7 +98,9 @@ export default function DressUpPage({
   const handleToggleAccessory = (accId) => {
     sfx.pop();
     let nextAccs;
-    if (activeAccessories.includes(accId)) {
+    const isAdding = !activeAccessories.includes(accId);
+
+    if (!isAdding) {
       nextAccs = activeAccessories.filter((id) => id !== accId);
     } else {
       nextAccs = [...activeAccessories, accId];
@@ -70,14 +117,41 @@ export default function DressUpPage({
       }));
     }
 
+    // Update active learning lesson
+    if (ACCESSORY_LESSONS[accId]) {
+      setCurrentLesson(ACCESSORY_LESSONS[accId]);
+    }
+
     // Award Glamour Star badge when wearing 4 accessories!
     if (nextAccs.length >= 4 && !unlockedBadges.includes('glamour_star')) {
       if (onUnlockBadge) onUnlockBadge('glamour_star');
       sfx.fanfare();
       speakPetText(`Fabulous! You earned the Glamour Superstar trophy!`, currentPet.voice);
+    } else if (isAdding && activeTheme && activeTheme.required === accId) {
+      sfx.fanfare();
+      speakPetText(`Perfect match for ${activeTheme.name}! ${ACCESSORY_LESSONS[accId]?.fact || 'Looking wonderful!'}`, currentPet.voice);
+    } else if (isAdding && ACCESSORY_LESSONS[accId]) {
+      speakPetText(ACCESSORY_LESSONS[accId].fact, currentPet.voice);
     } else {
       const compliments = ['So fancy!', 'Looking great!', 'Ooh, stylish!', 'Super cute!'];
       speakPetText(compliments[Math.floor(Math.random() * compliments.length)], currentPet.voice);
+    }
+  };
+
+  const handleSelectTheme = (theme) => {
+    sfx.pop();
+    if (activeTheme?.id === theme.id) {
+      setActiveTheme(null);
+      speakPetText('Free style dress-up mode!', currentPet.voice);
+      return;
+    }
+    setActiveTheme(theme);
+    const hasRequired = activeAccessories.includes(theme.required);
+    if (hasRequired) {
+      sfx.sparkle();
+      speakPetText(`${theme.name} challenge ready! You already have the right item!`, currentPet.voice);
+    } else {
+      speakPetText(`${theme.name}! ${theme.hint}`, currentPet.voice);
     }
   };
 
@@ -155,22 +229,6 @@ export default function DressUpPage({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {onToggleLanguage && (
-            <button
-              type="button"
-              onClick={onToggleLanguage}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
-                audioLanguage === 'hi' || audioLanguage === 'hinglish'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
-                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-              title={audioLanguage === 'hi' || audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hindi audio"}
-            >
-              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
-              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'हिंदी' : 'English'}</span>
-            </button>
-          )}
-
           <div className="flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-full shadow-md border-2 border-rose-300">
             <Sparkles className="w-3.5 h-3.5 text-rose-600" />
             <span className="text-xs font-black text-rose-900">
@@ -180,25 +238,31 @@ export default function DressUpPage({
         </div>
       </header>
 
-      {/* Task Prompt Banner */}
-      <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
+      {/* Task Prompt Banner & Weather Challenge Selector */}
+      <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0 flex flex-col gap-1">
         <div className="bg-white/95 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-md border-2 border-rose-400 flex items-center justify-between">
           <div className="text-left">
             <p className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700">
-              👗 Dress-Up Salon:
+              👗 Dress-Up Salon & Style Lab:
             </p>
-            <h2 className="text-base sm:text-xl font-black text-slate-800 tracking-tight leading-tight">
-              Mix & Match Silly Outfits!
+            <h2 className="text-base sm:text-lg font-black text-slate-800 tracking-tight leading-tight">
+              {activeTheme ? `${activeTheme.name} Mode` : 'Mix & Match Costumes!'}
             </h2>
           </div>
 
           <button
             onClick={() => {
               sfx.pop();
-              speakPetText(
-                `Tap any costume below to mix and match silly outfits for ${petDisplayName}!`,
-                currentPet.voice
-              );
+              if (activeTheme) {
+                speakPetText(activeTheme.hint, currentPet.voice);
+              } else if (currentLesson) {
+                speakPetText(currentLesson.fact, currentPet.voice);
+              } else {
+                speakPetText(
+                  `Tap any costume below to mix and match silly outfits for ${petDisplayName}!`,
+                  currentPet.voice
+                );
+              }
             }}
             aria-label="Listen to instructions"
             className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-rose-400 to-pink-300 rounded-xl shadow-md border border-rose-500 flex items-center justify-center text-rose-950 active:scale-90 flex-shrink-0"
@@ -206,6 +270,46 @@ export default function DressUpPage({
             <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
+
+        {/* Weather & Occasion Style Guide Tabs */}
+        <div className="flex items-center justify-between gap-1 px-1">
+          {WEATHER_THEMES.map((th) => {
+            const isSelected = activeTheme?.id === th.id;
+            const isCompleted = activeAccessories.includes(th.required);
+            return (
+              <button
+                key={th.id}
+                onClick={() => handleSelectTheme(th)}
+                className={`flex-1 flex items-center justify-center gap-1 py-1 px-1 rounded-xl text-[10px] font-black border transition-all active:scale-95 shadow-sm ${
+                  isSelected
+                    ? 'bg-rose-500 text-white border-rose-600 ring-2 ring-rose-200'
+                    : isCompleted
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : 'bg-white/90 text-slate-700 border-rose-200 hover:bg-rose-50'
+                }`}
+              >
+                <span>{th.icon}</span>
+                <span className="truncate">{th.name}</span>
+                {isCompleted && <span className="text-[8px] text-emerald-600 font-bold">✓</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Educational Lesson Bar */}
+        {currentLesson && (
+          <div className="bg-amber-50/95 border border-amber-300 rounded-xl px-2.5 py-1 flex items-center gap-1.5 shadow-sm">
+            <span className="text-sm">{currentLesson.icon}</span>
+            <div className="text-left flex-1 min-w-0">
+              <span className="text-[9px] font-black text-amber-800 uppercase tracking-wider block">
+                💡 Learning: {currentLesson.title}
+              </span>
+              <p className="text-[9.5px] font-semibold text-slate-700 leading-tight truncate">
+                {currentLesson.fact}
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Fashion Runway & Styled Pet */}

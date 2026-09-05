@@ -82,6 +82,14 @@ export default function BedroomPage({
     }, 400);
   };
 
+  const STAR_FACTS = [
+    'Star 1: Polaris! The North Star helps travelers navigate at night!',
+    'Star 2: Sirius! The brightest star in the whole night sky!',
+    'Star 3: Vega! A dazzling blue-white star in our galaxy!',
+    'Star 4: Betelgeuse! A giant red super star!',
+    'Star 5: Rigel! A brilliant blue star in Orion constellation!',
+  ];
+
   // -------------------------------------------------------------
   // STEP 2: WARM BEDTIME MILK
   // -------------------------------------------------------------
@@ -97,7 +105,7 @@ export default function BedroomPage({
       setTimeout(() => {
         sfx.chime(4);
         speakPetText(
-          `Yummy warm milk! Now let's count the 5 twinkling window stars!`,
+          `Healthy warm milk! Calcium builds strong bones while we sleep! Now let's count the 5 night stars!`,
           currentPet.voice
         );
         setActiveBedStep('stars');
@@ -119,7 +127,7 @@ export default function BedroomPage({
       setLitStars(nextLit);
 
       const words = ['One', 'Two', 'Three', 'Four', 'Five'];
-      speakPetText(words[starNum - 1], { ...currentPet.voice, rate: 0.95 });
+      speakPetText(`${words[starNum - 1]}! ${STAR_FACTS[starNum - 1]}`, { ...currentPet.voice, rate: 0.90 });
 
       // Track total stars counted in player stats
       const nextCount = (playerStats.starsCounted || 0) + 1;
@@ -139,7 +147,7 @@ export default function BedroomPage({
         setTimeout(() => {
           sfx.fanfare();
           speakPetText(
-            `Twinkle twinkle little star! Yawn... so sleepy... tuck me into bed and turn off the lamp!`,
+            `Twinkle twinkle little star! Sleep helps our brain recharge and grow! Tuck me into bed and turn off the lamp!`,
             currentPet.voice
           );
           setActiveBedStep('tuck');
@@ -299,37 +307,44 @@ export default function BedroomPage({
       </section>
 
       {/* Arched Window with 5 Twinkling Stars (Step 3) */}
-      <div className="w-full max-w-sm flex items-center justify-center z-15 flex-shrink-0 my-0.5">
-        <div className="w-full bg-slate-900/90 rounded-2xl border-2 border-indigo-400/80 shadow-md p-2 flex items-center justify-between px-3">
-          <div className="flex items-center gap-1.5 text-xs text-amber-300 font-black">
-            <span className="text-base animate-pulse">🌙</span>
-            <span>Night Sky:</span>
-          </div>
+      <div className="w-full max-w-sm flex flex-col items-center justify-center z-15 flex-shrink-0 my-0.5">
+        <div className="w-full bg-slate-900/90 rounded-2xl border-2 border-indigo-400/80 shadow-md p-2 flex flex-col gap-1 px-3">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-1.5 text-xs text-amber-300 font-black">
+              <span className="text-base animate-pulse">🌙</span>
+              <span>Constellation Explorer:</span>
+            </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
-            {[1, 2, 3, 4, 5].map((starNum) => {
-              const isLit = litStars.includes(starNum);
-              return (
-                <button
-                  key={starNum}
-                  onClick={() => handleTapStar(starNum)}
-                  className={`
-                    flex flex-col items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl
-                    transition-all duration-300 active:scale-80 cursor-pointer
-                    ${
-                      isLit
-                        ? 'bg-amber-300 text-amber-950 scale-110 shadow-md ring-2 ring-amber-200 animate-pulse'
-                        : 'bg-white/10 text-white/50 border border-white/20 hover:bg-white/20'
-                    }
-                  `}
-                  title={`Star ${starNum}`}
-                >
-                  <span className="text-sm sm:text-base leading-none">⭐</span>
-                  <span className="text-[8px] font-black leading-none mt-0.5">{starNum}</span>
-                </button>
-              );
-            })}
+            <div className="flex items-center gap-1 sm:gap-2">
+              {[1, 2, 3, 4, 5].map((starNum) => {
+                const isLit = litStars.includes(starNum);
+                return (
+                  <button
+                    key={starNum}
+                    onClick={() => handleTapStar(starNum)}
+                    className={`
+                      flex flex-col items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl
+                      transition-all duration-300 active:scale-80 cursor-pointer
+                      ${
+                        isLit
+                          ? 'bg-amber-300 text-amber-950 scale-110 shadow-md ring-2 ring-amber-200 animate-pulse'
+                          : 'bg-white/10 text-white/50 border border-white/20 hover:bg-white/20'
+                      }
+                    `}
+                    title={`Star ${starNum}`}
+                  >
+                    <span className="text-sm sm:text-base leading-none">⭐</span>
+                    <span className="text-[8px] font-black leading-none mt-0.5">{starNum}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+          {litStars.length > 0 && (
+            <p className="text-[10px] text-amber-200/90 font-bold bg-white/5 px-2 py-0.5 rounded-lg border border-white/10 text-center animate-fade">
+              🔭 {STAR_FACTS[litStars[litStars.length - 1] - 1]}
+            </p>
+          )}
         </div>
       </div>
 
