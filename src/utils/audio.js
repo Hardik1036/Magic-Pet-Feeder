@@ -397,48 +397,229 @@ class SoundFX {
 
 export const sfx = new SoundFX();
 
-// Voice synthesis helper with pet custom pitch and speed
-let cachedVoice = null;
+// ==========================================
+// HINGLISH TRANSLATION & PHRASING DICTIONARY
+// ==========================================
+export function toHinglish(text) {
+  if (!text || typeof text !== 'string') return text;
+
+  let str = text.trim();
+
+  const directPhrases = [
+    // Welcome / Hats / Photos
+    { from: /welcome to the dress-up salon! pick your favorite costume for ([^!?.]+)[!?.]*/i, to: 'Dress-Up Salon mein aapka swaagat hai! $1 ke liye pyara sa costume chuno!' },
+    { from: /what would you like to name your new ([^!?.]+)[!?.]*/i, to: 'Aap apne naye $1 ka kya naam rakhna chahenge?' },
+    { from: /so fancy!?/i, to: 'Bohot shandaar!' },
+    { from: /looking great!?/i, to: 'Bohot achhe lag rahe ho!' },
+    { from: /ooh, stylish!?/i, to: 'Arre waah, kya style hai!' },
+    { from: /super cute!?/i, to: 'Kitna cute lag raha hai!' },
+    { from: /badge unlocked:\s*([^!]+)!\s*(.*)/i, to: 'Badge unlock ho gaya: $1! $2' },
+    { from: /locked badge:\s*([^.]+)\.\s*goal:\s*(.*)/i, to: 'Locked badge: $1. Goal: $2' },
+    { from: /hi ([^!]+)!\s*i'm ([^!]+)!\s*(.*)/i, to: 'Namaste $1! Main hoon $2! $3' },
+    { from: /say cheese! what a gorgeous photo saved to your scrapbook!?/i, to: 'Say cheese! Photo scrapbook mein save ho gayi!' },
+    { from: /say cheese! what a gorgeous photo!?/i, to: 'Say cheese! Kitni pyaari photo aayi hai!' },
+    { from: /fabulous! you earned the glamour superstar trophy!?/i, to: 'Arre waah! Aapko Glamour Superstar trophy mil gayi!' },
+    { from: /ready for another bubbly spa session! scrub the mud spots!?/i, to: 'Chalo bubbly spa karte hain! Mud spots saaf karo!' },
+    { from: /rub the soft sponge over the mud spots!?/i, to: 'Soft sponge se keechad saaf karo!' },
+    { from: /rub shampoo to make fluffy bubbles!?/i, to: 'Shampoo lagao aur dher saare bubbles banao!' },
+    { from: /rub with the fluffy towel to dry clean!?/i, to: 'Naram towel se pet ko sukha do!' },
+    { from: /ah, warm water feels so good! washing away the bubbles!?/i, to: 'Aaha, garam paani! Saare bubbles dho diye!' },
+    { from: /hooray! you earned the bubble champion trophy!?/i, to: 'Shabash! Aap ban gaye Bubble Champion!' },
+    { from: /turn off the lamp so ([^!?.]+) can sleep[!?.]*/i, to: 'Night lamp band karo taaki $1 so sake!' },
+    { from: /play a sweet lullaby for sweet dreams!?/i, to: 'Pyari si lori bajao taaki meethe sapne aayein!' },
+    { from: /good night, sweet dreams!?/i, to: 'Good night, sweet dreams! Shubh raatri!' },
+    { from: /give ([^!?.]+) cozy bedtime cuddles[!?.]*/i, to: '$1 ko pyar se thap-thapao!' },
+    { from: /tap the blanket to tuck ([^!?.]+) in[!?.]*/i, to: 'Blanket odhao taaki $1 so jaye!' },
+    { from: /([^!?.]+) is getting sleepy! give bedtime cuddles[!?.]*/i, to: '$1 ko neend aa rahi hai! Pyar se sulao!' },
+
+    // Playroom: Detective
+    { from: /detective ([^!]+)! search the moving numbers to find letter ([^!?.]+)[!?.]*/i, to: 'Detective $1! Box mein se letter $2 dhoondo!' },
+    { from: /search the moving numbers to find letter ([^!?.]+)[!?.]*/i, to: 'Moving numbers mein se letter $1 dhoondo!' },
+    { from: /incredible! you earned the alphabet master trophy!?/i, to: 'Kamaal kar diya! Alphabet Master trophy aapki hui!' },
+    { from: /great detective work! you found letter ([^!?.]+)[!?.]*/i, to: 'Bohot badhiya! Aapne letter $1 dhoond liya!' },
+    { from: /that's number ([^!]+)! keep looking for letter ([^!?.]+)[!?.]*/i, to: 'Yeh toh number $1 hai! Letter $2 dhoondo!' },
+    { from: /that's letter ([^!]+)! find letter ([^!?.]+)[!?.]*/i, to: 'Yeh letter $1 hai! Humein letter $2 chahiye!' },
+
+    // Playroom: Word Speller
+    { from: /we are spelling ([^!]+)! find the letter ([^!?.]+)[!?.]*/i, to: 'Hum spell kar rahe hain $1! Letter $2 dhoondo!' },
+    { from: /spelling ([^!]+)! look for ([^!?.]+)[!?.]*/i, to: '$1 ki spelling! Letter $2 ko tap karo!' },
+    { from: /amazing spelling! you spelled ([^!?.]+)[!?.]*/i, to: 'Waah shabash! Aapne $1 spell kar liya!' },
+    { from: /that's ([^!]+)! we need ([^!?.]+) next[!?.]*/i, to: 'Yeh $1 hai! Abhi humein $2 chahiye!' },
+
+    // Playroom: Counting
+    { from: /pop balloons in order from 1 to 5! tap number ([^!?.]+)[!?.]*/i, to: 'Balloons ko 1 se 5 ke order mein pop karo! Number $1 tap karo!' },
+    { from: /pop balloon #?([^!?.]+) next[!?.]*/i, to: 'Ab balloon number $1 pop karo!' },
+    { from: /super counting! you popped all 5 balloons!?/i, to: 'Kamaal kar diya! Saare 5 balloons pop kar diye!' },
+    { from: /pop balloon ([^!?.]+) first[!?.]*/i, to: 'Pehle balloon $1 pop karo!' },
+
+    // Playroom: Shapes
+    { from: /find the ([^!]+) and put it in my toy box[!?.]*/i, to: '$1 dhoondo aur mere toy box mein daalo!' },
+    { from: /yes! you found the ([^!]+)! into the toy box[!?.]*/i, to: 'Sahi pakde! $1 mil gaya! Toy box ke andar!' },
+    { from: /that's a ([^!]+)! look for the ([^!?.]+)[!?.]*/i, to: 'Yeh $1 hai! Humein $2 dhoondna hai!' },
+
+    // Playroom: Ball
+    { from: /tap the beach ball to play catch with ([^!?.]+)[!?.]*/i, to: 'Beach ball tap karo aur $1 ke saath catch-catch khelo!' },
+    { from: /incredible! you earned the ball juggler trophy!?/i, to: 'Kamaal kar diya! Ball Juggler trophy aapki hui!' },
+    { from: /awesome catch!?/i, to: 'Waah, kya catch hai!' },
+    { from: /bounce bounce!?/i, to: 'Uchhlo uchhlo!' },
+    { from: /wheee!?/i, to: 'Wheee! Maza aa gaya!' },
+
+    // MagicPetFeeder prompts
+    { from: /touch the ([^!?.]+)[!?.]*/i, to: '$1 ko touch karo!' },
+    { from: /feed the ([^!?.]+)[!?.]*/i, to: '$1 khilao!' },
+    { from: /find the letter ([^!?.]+)[!?.]*/i, to: 'Letter $1 dhoondo aur khilao!' },
+    { from: /find the number ([^!?.]+)[!?.]*/i, to: 'Number $1 dhoondo aur khilao!' },
+    { from: /find the ([^!?.]+)[!?.]*/i, to: '$1 dhoondo!' },
+    { from: /wow! the egg hatched! welcome ([^!?.]+)[!?.]*/i, to: 'Arre waah! Anda phoot gaya! Welcome $1!' },
+    { from: /hooray! ([^!]+) grew into a playful kid[!?.]*/i, to: 'Hooray! $1 ab bada ho gaya hai!' },
+    { from: /amazing! ([^!]+) is now a full grown adult[!?.]*/i, to: 'Kamaal hai! $1 ab bada dragon ban gaya!' },
+    { from: /i'm hungry! feed me ([^!?.]+)[!?.]*/i, to: 'Mujhe bhookh lagi hai! $1 khilao!' },
+    { from: /yum yum, delicious!?/i, to: 'Yum yum, bohot tasty hai!' },
+    { from: /delicious!?/i, to: 'Bohot swaadisht!' },
+    { from: /yummy!?/i, to: 'Mazedaar!' },
+    { from: /great job!?/i, to: 'Shabash!' },
+    { from: /awesome!?/i, to: 'Bohot badhiya!' },
+    { from: /super!?/i, to: 'Kamaal!' },
+    { from: /hooray!?/i, to: 'Hooray!' },
+    { from: /oops, try again!?/i, to: 'Arre, dubara try karo!' },
+    { from: /try another one!?/i, to: 'Koi aur try karo!' },
+    { from: /oopsie! let's find ([^!?.]+)[!?.]*/i, to: 'Arre! Chalo $1 dhoondein!' },
+    { from: /hehe, that tickles! try ([^!?.]+)[!?.]*/i, to: 'Hehe, gudgudi hui! $1 try karo!' },
+    { from: /almost! can you find ([^!?.]+)[!?.]*/i, to: 'Bohot paas! Kya aap $1 dhoond sakte ho?' },
+
+    // Pet greetings
+    { from: /roar! let's eat tasty snacks!?/i, to: 'Roar! Chalo yummy snacks khate hain!' },
+    { from: /hop hop! i love yummy treats!?/i, to: 'Hop hop! Mujhe treats bohot pasand hain!' },
+    { from: /woof woof! i love treats!?/i, to: 'Woof woof! Mujhe tasty treats khilao!' },
+    { from: /meow meow! purrfect snack!?/i, to: 'Meow meow! Bohot mazedaar snack!' },
+    { from: /chomp chomp! tasty bamboo!?/i, to: 'Chomp chomp! Tasty bamboo khilao!' },
+    { from: /yip yip! yummy berries!?/i, to: 'Yip yip! Yummy berries khilao!' },
+    { from: /waddle waddle! tasty fish!?/i, to: 'Waddle waddle! Tasty fish khilao!' },
+    { from: /squeak squeak! crunchy seeds!?/i, to: 'Squeak squeak! Crunchy seeds khilao!' },
+    { from: /nom nom roar!?/i, to: 'Nom nom roar! Mazaa aa gaya!' },
+    { from: /munch munch squeak!?/i, to: 'Munch munch! Mazedaar!' },
+  ];
+
+  for (const { from, to } of directPhrases) {
+    if (from.test(str)) {
+      return str.replace(from, to);
+    }
+  }
+
+  // Phonics hints: e.g. "C - A - T spells Cat!"
+  const phonicsMatch = str.match(/^([A-Z]\s*-\s*[A-Z].*?)\s+spells\s+([A-Za-z]+)!?$/i);
+  if (phonicsMatch) {
+    const word = phonicsMatch[2];
+    const hindiWord = {
+      cat: 'Billi',
+      dog: 'Kutta',
+      sun: 'Sun',
+      star: 'star',
+      fish: 'Machhli',
+      bird: 'Chidiya',
+      ball: 'ball',
+      duck: 'Batakh',
+    }[word.toLowerCase()] || word;
+    return `${phonicsMatch[1]} banta hai ${word}, yaani ${hindiWord}!`;
+  }
+
+  return str;
+}
+
+// Voice synthesis helper with pet custom pitch, speed, and Hinglish language support
+let cachedEnglishVoice = null;
+let cachedHinglishVoice = null;
+
+let currentLanguage = 'en';
+try {
+  if (typeof window !== 'undefined') {
+    const savedLang = localStorage.getItem('magic_pet_feeder_lang');
+    if (savedLang === 'hinglish' || savedLang === 'en') {
+      currentLanguage = savedLang;
+    }
+  }
+} catch (e) {
+  // LocalStorage unavailable
+}
+
+export function setAudioLanguage(lang) {
+  currentLanguage = lang === 'hinglish' ? 'hinglish' : 'en';
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('magic_pet_feeder_lang', currentLanguage);
+    }
+  } catch (e) { }
+}
+
+export function getAudioLanguage() {
+  return currentLanguage;
+}
+
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   const loadVoices = () => {
     const voices = window.speechSynthesis.getVoices();
-    cachedVoice = voices.find(
-      (v) =>
-        v.lang.startsWith('en') &&
-        (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
-    ) || voices.find((v) => v.lang.startsWith('en')) || null;
+    if (!voices || voices.length === 0) return;
+
+    // Best English voice
+    cachedEnglishVoice =
+      voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
+      ) ||
+      voices.find((v) => v.lang.startsWith('en')) ||
+      null;
+
+    // Best Hindi / Indian voice for Hinglish
+    cachedHinglishVoice =
+      voices.find((v) => v.lang === 'hi-IN' || v.lang === 'hi_IN' || v.lang.startsWith('hi')) ||
+      voices.find((v) => v.lang === 'en-IN' || v.lang === 'en_IN') ||
+      voices.find(
+        (v) =>
+          v.name.includes('Hindi') ||
+          v.name.includes('India') ||
+          v.name.includes('Kalpana') ||
+          v.name.includes('Hemant') ||
+          v.name.includes('Swara') ||
+          v.name.includes('Ravi') ||
+          v.name.includes('Heera') ||
+          v.name.includes('Neerja') ||
+          v.name.includes('Veena') ||
+          v.name.includes('Rishi') ||
+          v.name.includes('Lekha')
+      ) ||
+      cachedEnglishVoice;
   };
+
   loadVoices();
   if (window.speechSynthesis.onvoiceschanged !== undefined) {
     window.speechSynthesis.onvoiceschanged = loadVoices;
   }
 }
 
-export function speakPetText(text, petVoice) {
+export function speakPetText(text, petVoice, langOverride) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   try {
+    const isHinglish = (langOverride || currentLanguage) === 'hinglish';
+    const spokenText = isHinglish ? toHinglish(text) : text;
+
     window.speechSynthesis.cancel();
     setTimeout(() => {
       try {
-        const utterance = new SpeechSynthesisUtterance(text);
+        const utterance = new SpeechSynthesisUtterance(spokenText);
         utterance.pitch = petVoice?.pitch || 1.2;
-        utterance.rate = petVoice?.rate || 0.96;
-        utterance.lang = 'en-US';
+        utterance.rate = isHinglish ? 0.90 : (petVoice?.rate || 0.96);
 
-        if (cachedVoice) {
-          utterance.voice = cachedVoice;
+        if (isHinglish && cachedHinglishVoice) {
+          utterance.voice = cachedHinglishVoice;
+          utterance.lang = cachedHinglishVoice.lang || 'hi-IN';
+        } else if (cachedEnglishVoice) {
+          utterance.voice = cachedEnglishVoice;
+          utterance.lang = 'en-US';
         } else {
-          const voices = window.speechSynthesis.getVoices();
-          const found = voices.find(
-            (v) =>
-              v.lang.startsWith('en') &&
-              (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
-          ) || voices.find((v) => v.lang.startsWith('en'));
-          if (found) {
-            cachedVoice = found;
-            utterance.voice = found;
-          }
+          utterance.lang = isHinglish ? 'hi-IN' : 'en-US';
         }
+
         window.speechSynthesis.speak(utterance);
       } catch (innerErr) {
         console.warn('Speech utterance error:', innerErr);

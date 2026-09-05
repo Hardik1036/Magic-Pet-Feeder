@@ -277,6 +277,8 @@ export default function MagicPetFeeder({
   },
   onUpdateStats,
   totalFeeds = 0,
+  audioLanguage = 'en',
+  onToggleLanguage,
   onUnlockBadge,
   onOpenBadges,
   onNavigate,
@@ -799,6 +801,23 @@ export default function MagicPetFeeder({
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* Audio Language Switcher */}
+            {onToggleLanguage && (
+              <button
+                type="button"
+                onClick={onToggleLanguage}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                  audioLanguage === 'hinglish'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                    : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+                }`}
+                title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+              >
+                <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+                <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+              </button>
+            )}
+
             {/* Trophies Button */}
             <button
               onClick={onOpenBadges}

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { ArrowLeft, Sparkles, Volume2, Check, Heart, Trophy, Hand } from 'lucide-react';
 import { PETS } from '../data/pets.js';
 import PetAvatar from './PetAvatar.jsx';
-import { sfx } from '../utils/audio.js';
+import { sfx, speakPetText } from '../utils/audio.js';
 
 export default function PetSelectPage({
   playerName,
   petsProgress = {},
   selectedPetId,
+  audioLanguage = 'en',
+  onToggleLanguage,
   onSelectPet,
   onOpenBadges,
   onBack,
@@ -21,26 +23,10 @@ export default function PetSelectPage({
 
   const playVoicePreview = (pet) => {
     sfx.pop();
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const prog = petsProgress[pet.id];
-      const name = prog?.customName || pet.defaultName;
-      const text = `Hi ${playerName}! I'm ${name}! ${pet.voice.greeting}`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.pitch = pet.voice.pitch;
-      utterance.rate = pet.voice.rate;
-      utterance.lang = 'en-US';
-
-      const voices = window.speechSynthesis.getVoices();
-      const naturalVoice = voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha'))
-      );
-      if (naturalVoice) utterance.voice = naturalVoice;
-
-      window.speechSynthesis.speak(utterance);
-    }
+    const prog = petsProgress[pet.id];
+    const name = prog?.customName || pet.defaultName;
+    const text = `Hi ${playerName}! I'm ${name}! ${pet.voice.greeting}`;
+    speakPetText(text, pet.voice);
   };
 
   const handleConfirm = (pet) => {
@@ -72,6 +58,22 @@ export default function PetSelectPage({
         </button>
 
         <div className="flex items-center gap-1.5">
+          {onToggleLanguage && (
+            <button
+              type="button"
+              onClick={onToggleLanguage}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                audioLanguage === 'hinglish'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+            >
+              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+            </button>
+          )}
+
           {onOpenBadges && (
             <button
               onClick={() => {

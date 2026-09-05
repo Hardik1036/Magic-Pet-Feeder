@@ -105,6 +105,8 @@ export default function PlayroomPage({
   unlockedAccessories = [],
   unlockedBadges = [],
   playerStats = {},
+  audioLanguage = 'en',
+  onToggleLanguage,
   onUpdateStats,
   onUnlockBadge,
   onNavigate,
@@ -641,11 +643,29 @@ export default function PlayroomPage({
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-white/95 px-3 py-1 rounded-full shadow-md border-2 border-amber-300 animate-pulse">
-          <span className="text-sm">⭐</span>
-          <span className="text-xs font-black text-amber-900">
-            {learningStars} Learning Stars
-          </span>
+        <div className="flex items-center gap-1.5">
+          {onToggleLanguage && (
+            <button
+              type="button"
+              onClick={onToggleLanguage}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                audioLanguage === 'hinglish'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+            >
+              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1 bg-white/95 px-2.5 py-1 rounded-full shadow-md border-2 border-amber-300 animate-pulse">
+            <span className="text-sm">⭐</span>
+            <span className="text-xs font-black text-amber-900">
+              {learningStars}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -968,16 +988,16 @@ export default function PlayroomPage({
           </p>
           <p className="text-xs font-black text-slate-800 leading-tight mt-0.5 truncate sm:whitespace-normal">
             {petExpression === 'happy'
-              ? '🌟 Woohoo! Great job!'
+              ? (audioLanguage === 'hinglish' ? '🌟 Waah! Kamaal kar diya!' : '🌟 Woohoo! Great job!')
               : activeGame === 'detective'
-              ? `Find letter ${detectiveData.targetLetter} in the box!`
+              ? (audioLanguage === 'hinglish' ? `Box mein se letter ${detectiveData.targetLetter} dhoondo!` : `Find letter ${detectiveData.targetLetter} in the box!`)
               : activeGame === 'word'
-              ? `Look for letter ${activeWordObj.word[spelledLetters.length]}!`
+              ? (audioLanguage === 'hinglish' ? `Letter ${activeWordObj.word[spelledLetters.length]} ko dhoondo!` : `Look for letter ${activeWordObj.word[spelledLetters.length]}!`)
               : activeGame === 'count'
-              ? `Pop balloon #${countTarget} next!`
+              ? (audioLanguage === 'hinglish' ? `Ab balloon #${countTarget} pop karo!` : `Pop balloon #${countTarget} next!`)
               : activeGame === 'shape'
-              ? `Put the ${shapeTarget.shape} into the chest!`
-              : `Tap ball to play catch with me!`}
+              ? (audioLanguage === 'hinglish' ? `${shapeTarget.shape} ko chest mein daalo!` : `Put the ${shapeTarget.shape} into the chest!`)
+              : (audioLanguage === 'hinglish' ? `Ball tap karke mere saath khelo! ⚽` : `Tap ball to play catch with me!`)}
           </p>
         </div>
 
@@ -1021,7 +1041,7 @@ export default function PlayroomPage({
             />
           </div>
           <span className="text-[9px] font-extrabold text-teal-800 mt-0.5">
-            Tap to pet! ✨
+            {audioLanguage === 'hinglish' ? 'Pyar karne ke liye tap karo! ✨' : 'Tap to pet! ✨'}
           </span>
         </div>
       </div>

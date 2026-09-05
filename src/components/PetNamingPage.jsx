@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, Sparkles, Volume2, PawPrint } from 'lucide-react';
 import { PETS } from '../data/pets.js';
+import { speakPetText } from '../utils/audio.js';
 
 export default function PetNamingPage({
   selectedPetId,
   currentPetName,
   playerName,
+  audioLanguage = 'en',
+  onToggleLanguage,
   onConfirmName,
   onBack,
 }) {
@@ -13,14 +16,8 @@ export default function PetNamingPage({
   const [name, setName] = useState(currentPetName || currentPet.defaultName);
 
   const speakPrompt = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const text = `What would you like to name your new ${currentPet.species}?`;
-      const u = new SpeechSynthesisUtterance(text);
-      u.pitch = currentPet.voice.pitch;
-      u.rate = currentPet.voice.rate;
-      window.speechSynthesis.speak(u);
-    }
+    const text = `What would you like to name your new ${currentPet.species}?`;
+    speakPetText(text, currentPet.voice);
   };
 
   const handleStart = (e) => {
@@ -44,13 +41,31 @@ export default function PetNamingPage({
           <span>Choose Another</span>
         </button>
 
-        <button
-          onClick={speakPrompt}
-          aria-label="Listen to voice"
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
-        >
-          <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {onToggleLanguage && (
+            <button
+              type="button"
+              onClick={onToggleLanguage}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                audioLanguage === 'hinglish'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+            >
+              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+            </button>
+          )}
+
+          <button
+            onClick={speakPrompt}
+            aria-label="Listen to voice"
+            className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-transform"
+          >
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
       </header>
 
       {/* Main Content Card */}

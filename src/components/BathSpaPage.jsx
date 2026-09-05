@@ -28,6 +28,8 @@ export default function BathSpaPage({
   unlockedAccessories = [],
   unlockedBadges = [],
   playerStats = {},
+  audioLanguage = 'en',
+  onToggleLanguage,
   onUpdateStats,
   onUnlockBadge,
   onNavigate,
@@ -325,11 +327,29 @@ export default function BathSpaPage({
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-full shadow-md border-2 border-cyan-300">
-          <span className="text-xs">🫧</span>
-          <span className="text-xs font-black text-cyan-900">
-            {playerStats.bubblesPopped || 0} / 15 Popped
-          </span>
+        <div className="flex items-center gap-1.5">
+          {onToggleLanguage && (
+            <button
+              type="button"
+              onClick={onToggleLanguage}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                audioLanguage === 'hinglish'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+            >
+              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+            </button>
+          )}
+
+          <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-full shadow-md border-2 border-cyan-300">
+            <span className="text-xs">🫧</span>
+            <span className="text-xs font-black text-cyan-900">
+              {playerStats.bubblesPopped || 0} / 15 Popped
+            </span>
+          </div>
         </div>
       </header>
 

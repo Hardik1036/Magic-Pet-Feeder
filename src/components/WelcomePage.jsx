@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, ArrowRight, User, Volume2, Trophy } from 'lucide-react';
+import { speakPetText } from '../utils/audio.js';
 
 const POPULAR_PLAYER_NAMES = ['Emma', 'Leo', 'Maya', 'Noah', 'Zara', 'Lucas', 'Oliver', 'Chloe'];
 
@@ -10,6 +11,8 @@ export default function WelcomePage({
   onResumeExisting,
   savedPetName,
   unlockedBadgesCount = 0,
+  audioLanguage = 'en',
+  onToggleLanguage,
   onOpenBadges,
 }) {
   const [playerName, setPlayerName] = useState(initialPlayerName || '');
@@ -21,16 +24,15 @@ export default function WelcomePage({
   };
 
   const speakWelcome = () => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const text = playerName.trim()
+    const text =
+      audioLanguage === 'hinglish'
+        ? playerName.trim()
+          ? `Namaste ${playerName}! Chalo magic pet chunein!`
+          : 'Welcome to Magic Pet Feeder! Aapka naam kya hai?'
+        : playerName.trim()
         ? `Hi ${playerName}! Let's pick a magic pet!`
-        : "Welcome to Magic Pet Feeder! What is your name?";
-      const u = new SpeechSynthesisUtterance(text);
-      u.pitch = 1.3;
-      u.rate = 0.9;
-      window.speechSynthesis.speak(u);
-    }
+        : 'Welcome to Magic Pet Feeder! What is your name?';
+    speakPetText(text, { pitch: 1.3, rate: 0.9 }, audioLanguage);
   };
 
   return (
@@ -48,6 +50,22 @@ export default function WelcomePage({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {onToggleLanguage && (
+            <button
+              type="button"
+              onClick={onToggleLanguage}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                audioLanguage === 'hinglish'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hinglish audio"}
+            >
+              <span>{audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
+              <span>{audioLanguage === 'hinglish' ? 'Hinglish' : 'English'}</span>
+            </button>
+          )}
+
           {unlockedBadgesCount > 0 && onOpenBadges && (
             <button
               onClick={onOpenBadges}
