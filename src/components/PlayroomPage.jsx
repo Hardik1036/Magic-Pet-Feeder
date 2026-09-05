@@ -21,16 +21,176 @@ const SPELLING_WORDS = [
 ];
 
 // ==========================================
-// 2. SHAPE & COLOR MATCH ITEMS
+// 2. SHAPE & COLOR MATCH ITEMS & SVG RENDERER
 // ==========================================
 const SHAPE_ITEMS = [
-  { id: 'yellow_star', shape: 'Star', color: 'Yellow', icon: '⭐', bg: 'bg-amber-400 border-amber-500 text-amber-950' },
-  { id: 'blue_circle', shape: 'Circle', color: 'Blue', icon: '🔵', bg: 'bg-blue-500 border-blue-600 text-white' },
-  { id: 'red_heart', shape: 'Heart', color: 'Red', icon: '❤️', bg: 'bg-rose-500 border-rose-600 text-white' },
-  { id: 'green_triangle', shape: 'Triangle', color: 'Green', icon: '🔺', bg: 'bg-emerald-500 border-emerald-600 text-white' },
-  { id: 'purple_diamond', shape: 'Diamond', color: 'Purple', icon: '🔷', bg: 'bg-purple-500 border-purple-600 text-white' },
-  { id: 'orange_square', shape: 'Square', color: 'Orange', icon: '🟧', bg: 'bg-orange-500 border-orange-600 text-white' },
+  {
+    id: 'yellow_star',
+    shape: 'Star',
+    color: 'Yellow',
+    hex: '#FACC15',
+    stroke: '#CA8A04',
+    bg: 'bg-amber-400 border-amber-500 text-amber-950',
+    description: 'Bright yellow 5-point star',
+  },
+  {
+    id: 'blue_circle',
+    shape: 'Circle',
+    color: 'Blue',
+    hex: '#3B82F6',
+    stroke: '#1D4ED8',
+    bg: 'bg-blue-500 border-blue-600 text-white',
+    description: 'Round ocean blue circle',
+  },
+  {
+    id: 'red_heart',
+    shape: 'Heart',
+    color: 'Red',
+    hex: '#EF4444',
+    stroke: '#B91C1C',
+    bg: 'bg-rose-500 border-rose-600 text-white',
+    description: 'Warm ruby red heart',
+  },
+  {
+    id: 'green_triangle',
+    shape: 'Triangle',
+    color: 'Green',
+    hex: '#10B981',
+    stroke: '#047857',
+    bg: 'bg-emerald-500 border-emerald-600 text-white',
+    description: 'Emerald green triangle',
+  },
+  {
+    id: 'purple_diamond',
+    shape: 'Diamond',
+    color: 'Purple',
+    hex: '#A855F7',
+    stroke: '#7E22CE',
+    bg: 'bg-purple-500 border-purple-600 text-white',
+    description: 'Sparkly purple diamond',
+  },
+  {
+    id: 'orange_square',
+    shape: 'Square',
+    color: 'Orange',
+    hex: '#F97316',
+    stroke: '#C2410C',
+    bg: 'bg-orange-500 border-orange-600 text-white',
+    description: 'Sunny orange square',
+  },
 ];
+
+function GeometricShapeSvg({ shape, hex, stroke, size = 52, className = '' }) {
+  switch (shape) {
+    case 'Star':
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <polygon
+            points="50,5 64,36 98,36 70,57 81,91 50,70 19,91 30,57 2,36 36,36"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 'Circle':
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <circle
+            cx="50"
+            cy="50"
+            r="42"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+          />
+        </svg>
+      );
+    case 'Heart':
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <path
+            d="M50 88 C20 60 5 40 5 24 C5 10 16 2 28 2 C38 2 46 8 50 16 C54 8 62 2 72 2 C84 2 95 10 95 24 C95 40 80 60 50 88 Z"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 'Triangle':
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <polygon
+            points="50,8 94,88 6,88"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 'Diamond':
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <polygon
+            points="50,6 94,50 50,94 6,50"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case 'Square':
+    default:
+      return (
+        <svg
+          width={size}
+          height={size}
+          viewBox="0 0 100 100"
+          className={`filter drop-shadow-md transition-transform ${className}`}
+        >
+          <rect
+            x="10"
+            y="10"
+            width="80"
+            height="80"
+            rx="12"
+            fill={hex}
+            stroke={stroke}
+            strokeWidth="5"
+          />
+        </svg>
+      );
+  }
+}
 
 // Color palette for floating numbers
 const NUMBER_PALETTE = [
@@ -172,11 +332,12 @@ export default function PlayroomPage({
     detectiveItemsRef.current = detectiveData.items;
   }, [detectiveData]);
 
-  // Auto-speak on game change
+  // Auto-speak on game change or shape target change
   const lastSpokenGameRef = useRef('');
   useEffect(() => {
-    if (lastSpokenGameRef.current === activeGame) return;
-    lastSpokenGameRef.current = activeGame;
+    const speakKey = activeGame === 'shape' ? `shape_${shapeTarget.id}` : activeGame;
+    if (lastSpokenGameRef.current === speakKey) return;
+    lastSpokenGameRef.current = speakKey;
 
     const timer = setTimeout(() => {
       if (activeGame === 'detective') {
@@ -196,7 +357,7 @@ export default function PlayroomPage({
         );
       } else if (activeGame === 'shape') {
         speakPetText(
-          `Can you find the ${shapeTarget.color} ${shapeTarget.shape}? Look for the ${shapeTarget.color} color with the ${shapeTarget.shape} shape, then tap it for the toy box!`,
+          `Shape and Color Match! Find the ${shapeTarget.color} ${shapeTarget.shape}! Tap the floating ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
           currentPet.voice
         );
       } else if (activeGame === 'ball') {
@@ -208,7 +369,7 @@ export default function PlayroomPage({
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [activeGame, playerName, petDisplayName, currentPet.voice, detectiveData.targetLetter, activeWordObj.word, spelledLetters.length, countTarget, shapeTarget]);
+  }, [activeGame, playerName, petDisplayName, currentPet.voice, detectiveData.targetLetter, activeWordObj.word, spelledLetters.length, countTarget, shapeTarget.id, shapeTarget.color, shapeTarget.shape]);
 
   // Continuous smooth physics loop for Letter Detective moving numbers (60 FPS direct DOM update, 0 React re-renders)
   useEffect(() => {
@@ -543,11 +704,15 @@ export default function PlayroomPage({
         setPetSparkle(false);
         setPetExpression('idle');
         setCelebrationMessage('');
+        speakPetText(
+          `Now find the ${nextShape.color} ${nextShape.shape}! Tap the ${nextShape.color} ${nextShape.shape}!`,
+          currentPet.voice
+        );
       }, 1500);
     } else {
       sfx.squeak();
       speakPetText(
-        `That is a ${item.color} ${item.shape}! Try looking for the ${shapeTarget.color} color with the ${shapeTarget.shape} shape!`,
+        `That is the ${item.color} ${item.shape}! Look for the ${shapeTarget.color} ${shapeTarget.shape}!`,
         currentPet.voice
       );
     }
@@ -613,7 +778,7 @@ export default function PlayroomPage({
       );
     } else if (activeGame === 'shape') {
       speakPetText(
-        `We are looking for the ${shapeTarget.color} ${shapeTarget.shape}! Tap the matching ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
+        `We are looking for the ${shapeTarget.color} ${shapeTarget.shape}! Look around the play box and tap the ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
         currentPet.voice
       );
     } else if (activeGame === 'ball') {
@@ -651,22 +816,6 @@ export default function PlayroomPage({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {onToggleLanguage && (
-            <button
-              type="button"
-              onClick={onToggleLanguage}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
-                audioLanguage === 'hi' || audioLanguage === 'hinglish'
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
-                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-              title={audioLanguage === 'hi' || audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hindi audio"}
-            >
-              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
-              <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'हिंदी' : 'English'}</span>
-            </button>
-          )}
-
           <div className="flex items-center gap-1 bg-white/95 px-2.5 py-1 rounded-full shadow-md border-2 border-amber-300 animate-pulse">
             <span className="text-sm">⭐</span>
             <span className="text-xs font-black text-amber-900">
@@ -770,22 +919,28 @@ export default function PlayroomPage({
               <div>
                 <div className="flex items-center gap-1">
                   <span className="text-xs">🎨</span>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-rose-700">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-purple-700">
                     Shape & Color Match:
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                   <span className="text-xs sm:text-sm font-black text-slate-800">
-                    Target:
+                    Find:
                   </span>
-                  <span className="px-2.5 py-0.5 rounded-lg bg-rose-500 text-white font-black text-xs sm:text-sm flex items-center gap-1 shadow-sm border border-rose-600">
-                    <span>{shapeTarget.icon}</span>
+                  <span className={`px-2.5 py-1 rounded-xl font-black text-xs sm:text-sm flex items-center gap-1.5 shadow-sm border-2 ${shapeTarget.bg}`}>
+                    <GeometricShapeSvg
+                      shape={shapeTarget.shape}
+                      hex={shapeTarget.hex}
+                      stroke={shapeTarget.stroke}
+                      size={20}
+                    />
                     <span>
                       {shapeTarget.color} {shapeTarget.shape}
                     </span>
                   </span>
-                  <span className="text-[10px] font-bold text-rose-800 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
-                    Find {shapeTarget.color} color + {shapeTarget.shape} shape!
+                  <span className="text-[10px] font-black text-slate-800 bg-white/95 px-2 py-0.5 rounded-full border border-slate-300 shadow-sm flex items-center gap-1">
+                    <span>👉</span>
+                    <span>Tap the floating {shapeTarget.color.toLowerCase()} {shapeTarget.shape.toLowerCase()}!</span>
                   </span>
                 </div>
               </div>
@@ -942,9 +1097,16 @@ export default function PlayroomPage({
                       top: `${item.y}%`,
                       transform: 'translate(-50%, -50%)',
                     }}
-                    className={`absolute w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${item.bg} border-2 shadow-lg flex flex-col items-center justify-center text-xl sm:text-2xl active:scale-130 transition-transform animate-float select-none cursor-pointer`}
+                    className="absolute p-2 bg-transparent border-0 outline-none flex items-center justify-center cursor-pointer active:scale-135 hover:scale-120 transition-transform animate-float select-none group"
+                    title={`${item.color} ${item.shape}`}
                   >
-                    <span>{item.icon}</span>
+                    <GeometricShapeSvg
+                      shape={item.shape}
+                      hex={item.hex}
+                      stroke={item.stroke}
+                      size={54}
+                      className="group-hover:rotate-6 group-active:scale-110"
+                    />
                   </button>
                 )
             )}
@@ -954,10 +1116,17 @@ export default function PlayroomPage({
               <span className="text-2xl animate-bounce">📦</span>
               <div className="text-left leading-tight">
                 <p className="text-[9px] font-bold text-amber-200 uppercase tracking-wide">Put in Toy Box:</p>
-                <p className="text-xs font-black flex items-center gap-1">
-                  <span>{shapeTarget.icon}</span>
-                  <span>{shapeTarget.color} {shapeTarget.shape}</span>
-                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <GeometricShapeSvg
+                    shape={shapeTarget.shape}
+                    hex={shapeTarget.hex}
+                    stroke={shapeTarget.stroke}
+                    size={20}
+                  />
+                  <span className="text-xs font-black text-white">
+                    {shapeTarget.color} {shapeTarget.shape}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -999,16 +1168,16 @@ export default function PlayroomPage({
           </p>
           <p className="text-xs font-black text-slate-800 leading-tight mt-0.5 truncate sm:whitespace-normal">
             {petExpression === 'happy'
-              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🌟 वाह! कमाल कर दिया!' : '🌟 Woohoo! Great job!')
+              ? '🌟 Great job! You found it!'
               : activeGame === 'detective'
-              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `डिब्बे में से अक्षर ${detectiveData.targetLetter} ढूंढो!` : `Find letter ${detectiveData.targetLetter} in the box!`)
+              ? `Find letter ${detectiveData.targetLetter} in the box!`
               : activeGame === 'word'
-              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `अक्षर ${activeWordObj.word[spelledLetters.length]} को ढूंढो!` : `Look for letter ${activeWordObj.word[spelledLetters.length]}!`)
+              ? `Look for letter ${activeWordObj.word[spelledLetters.length]}!`
               : activeGame === 'count'
-              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `अब गुब्बारा #${countTarget} फोड़ो!` : `Pop balloon #${countTarget} next!`)
+              ? `Pop balloon #${countTarget} next!`
               : activeGame === 'shape'
-              ? (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `${shapeTarget.shape} को खिलौनों के डिब्बे में डालो!` : `Put the ${shapeTarget.shape} into the chest!`)
-              : (audioLanguage === 'hi' || audioLanguage === 'hinglish' ? `बीच बॉल पर टैप करके मेरे साथ खेलो! ⚽` : `Tap ball to play catch with me!`)}
+              ? `Find and tap the ${shapeTarget.color} ${shapeTarget.shape}! 🎨`
+              : `Tap ball to play catch with me! ⚽`}
           </p>
         </div>
 
@@ -1052,7 +1221,7 @@ export default function PlayroomPage({
             />
           </div>
           <span className="text-[9px] font-extrabold text-teal-800 mt-0.5">
-            {audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'प्यार करने के लिए टैप करो! ✨' : 'Tap to pet! ✨'}
+            Tap to pet! ✨
           </span>
         </div>
       </div>
@@ -1119,6 +1288,10 @@ export default function PlayroomPage({
             onClick={() => {
               sfx.pop();
               setActiveGame('shape');
+              speakPetText(
+                `Shape and Color Match! Find the ${shapeTarget.color} ${shapeTarget.shape}! Tap the floating ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
+                currentPet.voice
+              );
             }}
             className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
               activeGame === 'shape'
