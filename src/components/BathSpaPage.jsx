@@ -3,7 +3,7 @@ import { User, Volume2, Sparkles, RefreshCw, Droplets, Heart, Check, Star, Award
 import PetAvatar from './PetAvatar.jsx';
 import ActivityNavBar from './ActivityNavBar.jsx';
 import { PETS } from '../data/pets.js';
-import { sfx, speakPetText } from '../utils/audio.js';
+import { sfx, speakPetText, playBodyPartGuide } from '../utils/audio.js';
 
 // 5 Mud Spots across the pet body with clear anatomical body part labels
 const INITIAL_MUD_SPOTS = [
@@ -130,11 +130,15 @@ export default function BathSpaPage({
   const [isPetCrying, setIsPetCrying] = useState(true);
   const [showToyModal, setShowToyModal] = useState(false);
   const [activeToyLesson, setActiveToyLesson] = useState('');
+  const [speakingPartId, setSpeakingPartId] = useState(null);
   // Drag & drop state for cute human toy assembly
   const [draggedToyPart, setDraggedToyPart] = useState(null);
   const [dragToyPos, setDragToyPos] = useState({ x: 0, y: 0 });
   const [hoveredToySlot, setHoveredToySlot] = useState(null);
   const blueprintRef = useRef(null);
+  const dragStartPosRef = useRef({ x: 0, y: 0 });
+  const hasMovedRef = useRef(false);
+  const speakingTimeoutRef = useRef(null);
 
   // Welcome speech
   useEffect(() => {
@@ -203,7 +207,7 @@ export default function BathSpaPage({
               if (nextHits <= 0) {
                 // Spot is completely scrubbed!
                 sfx.chime(spot.id);
-                speakPetText(`${spot.label} is clean!`, currentPet.voice);
+                speakPetText(`${spot.hint} Squeaky clean!`, currentPet.voice);
                 setCleanedSpots((c) => {
                   const nextCleaned = [...c, spot.id];
                   if (nextCleaned.length === INITIAL_MUD_SPOTS.length) {
@@ -289,7 +293,7 @@ export default function BathSpaPage({
     sfx.scrub();
     setPetExpression('happy');
     sfx.chime(spot.id);
-    speakPetText(`${spot.label} is clean!`, currentPet.voice);
+    speakPetText(`${spot.hint} Squeaky clean!`, currentPet.voice);
     setCleanedSpots((prev) => {
       if (prev.includes(spot.id)) return prev;
       const next = [...prev, spot.id];
@@ -413,13 +417,50 @@ export default function BathSpaPage({
   // -------------------------------------------------------------
   // EDUCATIONAL CUTE HUMAN TOY ASSEMBLY (DRAG & DROP HANDLERS)
   // -------------------------------------------------------------
+  const playBodyPartAudioGuide = useCallback((part) => {
+    if (!part) return;
+    sfx.pop();
+    const idx = TOY_BODY_PARTS.findIndex((p) => p.id === part.id);
+    sfx.chime(idx >= 0 ? idx + 1 : 2);
+
+    setSpeakingPartId(part.id);
+    setActiveToyLesson(`${part.name}: ${part.explanation}`);
+
+    if (speakingTimeoutRef.current) {
+      clearTimeout(speakingTimeoutRef.current);
+    }
+    speakingTimeoutRef.current = setTimeout(() => {
+      setSpeakingPartId(null);
+    }, 4500);
+
+    playBodyPartGuide(part.name, part.explanation, currentPet.voice);
+  }, [currentPet]);
+
+  const playAllBodyPartsGuide = useCallback(() => {
+    sfx.pop();
+    sfx.fanfare();
+    setActiveToyLesson('All 6 Body Parts: Head, Eyes, Ears, Tummy, Arms, and Feet!');
+    const fullSpeech = 'Welcome to the Body Parts Audio Guide! Our head holds our brain to think. Our eyes see bright colors. Our ears listen to sounds. Our chest and tummy breathe air and digest food. Our arms give hugs. And our legs and feet balance, walk, and jump!';
+    speakPetText(fullSpeech, currentPet.voice);
+  }, [currentPet]);
+
   const handleSnapToyPart = (part) => {
     if (placedToyParts.includes(part.id)) return;
     sfx.pop();
-    sfx.chime(placedToyParts.length + 1);
+    const idx = TOY_BODY_PARTS.findIndex((p) => p.id === part.id);
+    sfx.chime(idx >= 0 ? idx + 1 : 2);
 
+    setSpeakingPartId(part.id);
     setActiveToyLesson(`${part.name}: ${part.explanation}`);
-    speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
+
+    if (speakingTimeoutRef.current) {
+      clearTimeout(speakingTimeoutRef.current);
+    }
+    speakingTimeoutRef.current = setTimeout(() => {
+      setSpeakingPartId(null);
+    }, 4500);
+
+    playBodyPartGuide(part.name, part.explanation, currentPet.voice);
 
     setPlacedToyParts((prev) => {
       const next = [...prev, part.id];
@@ -438,9 +479,14 @@ export default function BathSpaPage({
   };
 
   const handleToyDragStart = (part, e) => {
-    if (placedToyParts.includes(part.id)) return;
+    if (placedToyParts.includes(part.id)) {
+      playBodyPartAudioGuide(part);
+      return;
+    }
     sfx.pop();
     const touch = e.touches ? e.touches[0] : e;
+    dragStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    hasMovedRef.current = false;
     setDraggedToyPart(part);
     setDragToyPos({ x: touch.clientX, y: touch.clientY });
   };
@@ -450,6 +496,12 @@ export default function BathSpaPage({
     const touch = e.touches ? e.touches[0] : e;
     const x = touch.clientX;
     const y = touch.clientY;
+
+    const distMoved = Math.hypot(x - dragStartPosRef.current.x, y - dragStartPosRef.current.y);
+    if (distMoved > 8) {
+      hasMovedRef.current = true;
+    }
+
     setDragToyPos({ x, y });
 
     // Calculate proximity to the correct target slot on the blueprint
@@ -469,6 +521,16 @@ export default function BathSpaPage({
 
   const handleToyDragEnd = (e) => {
     if (!draggedToyPart) return;
+    const part = draggedToyPart;
+    setDraggedToyPart(null);
+    setHoveredToySlot(null);
+
+    // If pointer did not move, it's a tap!
+    if (!hasMovedRef.current) {
+      handleToyDirectTap(part);
+      return;
+    }
+
     const touch = e.changedTouches ? e.changedTouches[0] : (e.touches ? e.touches[0] : e);
     const x = touch.clientX;
     const y = touch.clientY;
@@ -476,30 +538,25 @@ export default function BathSpaPage({
     let snapped = false;
     if (blueprintRef.current) {
       const rect = blueprintRef.current.getBoundingClientRect();
-      const targetSlotX = rect.left + (draggedToyPart.slot.x / 100) * rect.width;
-      const targetSlotY = rect.top + (draggedToyPart.slot.y / 100) * rect.height;
+      const targetSlotX = rect.left + (part.slot.x / 100) * rect.width;
+      const targetSlotY = rect.top + (part.slot.y / 100) * rect.height;
       const dist = Math.hypot(x - targetSlotX, y - targetSlotY);
 
       if (dist < 75) {
         snapped = true;
-        handleSnapToyPart(draggedToyPart);
+        handleSnapToyPart(part);
       }
     }
 
     if (!snapped) {
       sfx.boing();
-      speakPetText(draggedToyPart.hint, currentPet.voice);
+      speakPetText(part.hint, currentPet.voice);
     }
-
-    setDraggedToyPart(null);
-    setHoveredToySlot(null);
   };
 
   const handleToyDirectTap = (part) => {
     if (placedToyParts.includes(part.id)) {
-      sfx.pop();
-      setActiveToyLesson(`${part.name}: ${part.explanation}`);
-      speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
+      playBodyPartAudioGuide(part);
     } else {
       handleSnapToyPart(part);
     }
@@ -630,7 +687,7 @@ export default function BathSpaPage({
                 return;
               }
               const hints = {
-                sponge: `Drag the soft sponge across ${petDisplayName}'s mud spots to scrub them clean!`,
+                sponge: `Drag the soft sponge across ${petDisplayName}'s body parts to scrub Cheek, Ear, Tummy, Paw, and Chest clean!`,
                 shampoo: `Drag shampoo back and forth across ${petDisplayName} to lather fluffy soap foam!`,
                 shower: `Shower is rinsing the soap! Tap and pop the floating bubbles!`,
                 towel: `Rub the fluffy warm towel back and forth across ${petDisplayName} to dry off!`,
@@ -782,9 +839,12 @@ export default function BathSpaPage({
                           transform: `translate(-50%, -50%) scale(${0.7 + hitsRemaining * 0.15})`,
                         }}
                         className="absolute rounded-full bg-gradient-to-tr from-amber-900 via-amber-800 to-amber-700 border-2 border-amber-950 shadow-md flex items-center justify-center text-xs animate-pulse active:scale-75 z-25 cursor-pointer hover:ring-2 hover:ring-amber-400"
-                        title={`Scrub ${spot.label}!`}
+                        title={`Audio Guide: Scrub ${spot.label} (${spot.hint})`}
                       >
-                        <span className="text-[10px] font-black text-amber-100">{spot.label}</span>
+                        <span className="text-[9px] font-black text-amber-100 flex items-center gap-0.5">
+                          <Volume2 className="w-2.5 h-2.5 inline text-amber-200" />
+                          <span>{spot.label}</span>
+                        </span>
                       </button>
                     );
                   })}
@@ -1079,33 +1139,47 @@ export default function BathSpaPage({
 
           {/* Educational Human Body Part Lesson Card */}
           <div className="w-full max-w-lg my-1.5 bg-gradient-to-r from-purple-900/95 to-indigo-900/95 border-2 border-purple-300 rounded-2xl px-3.5 py-2 text-white shadow-lg flex items-center justify-between flex-shrink-0">
-            <div className="flex items-center gap-2 text-left">
+            <div className="flex items-center gap-2 text-left flex-1 mr-2">
               <span className="text-2xl animate-pulse">💡</span>
-              <div>
-                <p className="text-[10px] font-bold text-purple-200 uppercase tracking-wide">
-                  {draggedToyPart ? `Dragging ${draggedToyPart.name}:` : 'Human Anatomy Lesson:'}
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-purple-200 uppercase tracking-wide flex items-center gap-1.5">
+                  <span>{draggedToyPart ? `Dragging ${draggedToyPart.name}:` : 'Body Parts Audio Guide:'}</span>
+                  {speakingPartId && (
+                    <span className="bg-amber-400 text-amber-950 font-black px-1.5 py-0.2 rounded-full text-[8.5px] animate-pulse flex items-center gap-0.5">
+                      <span>🔊</span>
+                      <span>SPEAKING</span>
+                    </span>
+                  )}
                 </p>
-                <p className="text-xs sm:text-sm font-black text-amber-200">
+                <p className="text-xs sm:text-sm font-black text-amber-200 leading-snug">
                   {draggedToyPart
                     ? draggedToyPart.hint
-                    : activeToyLesson || 'Drag each body part from below onto the human silhouette to learn!'}
+                    : activeToyLesson || 'Tap any body part card (or 🔊 button) to hear its audio guide!'}
                 </p>
               </div>
             </div>
 
-            {activeToyLesson && !draggedToyPart && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <button
                 type="button"
                 onClick={() => {
-                  sfx.pop();
-                  speakPetText(activeToyLesson, currentPet.voice);
+                  if (speakingPartId) {
+                    const p = TOY_BODY_PARTS.find((item) => item.id === speakingPartId);
+                    if (p) playBodyPartAudioGuide(p);
+                  } else if (activeToyLesson) {
+                    sfx.pop();
+                    speakPetText(activeToyLesson, currentPet.voice);
+                  } else {
+                    playAllBodyPartsGuide();
+                  }
                 }}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white flex-shrink-0 active:scale-90 cursor-pointer"
-                title="Replay lesson audio"
+                className="px-2.5 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs flex items-center gap-1 shadow-md active:scale-95 cursor-pointer"
+                title="Play Body Parts Audio Guide"
               >
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-4 h-4 text-amber-950" />
+                <span className="text-[11px] font-black">Audio Guide</span>
               </button>
-            )}
+            </div>
           </div>
 
           {/* Blueprint Canvas: Drag & Drop Drop-Zone with Cute Human Art */}
@@ -1324,11 +1398,18 @@ export default function BathSpaPage({
             <div className="absolute inset-0 pointer-events-none">
               {TOY_BODY_PARTS.map((part) => {
                 const isPlaced = placedToyParts.includes(part.id);
+                const isSpeaking = speakingPartId === part.id;
                 return (
                   <button
                     key={part.id}
                     type="button"
-                    onClick={() => handleToyDirectTap(part)}
+                    onClick={() => {
+                      if (isPlaced) {
+                        playBodyPartAudioGuide(part);
+                      } else {
+                        handleSnapToyPart(part);
+                      }
+                    }}
                     style={{
                       left: `${part.slot.x}%`,
                       top: `${part.slot.y}%`,
@@ -1337,19 +1418,26 @@ export default function BathSpaPage({
                       transform: 'translate(-50%, -50%)',
                     }}
                     className={`absolute flex flex-col items-center justify-center pointer-events-auto cursor-pointer rounded-2xl transition-all ${
-                      hoveredToySlot === part.id
-                        ? 'bg-amber-400/25 ring-4 ring-amber-300 scale-105'
+                      isSpeaking
+                        ? 'ring-4 ring-amber-400 bg-amber-400/30 scale-105 shadow-xl animate-pulse z-30'
+                        : hoveredToySlot === part.id
+                        ? 'bg-amber-400/25 ring-4 ring-amber-300 scale-105 z-25'
                         : isPlaced
-                        ? 'hover:ring-2 hover:ring-purple-300'
+                        ? 'hover:ring-2 hover:ring-purple-300 hover:bg-purple-500/10'
                         : 'border-2 border-dashed border-purple-400/40 hover:bg-purple-500/20'
                     }`}
-                    title={isPlaced ? `Review ${part.name}` : `Drop or tap ${part.name}`}
+                    title={isPlaced ? `Audio Guide: ${part.name}` : `Drop or tap ${part.name}`}
                   >
-                    {!isPlaced && (
+                    {isSpeaking ? (
+                      <span className="text-[10px] font-black text-amber-950 bg-amber-300 px-2 py-0.5 rounded-full shadow-md animate-bounce flex items-center gap-1">
+                        <span>🔊</span>
+                        <span>{part.name}!</span>
+                      </span>
+                    ) : !isPlaced ? (
                       <span className="text-[10px] font-black text-purple-200/80 bg-slate-900/60 px-2 py-0.5 rounded-full backdrop-blur-xs">
                         {hoveredToySlot === part.id ? '✨ DROP!' : `${part.name}?`}
                       </span>
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
@@ -1401,45 +1489,74 @@ export default function BathSpaPage({
 
           {/* Draggable Body Parts Tray at Bottom */}
           <div className="w-full max-w-lg bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-xl border-2 border-purple-300 mt-1.5 flex-shrink-0">
-            <div className="flex items-center justify-between mb-1 px-1">
+            <div className="flex items-center justify-between mb-1.5 px-1">
               <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider flex items-center gap-1">
-                <span>👇 Drag Body Parts to Silhouette (or Tap):</span>
+                <span>👇 Body Parts Segments (Drag or Tap 🔊 Guide):</span>
               </span>
-              <span className="text-[9.5px] font-bold text-slate-500">
-                (Touch & drag onto blueprint)
-              </span>
+              <button
+                type="button"
+                onClick={playAllBodyPartsGuide}
+                className="text-[9.5px] font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs cursor-pointer active:scale-95"
+                title="Hear audio guide for all 6 body parts"
+              >
+                <Volume2 className="w-3 h-3 text-indigo-600" />
+                <span>Hear All Parts</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
               {TOY_BODY_PARTS.map((part) => {
                 const isPlaced = placedToyParts.includes(part.id);
+                const isSpeaking = speakingPartId === part.id;
                 return (
-                  <button
+                  <div
                     key={part.id}
-                    type="button"
-                    onPointerDown={(e) => handleToyDragStart(part, e)}
-                    onClick={() => handleToyDirectTap(part)}
-                    style={{ touchAction: 'none' }}
-                    className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none ${
-                      isPlaced
+                    className={`relative flex flex-col items-center justify-between p-1 sm:p-1.5 rounded-xl border transition-all select-none ${
+                      isSpeaking
+                        ? 'ring-3 ring-amber-400 bg-amber-50 border-amber-400 scale-105 shadow-md z-20'
+                        : isPlaced
                         ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs'
-                        : 'bg-purple-50 border-purple-300 hover:bg-purple-100 text-purple-950 active:scale-90 shadow-xs ring-1 ring-purple-200'
+                        : 'bg-purple-50 border-purple-300 hover:bg-purple-100 text-purple-950 shadow-xs ring-1 ring-purple-200'
                     }`}
                   >
-                    <span className="text-xl sm:text-2xl">{part.icon}</span>
-                    <span className="text-[8.5px] sm:text-[9px] font-black mt-0.5 leading-tight truncate max-w-full">
-                      {part.name}
-                    </span>
-                    <span
-                      className={`text-[7px] sm:text-[7.5px] font-bold px-1 rounded-full mt-0.5 ${
-                        isPlaced
-                          ? 'bg-emerald-200 text-emerald-900'
-                          : 'bg-purple-200 text-purple-900'
+                    {/* Dedicated Audio Guide Speaker Button on Top-Right */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        playBodyPartAudioGuide(part);
+                      }}
+                      className={`absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md transition-transform active:scale-90 z-30 cursor-pointer ${
+                        isSpeaking
+                          ? 'bg-amber-400 text-amber-950 animate-bounce ring-2 ring-white'
+                          : 'bg-indigo-600 text-white hover:bg-indigo-500 border border-white'
                       }`}
+                      title={`Audio Guide: Hear what ${part.name} does`}
                     >
-                      {isPlaced ? '✓ Placed' : '🖐️ Drag'}
-                    </span>
-                  </button>
+                      <Volume2 className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    </button>
+
+                    {/* Draggable & Tappable Main Area */}
+                    <div
+                      onPointerDown={(e) => handleToyDragStart(part, e)}
+                      style={{ touchAction: 'none' }}
+                      className="w-full flex flex-col items-center cursor-grab active:cursor-grabbing"
+                    >
+                      <span className="text-xl sm:text-2xl">{part.icon}</span>
+                      <span className="text-[8.5px] sm:text-[9px] font-black mt-0.5 leading-tight truncate max-w-full">
+                        {part.name}
+                      </span>
+                      <span
+                        className={`text-[7px] sm:text-[7.5px] font-bold px-1 rounded-full mt-0.5 ${
+                          isPlaced
+                            ? 'bg-emerald-200 text-emerald-900'
+                            : 'bg-purple-200 text-purple-900'
+                        }`}
+                      >
+                        {isPlaced ? '✓ Placed' : '🖐️ Drag'}
+                      </span>
+                    </div>
+                  </div>
                 );
               })}
             </div>

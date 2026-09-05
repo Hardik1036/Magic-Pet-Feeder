@@ -512,6 +512,25 @@ export function toHinglish(text) {
 let activeSpeechTimer = null;
 let keepAliveInterval = null;
 
+export function cleanSpeechText(text) {
+  if (!text || typeof text !== 'string') return '';
+  return text
+    // Strip common emojis and symbols
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1FA70}-\u{1FAFF}]/gu, '')
+    // Remove markdown symbols
+    .replace(/[*_#`~]/g, '')
+    // Clean spaces
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function playBodyPartGuide(partName, partExplanation, petVoice) {
+  unlockMobileAudio();
+  sfx.chime(2);
+  const speech = `${partName}! ${partExplanation}`;
+  speakPetText(speech, petVoice);
+}
+
 export function speakPetText(text, petVoice) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   if (!text || typeof text !== 'string' || !text.trim()) return;
@@ -539,7 +558,7 @@ export function speakPetText(text, petVoice) {
       window.speechSynthesis.cancel();
     } catch (e) {}
 
-    // 70ms buffer ensures Chromium cleanly clears its internal queue before new utterance
+    // 60ms buffer ensures Chromium cleanly clears its internal queue before new utterance
     activeSpeechTimer = setTimeout(() => {
       try {
         if (window.speechSynthesis.paused) {
@@ -564,7 +583,8 @@ export function speakPetText(text, petVoice) {
           voices[0] ||
           null;
 
-        const cleanText = text.trim();
+        const clean = cleanSpeechText(text);
+        const cleanText = clean.length > 0 ? clean : text.trim();
         const utterance = new SpeechSynthesisUtterance(cleanText);
         if (bestVoice) {
           utterance.voice = bestVoice;
@@ -611,10 +631,15 @@ export function speakPetText(text, petVoice) {
         }, 5000);
 
         window.speechSynthesis.speak(utterance);
+
+        // WebKit / Chrome Android resume check
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
       } catch (err) {
         console.warn('speechSynthesis.speak error:', err);
       }
-    }, 70);
+    }, 60);
   } catch (e) {
     console.warn('General speech error:', e);
   }
