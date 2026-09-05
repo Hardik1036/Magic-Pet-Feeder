@@ -39,7 +39,60 @@ const areArraysEqual = (a = [], b = []) => {
   return true;
 };
 
-export default function App() {
+const VALID_PAGES = ['welcome', 'select_pet', 'name_pet', 'game', 'bath', 'playroom', 'bedroom', 'dressup', 'badges'];
+
+// Comprehensive Error Boundary ensuring no black screens ever occur
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('Game ErrorBoundary caught:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full min-h-screen bg-gradient-to-b from-sky-400 via-indigo-300 to-pink-300 flex flex-col items-center justify-center p-4 text-center select-none font-sans">
+          <div className="bg-white/95 text-slate-900 rounded-3xl p-6 shadow-2xl max-w-sm flex flex-col items-center gap-3 border-4 border-amber-400">
+            <span className="text-5xl animate-bounce">🦖</span>
+            <h2 className="text-xl font-black text-slate-800">Magic Pet World</h2>
+            <p className="text-xs text-slate-600 font-semibold leading-relaxed">
+              Your 3D pet companions are ready! Tap below to jump straight in!
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.reload();
+              }}
+              className="w-full py-3 bg-gradient-to-r from-emerald-400 to-teal-500 text-white font-black rounded-2xl shadow-lg active:scale-95 transition text-base"
+            >
+              Play with Pets! 🌟
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.removeItem(STORAGE_KEY);
+                } catch (e) {}
+                window.location.reload();
+              }}
+              className="text-xs text-slate-400 hover:text-rose-500 font-bold underline"
+            >
+              New Game Reset
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function AppContent() {
   // Global player profile
   const [playerName, setPlayerName] = useState('Emma');
   const [selectedPetId, setSelectedPetId] = useState('dino');
@@ -99,12 +152,12 @@ export default function App() {
     });
   };
 
-  // Navigation: 'welcome' | 'select_pet' | 'name_pet' | 'game' | 'badges'
+  // Navigation: 'welcome' | 'select_pet' | 'name_pet' | 'game' | 'bath' | 'playroom' | 'bedroom' | 'dressup' | 'badges'
   const [currentPage, setCurrentPage] = useState('welcome');
   const [hasExistingSave, setHasExistingSave] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load from localStorage
+  // Load from localStorage safely
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -130,7 +183,9 @@ export default function App() {
           }
           setHasExistingSave(true);
 
-          if (saved.currentPage === 'game') {
+          if (saved.currentPage && VALID_PAGES.includes(saved.currentPage)) {
+            setCurrentPage(saved.currentPage);
+          } else {
             setCurrentPage('game');
           }
         }
@@ -283,12 +338,16 @@ export default function App() {
   };
 
   const totalFeeds = Object.values(petsProgress).reduce((acc, p) => acc + (p.feedCount || 0), 0);
+  const safeAccessories = Array.isArray(activePetData.unlockedAccessories) ? activePetData.unlockedAccessories : EMPTY_ARRAY;
+  const effectivePage = VALID_PAGES.includes(currentPage)
+    ? currentPage
+    : (hasExistingSave ? 'game' : 'welcome');
 
   return (
     <div className="w-full h-[100dvh] flex items-center justify-center bg-slate-950 overflow-hidden select-none">
       <div className="w-full h-full max-h-[100dvh] max-w-md mx-auto relative overflow-hidden flex flex-col shadow-2xl bg-slate-900">
         {/* PAGE 1: WELCOME & PLAYER NAME */}
-        {currentPage === 'welcome' && (
+        {effectivePage === 'welcome' && (
           <WelcomePage
             initialPlayerName={playerName}
             hasExistingSave={hasExistingSave}
@@ -304,7 +363,7 @@ export default function App() {
         )}
 
         {/* PAGE 2: CHOOSE FROM 8 ANIMALS */}
-        {currentPage === 'select_pet' && (
+        {effectivePage === 'select_pet' && (
           <PetSelectPage
             playerName={playerName}
             petsProgress={petsProgress}
@@ -316,7 +375,7 @@ export default function App() {
         )}
 
         {/* STEP 2.5: NAME YOUR PET */}
-        {currentPage === 'name_pet' && (
+        {effectivePage === 'name_pet' && (
           <PetNamingPage
             selectedPetId={selectedPetId}
             currentPetName={activePetData.customName}
@@ -327,14 +386,14 @@ export default function App() {
         )}
 
         {/* ACTIVITY 1: FEEDING KITCHEN */}
-        {currentPage === 'game' && (
+        {effectivePage === 'game' && (
           <MagicPetFeeder
             key={selectedPetId}
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}
             initialFeedCount={activePetData.feedCount}
-            initialAccessories={activePetData.unlockedAccessories}
+            initialAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
             onUpdateStats={handleUpdateStats}
@@ -349,14 +408,14 @@ export default function App() {
         )}
 
         {/* ACTIVITY 2: BUBBLE BATH SPA */}
-        {currentPage === 'bath' && (
+        {effectivePage === 'bath' && (
           <BathSpaPage
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}
             stageIndex={activePetData.stageIndex}
             feedCount={activePetData.feedCount}
-            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
             onUpdateStats={handleUpdateStats}
@@ -368,14 +427,14 @@ export default function App() {
         )}
 
         {/* ACTIVITY 3: TOY PLAYROOM */}
-        {currentPage === 'playroom' && (
+        {effectivePage === 'playroom' && (
           <PlayroomPage
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}
             stageIndex={activePetData.stageIndex}
             feedCount={activePetData.feedCount}
-            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
             onUpdateStats={handleUpdateStats}
@@ -387,14 +446,14 @@ export default function App() {
         )}
 
         {/* ACTIVITY 4: COZY BEDROOM BEDTIME */}
-        {currentPage === 'bedroom' && (
+        {effectivePage === 'bedroom' && (
           <BedroomPage
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}
             stageIndex={activePetData.stageIndex}
             feedCount={activePetData.feedCount}
-            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedAccessories={safeAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
             onUpdateStats={handleUpdateStats}
@@ -406,14 +465,14 @@ export default function App() {
         )}
 
         {/* ACTIVITY 5: DRESS-UP SALON */}
-        {currentPage === 'dressup' && (
+        {effectivePage === 'dressup' && (
           <DressUpPage
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}
             stageIndex={activePetData.stageIndex}
             feedCount={activePetData.feedCount}
-            unlockedAccessories={activePetData.unlockedAccessories}
+            unlockedAccessories={safeAccessories}
             onUpdateAccessories={handleUpdateAccessories}
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
@@ -429,7 +488,7 @@ export default function App() {
         )}
 
         {/* PAGE 6: BADGES & TROPHIES ROOM */}
-        {currentPage === 'badges' && (
+        {effectivePage === 'badges' && (
           <BadgesPage
             unlockedBadges={unlockedBadges}
             playerStats={playerStats}
@@ -438,7 +497,33 @@ export default function App() {
             onBack={() => setCurrentPage('game')}
           />
         )}
+
+        {/* FALLBACK SAFETY CONTAINER: Prevents any black screen */}
+        {!VALID_PAGES.includes(effectivePage) && (
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-white text-center bg-gradient-to-b from-sky-400 to-indigo-500">
+            <span className="text-5xl mb-3 animate-bounce">🐾</span>
+            <h2 className="text-xl font-black mb-2">Magic Pet World</h2>
+            <p className="text-xs text-white/90 font-medium mb-4">
+              Your pet is excited to play!
+            </p>
+            <button
+              type="button"
+              onClick={() => setCurrentPage('game')}
+              className="px-6 py-3 bg-amber-400 hover:bg-amber-300 active:scale-95 text-amber-950 font-black rounded-2xl shadow-xl transition text-sm"
+            >
+              Play with Pets! 🌟
+            </button>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppContent />
+    </ErrorBoundary>
   );
 }

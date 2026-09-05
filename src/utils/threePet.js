@@ -19,6 +19,8 @@
  * - Accessories: Gold Jewel Crown & Cool Sunglasses
  */
 
+import * as THREE_MODULE from 'three';
+
 // ==========================================
 // SHARED WEB AUDIO CONTEXT SINGLETON
 // ==========================================
@@ -445,6 +447,8 @@ export function buildPet(THREE, petId = 'dino') {
   // --- PROPER ARMS & HANDS AVATAR RIGGING ---
   const clawMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.22, metalness: 0.1 });
   const pawPadMat = (petId === 'fox' || petId === 'panda' || petId === 'penguin') ? pinkMat : (petId === 'dino' ? accentMat : pinkMat);
+  const armMat = (petId === 'panda' || petId === 'fox' || petId === 'penguin') ? darkMat : skinMat;
+  const footColorMat = petId === 'penguin' ? accentMat : (petId === 'panda' || petId === 'fox' ? darkMat : skinMat);
 
   function buildArm(side) {
     const armGroup = new THREE.Group();
@@ -1026,7 +1030,7 @@ export function buildPet(THREE, petId = 'dino') {
 // MODULAR initPet FUNCTION
 // ==========================================
 export function initPet(scene, camera, canvas, options = {}) {
-  const THREE = window.THREE || options.THREE;
+  const THREE = options?.THREE || (typeof window !== 'undefined' && window.THREE) || THREE_MODULE;
   if (!THREE || !scene || !camera || !canvas) {
     console.error('initPet requires Three.js, scene, camera, and canvas!');
     return null;

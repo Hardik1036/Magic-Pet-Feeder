@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { initPet } from '../utils/threePet.js';
 
 export default function ThreePetCanvas({
@@ -49,30 +50,29 @@ export default function ThreePetCanvas({
     };
     canvas.addEventListener('webglcontextlost', handleContextLost, false);
 
-    // Safely wait for window.THREE if still loading from CDN
+    // Safely initialize scene with local Three.js or CDN fallback
     const initScene = () => {
       if (disposed || !canvas) return;
 
-      const THREE = window.THREE;
-      if (!THREE) {
-        // Retry in 50ms if script is still downloading
+      const ThreeLib = THREE || (typeof window !== 'undefined' ? window.THREE : null);
+      if (!ThreeLib) {
         setTimeout(initScene, 50);
         return;
       }
 
       const parent = canvas.parentElement;
-      const width = parent?.clientWidth || 240;
-      const height = parent?.clientHeight || 240;
+      const width = Math.max(parent?.clientWidth || 0, 240);
+      const height = Math.max(parent?.clientHeight || 0, 240);
 
       // Dedicated Scene & Camera for the avatar
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 50);
+      const scene = new ThreeLib.Scene();
+      const camera = new ThreeLib.PerspectiveCamera(45, width / height, 0.1, 50);
       camera.position.set(0, 1.7, 5.2);
       camera.lookAt(0, 1.25, 0);
 
       // WebGL Renderer with graceful error handling & verification
       try {
-        renderer = new THREE.WebGLRenderer({
+        renderer = new ThreeLib.WebGLRenderer({
           canvas,
           antialias: true,
           alpha: true,
@@ -85,7 +85,7 @@ export default function ThreePetCanvas({
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setSize(width, height, false); // false prevents layout thrashing
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = ThreeLib.PCFSoftShadowMap;
       } catch (err) {
         console.warn('WebGL initialization failed, falling back to 2D:', err);
         onErrorRef.current?.();
@@ -93,32 +93,33 @@ export default function ThreePetCanvas({
       }
 
       // Studio Lighting
-      const ambient = new THREE.AmbientLight(0xffffff, 0.85);
+      const ambient = new ThreeLib.AmbientLight(0xffffff, 0.85);
       scene.add(ambient);
 
-      const sun = new THREE.DirectionalLight(0xfffbeb, 1.3);
+      const sun = new ThreeLib.DirectionalLight(0xfffbeb, 1.3);
       sun.position.set(4, 7, 5);
       sun.castShadow = true;
       scene.add(sun);
 
-      const rim = new THREE.PointLight(0x38bdf8, 2.2, 10);
+      const rim = new ThreeLib.PointLight(0x38bdf8, 2.2, 10);
       rim.position.set(-3, 3, -3);
       scene.add(rim);
 
-      const warmFill = new THREE.PointLight(0xfbbf24, 1.5, 8);
+      const warmFill = new ThreeLib.PointLight(0xfbbf24, 1.5, 8);
       warmFill.position.set(3, 2, -2);
       scene.add(warmFill);
 
       // Ground shadow disk
-      const shadowGeo = new THREE.CircleGeometry(1.6, 24);
-      const shadowMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.28 });
-      const shadowDisk = new THREE.Mesh(shadowGeo, shadowMat);
+      const shadowGeo = new ThreeLib.CircleGeometry(1.6, 24);
+      const shadowMat = new ThreeLib.MeshBasicMaterial({ color: 0x0f172a, transparent: true, opacity: 0.28 });
+      const shadowDisk = new ThreeLib.Mesh(shadowGeo, shadowMat);
       shadowDisk.rotation.x = -Math.PI / 2;
       shadowDisk.position.y = -0.15;
       scene.add(shadowDisk);
 
       // Initialize the modular 3D Pet!
       controller = initPet(scene, camera, canvas, {
+        THREE: ThreeLib,
         petId: petIdRef.current || 'dino',
         onPet: () => onPetRef.current?.(),
         onTease: () => onTeaseRef.current?.(),
@@ -126,7 +127,7 @@ export default function ThreePetCanvas({
       controllerRef.current = controller;
 
       // Stable 60fps Animation Loop
-      const clock = new THREE.Clock();
+      const clock = new ThreeLib.Clock();
       const animate = () => {
         if (disposed) return;
         animId = requestAnimationFrame(animate);
