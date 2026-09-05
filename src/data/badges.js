@@ -258,10 +258,10 @@ export const BADGES = [
   {
     id: 'glamour_star',
     title: 'Glamour Superstar',
-    description: 'Dress up your pet and take 3 photo snapshots in the Salon!',
-    icon: '📸',
+    description: 'Dress up your pet with 4 stylish accessories in the Salon!',
+    icon: '✨',
     category: 'salon',
-    requirement: '3 photo snapshots',
+    requirement: 'Wear 4 accessories',
     bg: 'bg-rose-100 border-rose-300 text-rose-800',
   },
 ];

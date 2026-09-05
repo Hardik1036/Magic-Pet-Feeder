@@ -406,9 +406,16 @@ export function toHinglish(text) {
   let str = text.trim();
 
   const directPhrases = [
-    // Welcome / Hats / Photos
+    // Welcome / Hats / Costumes
     { from: /welcome to the dress-up salon! pick your favorite costume for ([^!?.]+)[!?.]*/i, to: 'Dress-Up Salon mein aapka swaagat hai! $1 ke liye pyara sa costume chuno!' },
+    { from: /tap any costume below to mix and match silly outfits for ([^!?.]+)[!?.]*/i, to: 'Neeche se costume chun kar $1 ko stylish kapde pehnao!' },
+    { from: /all fresh and cozy!?/i, to: 'Saare kapde utaar diye! Ekdum fresh!' },
     { from: /what would you like to name your new ([^!?.]+)[!?.]*/i, to: 'Aap apne naye $1 ka kya naam rakhna chahenge?' },
+    { from: /strike a pose! absolutely fabulous!?/i, to: 'Pose maaro! Ekdum hero lag rahe ho!' },
+    { from: /fashion icon alert! looking stunning!?/i, to: 'Fashion icon! Bohot sundar lag rahe ho!' },
+    { from: /work that runway! super stylish!?/i, to: 'Runway par aag laga di! Bohot stylish!' },
+    { from: /ta-da! you look so gorgeous!?/i, to: 'Ta-da! Kitne pyaare lag rahe ho!' },
+    { from: /surprise lucky mix! look at this hilarious outfit!?/i, to: 'Surprise lucky mix! Dekho kitna mazedaar outfit hai!' },
     { from: /so fancy!?/i, to: 'Bohot shandaar!' },
     { from: /looking great!?/i, to: 'Bohot achhe lag rahe ho!' },
     { from: /ooh, stylish!?/i, to: 'Arre waah, kya style hai!' },

@@ -101,7 +101,7 @@ export default function BadgesPage({
             ⭐ Stars: {playerStats.starsCounted || 0}/5
           </span>
           <span className="text-[9px] font-black bg-white/85 px-1.5 py-0.5 rounded-full border border-rose-300 text-rose-800 shadow-xs">
-            📸 Photos: {playerStats.photosTaken || 0}/3
+            👗 Outfits: {playerStats.outfitsStyled || 0}
           </span>
         </div>
       </div>

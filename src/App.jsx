@@ -25,7 +25,7 @@ const DEFAULT_STATS = {
   bubblesPopped: 0,
   ballsBounced: 0,
   starsCounted: 0,
-  photosTaken: 0,
+  outfitsStyled: 0,
 };
 
 const EMPTY_ARRAY = Object.freeze([]);
@@ -119,40 +119,6 @@ function AppContent() {
 
   // Global unlocked badges list
   const [unlockedBadges, setUnlockedBadges] = useState([]);
-
-  // Dressed pet photos scrapbook album
-  const [savedPhotos, setSavedPhotos] = useState(() => {
-    try {
-      const raw = localStorage.getItem('magic_pet_feeder_photos_v1');
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const handleSavePhoto = (photoData) => {
-    setSavedPhotos((prev) => {
-      const updated = [photoData, ...prev];
-      try {
-        localStorage.setItem('magic_pet_feeder_photos_v1', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Could not save photo to storage:', e);
-      }
-      return updated;
-    });
-  };
-
-  const handleDeletePhoto = (photoId) => {
-    setSavedPhotos((prev) => {
-      const updated = prev.filter((p) => p.id !== photoId);
-      try {
-        localStorage.setItem('magic_pet_feeder_photos_v1', JSON.stringify(updated));
-      } catch (e) {
-        console.warn('Could not update photos storage:', e);
-      }
-      return updated;
-    });
-  };
 
   // Navigation: 'welcome' | 'select_pet' | 'name_pet' | 'game' | 'bath' | 'playroom' | 'bedroom' | 'dressup' | 'badges'
   const [currentPage, setCurrentPage] = useState('welcome');
@@ -515,9 +481,6 @@ function AppContent() {
             onNavigate={handleNavigateActivity}
             onSwitchPet={() => setCurrentPage('select_pet')}
             onChangeProfile={() => setCurrentPage('welcome')}
-            savedPhotos={savedPhotos}
-            onSavePhoto={handleSavePhoto}
-            onDeletePhoto={handleDeletePhoto}
           />
         )}
 
