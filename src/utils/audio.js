@@ -438,13 +438,6 @@ export function unlockMobileAudio() {
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
       }
-      // Speak a micro-utterance to prime mobile WebSpeech audio track
-      const prime = new SpeechSynthesisUtterance(' ');
-      prime.volume = 0.01;
-      prime.rate = 1;
-      prime.onend = () => {};
-      prime.onerror = () => {};
-      window.speechSynthesis.speak(prime);
     }
 
     isMobileAudioUnlocked = true;
@@ -484,85 +477,112 @@ export function toHinglish(text) {
 // CRYSTAL-CLEAR ENGLISH SPEECH SYNTHESIZER
 // High intelligibility, natural pitch, relaxed rate
 // ==========================================
+let activeSpeechTimer = null;
+let keepAliveInterval = null;
+
 export function speakPetText(text, petVoice) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  if (!text || typeof text !== 'string') return;
+  if (!text || typeof text !== 'string' || !text.trim()) return;
 
   try {
-    // Wake up audio context on mobile
     unlockMobileAudio();
 
+    if (activeSpeechTimer) {
+      clearTimeout(activeSpeechTimer);
+      activeSpeechTimer = null;
+    }
+
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
+
+    // Unpause if stalled
     if (window.speechSynthesis.paused) {
       window.speechSynthesis.resume();
     }
 
-    // Cancel currently speaking audio cleanly on desktop
-    const isIOS = typeof navigator !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-    if (!isIOS && window.speechSynthesis.speaking) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch (e) {}
-    }
+    // Cancel currently speaking utterance
+    try {
+      window.speechSynthesis.cancel();
+    } catch (e) {}
 
-    const voices = refreshVoices();
-
-    // Priority for highest quality, natural, easy-to-understand English voices:
-    // 1. Warm natural female/male voices (Google US English, Samantha, Jenny, Zira, David)
-    // 2. Any en-US / en-GB English voice
-    const bestVoice =
-      voices.find(
-        (v) =>
-          v.lang &&
-          v.lang.toLowerCase().startsWith('en') &&
-          /natural|google us english|samantha|zira|david|jenny|guy|karen/i.test(v.name)
-      ) ||
-      voices.find(
-        (v) =>
-          v.lang &&
-          (v.lang === 'en-US' || v.lang === 'en_US' || v.lang.toLowerCase().startsWith('en-us'))
-      ) ||
-      voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en')) ||
-      voices[0] ||
-      null;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    }
-    utterance.lang = bestVoice?.lang || 'en-US';
-
-    // Intelligibility tuning:
-    // Clamping pitch between 0.98 and 1.06 prevents chipmunk / robotic distortion.
-    // Clamping rate between 0.88 and 0.92 gives kids time to hear every consonant and vowel clearly.
-    const rawPitch = typeof petVoice?.pitch === 'number' ? petVoice.pitch : 1.00;
-    utterance.pitch = Math.max(0.98, Math.min(1.06, rawPitch));
-
-    const rawRate = typeof petVoice?.rate === 'number' ? petVoice.rate : 0.90;
-    utterance.rate = Math.max(0.88, Math.min(0.92, rawRate));
-
-    // Keep global reference to prevent Chrome V8 garbage collection mid-speech
-    window.__activePetUtterance = utterance;
-
-    utterance.onend = () => {
-      window.__activePetUtterance = null;
-    };
-
-    utterance.onerror = (err) => {
-      window.__activePetUtterance = null;
-      console.warn('Speech error:', err?.error || err);
-    };
-
-    // Stagger speech slightly for mobile audio pipeline stability
-    setTimeout(() => {
+    // 70ms buffer ensures Chromium cleanly clears its internal queue before new utterance
+    activeSpeechTimer = setTimeout(() => {
       try {
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
         }
+
+        const voices = refreshVoices();
+
+        const bestVoice =
+          voices.find(
+            (v) =>
+              v.lang &&
+              v.lang.toLowerCase().startsWith('en') &&
+              /natural|google us english|samantha|zira|david|jenny|guy|karen/i.test(v.name)
+          ) ||
+          voices.find(
+            (v) =>
+              v.lang &&
+              (v.lang === 'en-US' || v.lang === 'en_US' || v.lang.toLowerCase().startsWith('en-us'))
+          ) ||
+          voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en')) ||
+          voices[0] ||
+          null;
+
+        const cleanText = text.trim();
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        if (bestVoice) {
+          utterance.voice = bestVoice;
+        }
+        utterance.lang = bestVoice?.lang || 'en-US';
+
+        const rawPitch = typeof petVoice?.pitch === 'number' ? petVoice.pitch : 1.00;
+        utterance.pitch = Math.max(0.98, Math.min(1.06, rawPitch));
+
+        const rawRate = typeof petVoice?.rate === 'number' ? petVoice.rate : 0.90;
+        utterance.rate = Math.max(0.88, Math.min(0.92, rawRate));
+
+        // Prevent Chrome GC bug
+        window.__activePetUtterance = utterance;
+
+        utterance.onend = () => {
+          window.__activePetUtterance = null;
+          if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+          }
+        };
+
+        utterance.onerror = (err) => {
+          window.__activePetUtterance = null;
+          if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+          }
+          if (err?.error !== 'canceled' && err?.error !== 'interrupted') {
+            console.warn('Speech error:', err?.error || err);
+          }
+        };
+
+        // Chrome keep-alive: pause/resume heartbeat every 5s during speech
+        keepAliveInterval = setInterval(() => {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.pause();
+            window.speechSynthesis.resume();
+          } else {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+          }
+        }, 5000);
+
         window.speechSynthesis.speak(utterance);
       } catch (err) {
         console.warn('speechSynthesis.speak error:', err);
       }
-    }, isIOS ? 50 : 20);
+    }, 70);
   } catch (e) {
     console.warn('General speech error:', e);
   }

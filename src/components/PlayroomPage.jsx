@@ -1288,10 +1288,6 @@ export default function PlayroomPage({
             onClick={() => {
               sfx.pop();
               setActiveGame('shape');
-              speakPetText(
-                `Shape and Color Match! Find the ${shapeTarget.color} ${shapeTarget.shape}! Tap the floating ${shapeTarget.color} ${shapeTarget.shape} to collect it in the toy box!`,
-                currentPet.voice
-              );
             }}
             className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
               activeGame === 'shape'
