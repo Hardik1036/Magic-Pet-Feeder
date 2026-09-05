@@ -84,9 +84,6 @@ export default function BathSpaPage({
   const currentPet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
   const petDisplayName = petNickname || currentPet.defaultName;
 
-  // Active Sub-Room Mode: 'bath' (Bubble Spa) | 'toy_lab' (Assemble Body Parts Toy)
-  const [activeSubMode, setActiveSubMode] = useState('bath');
-
   // Active step: 'sponge' | 'shampoo' | 'shower' | 'towel'
   const [activeTool, setActiveTool] = useState('sponge');
 
@@ -112,7 +109,6 @@ export default function BathSpaPage({
   // Physical Floating Rubber Ducky state
   const [duckPos, setDuckPos] = useState({ x: 22, y: 72 });
   const [duckSqueaking, setDuckSqueaking] = useState(false);
-  const [duckInTub, setDuckInTub] = useState(true);
 
   // Drag physics tracking
   const [isDragging, setIsDragging] = useState(false);
@@ -121,22 +117,31 @@ export default function BathSpaPage({
   const lastScrubTimeRef = useRef(0);
 
   // -------------------------------------------------------------
-  // TOY ANATOMY ASSEMBLY LAB STATE
+  // TOY ANATOMY ASSEMBLY & CRYING PET STATE
   // -------------------------------------------------------------
   const [placedToyParts, setPlacedToyParts] = useState([]);
-  const [selectedToyPart, setSelectedToyPart] = useState(null);
   const [isToyComplete, setIsToyComplete] = useState(false);
+  const [isPetCrying, setIsPetCrying] = useState(true);
+  const [showToyModal, setShowToyModal] = useState(false);
+  const [activeToyLesson, setActiveToyLesson] = useState('');
 
   // Welcome speech
   useEffect(() => {
     const timer = setTimeout(() => {
-      speakPetText(
-        `Splish splash! Let's take a warm bubble bath! Drag the soft sponge across ${petDisplayName}'s mud spots to scrub them clean!`,
-        currentPet.voice
-      );
-    }, 350);
+      if (!isToyComplete && isPetCrying) {
+        speakPetText(
+          `Waaah! ${petDisplayName} is crying in the bathtub because they lost their bath toy! Tap 'Assemble Toy' to build one from body parts so ${petDisplayName} stops crying!`,
+          currentPet.voice
+        );
+      } else {
+        speakPetText(
+          `Splish splash! Let's take a warm bubble bath! Drag the soft sponge across ${petDisplayName}'s mud spots to scrub them clean!`,
+          currentPet.voice
+        );
+      }
+    }, 400);
     return () => clearTimeout(timer);
-  }, [currentPet, petDisplayName]);
+  }, [currentPet, petDisplayName, isToyComplete, isPetCrying]);
 
   // Clean up shower sound loop on unmount
   useEffect(() => {
@@ -397,36 +402,50 @@ export default function BathSpaPage({
   // -------------------------------------------------------------
   // EDUCATIONAL TOY BODY PARTS ASSEMBLY HANDLERS
   // -------------------------------------------------------------
-  const handleSelectToyPart = (part) => {
-    sfx.pop();
-    setSelectedToyPart(part);
-    speakPetText(`Place the ${part.name}! ${part.explanation}`, currentPet.voice);
-  };
-
   const handleSnapToyPart = (part) => {
     if (placedToyParts.includes(part.id)) return;
     sfx.pop();
-    sfx.chime(placedToyParts.length);
+    sfx.chime(placedToyParts.length + 1);
+
+    setActiveToyLesson(`${part.name}: ${part.explanation}`);
+    speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
 
     setPlacedToyParts((prev) => {
       const next = [...prev, part.id];
-      speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
-
       if (next.length === TOY_BODY_PARTS.length) {
-        // Complete Toy Assembled!
         setTimeout(() => {
           sfx.fanfare();
           sfx.sparkle();
-          setIsToyComplete(true);
           speakPetText(
-            `Incredible! You assembled all body parts and built a cute bath toy! Head, Eyes, Beak, Wings, Tummy, and Feet!`,
+            `Incredible! All 6 body parts are assembled! Give the toy to ${petDisplayName} so they stop crying!`,
             currentPet.voice
           );
         }, 500);
       }
       return next;
     });
-    setSelectedToyPart(null);
+  };
+
+  const handleGiveToyToPet = () => {
+    sfx.splash();
+    sfx.fanfare();
+    setIsToyComplete(true);
+    setIsPetCrying(false);
+    setPetExpression('happy');
+    setPetSparkle(true);
+    setShowToyModal(false);
+
+    if (onUnlockBadge && !unlockedBadges.includes('toy_maker')) {
+      onUnlockBadge('toy_maker');
+    }
+
+    setTimeout(() => {
+      speakPetText(
+        `Hooray! ${petDisplayName} stopped crying and is so happy with the new bath toy! Now let's scrub and wash in our warm bubble bath!`,
+        currentPet.voice
+      );
+      setTimeout(() => setPetSparkle(false), 2000);
+    }, 400);
   };
 
   const allSpotsCleaned = cleanedSpots.length === INITIAL_MUD_SPOTS.length;
@@ -456,95 +475,87 @@ export default function BathSpaPage({
           </button>
         </div>
 
-        {/* Sub-Room Switcher: Bath Spa vs Toy Lab */}
-        <div className="flex items-center gap-1 bg-white/95 p-0.5 rounded-full border border-cyan-300 shadow-sm">
+        {/* Assemble Toy / Toy Workshop Button */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
               sfx.pop();
-              setActiveSubMode('bath');
-            }}
-            className={`px-2.5 py-0.5 rounded-full text-xs font-black transition-all flex items-center gap-1 ${
-              activeSubMode === 'bath'
-                ? 'bg-cyan-500 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <span>🛁</span>
-            <span>Spa Bath</span>
-          </button>
-          <button
-            onClick={() => {
-              sfx.pop();
-              setActiveSubMode('toy_lab');
+              setShowToyModal(true);
               speakPetText(
-                `Welcome to Toy Assembly Lab! Learn about body parts and build your bath toy!`,
+                isToyComplete
+                  ? `Toy Anatomy Workshop! Learn about body parts and review the toy!`
+                  : `Assemble all body parts to make a bath toy and stop ${petDisplayName} from crying!`,
                 currentPet.voice
               );
             }}
-            className={`px-2.5 py-0.5 rounded-full text-xs font-black transition-all flex items-center gap-1 ${
-              activeSubMode === 'toy_lab'
-                ? 'bg-purple-500 text-white shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1 rounded-full text-xs font-black transition-all flex items-center gap-1.5 shadow-md active:scale-95 ${
+              !isToyComplete
+                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-2 border-purple-300 ring-2 ring-purple-200 animate-pulse'
+                : 'bg-white/90 text-purple-900 border border-purple-300 hover:bg-purple-50'
             }`}
           >
             <span>🧩</span>
-            <span>Assemble Toy</span>
+            <span>{isToyComplete ? 'Toy Workshop' : 'Assemble Toy! 😭'}</span>
           </button>
         </div>
       </header>
 
-      {/* ============================================================= */}
-      {/* MODE 1: BUBBLE BATH SPA ROUTINE WITH REAL BATHTUB & DRAG      */}
-      {/* ============================================================= */}
-      {activeSubMode === 'bath' && (
-        <>
-          {/* Mission & Instruction Bar */}
-          <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
-            <div className="bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-md border-2 border-cyan-400 flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 flex items-center gap-1">
-                  <span>🛁 Bathhouse Hygiene Routine:</span>
-                  <span className="text-cyan-500 font-bold">
-                    {activeTool === 'sponge'
-                      ? '(Step 1: Scrub)'
-                      : activeTool === 'shampoo'
-                      ? '(Step 2: Lather)'
-                      : activeTool === 'shower'
-                      ? '(Step 3: Rinse)'
-                      : '(Step 4: Dry)'}
-                  </span>
-                </p>
-                <h2 className="text-xs sm:text-sm font-black text-slate-800 tracking-tight leading-tight">
-                  {isFullyCompleted
-                    ? '✨ Sparkling Clean, Soft & Fluffy! ✨'
-                    : activeTool === 'sponge'
-                    ? `Drag sponge over mud spots! (${cleanedSpots.length}/${INITIAL_MUD_SPOTS.length} cleaned)`
-                    : activeTool === 'shampoo'
-                    ? `Rub shampoo across pet body to make foam! (${foamLevel}%)`
-                    : activeTool === 'shower'
-                    ? 'Shower is rinsing! Tap floating bubbles to pop!'
-                    : `Drag towel over pet to dry off! (${dryLevel}%)`}
-                </h2>
-              </div>
+      {/* Mission & Instruction Bar */}
+      <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
+        <div className="bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-md border-2 border-cyan-400 flex items-center justify-between">
+          <div className="text-left">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-700 flex items-center gap-1">
+              <span>🛁 Bathhouse Hygiene Routine:</span>
+              <span className="text-cyan-500 font-bold">
+                {activeTool === 'sponge'
+                  ? '(Step 1: Scrub)'
+                  : activeTool === 'shampoo'
+                  ? '(Step 2: Lather)'
+                  : activeTool === 'shower'
+                  ? '(Step 3: Rinse)'
+                  : '(Step 4: Dry)'}
+              </span>
+            </p>
+            <h2 className="text-xs sm:text-sm font-black text-slate-800 tracking-tight leading-tight">
+              {!isToyComplete && isPetCrying
+                ? `😭 ${petDisplayName} is crying! Tap 'Assemble Toy' to build one!`
+                : isFullyCompleted
+                ? '✨ Sparkling Clean, Soft & Fluffy! ✨'
+                : activeTool === 'sponge'
+                ? `Drag sponge over mud spots! (${cleanedSpots.length}/${INITIAL_MUD_SPOTS.length} cleaned)`
+                : activeTool === 'shampoo'
+                ? `Rub shampoo across pet body to make foam! (${foamLevel}%)`
+                : activeTool === 'shower'
+                ? 'Shower is rinsing! Tap floating bubbles to pop!'
+                : `Drag towel over pet to dry off! (${dryLevel}%)`}
+            </h2>
+          </div>
 
-              <button
-                onClick={() => {
-                  sfx.pop();
-                  const hints = {
-                    sponge: `Drag the soft sponge across ${petDisplayName}'s mud spots to scrub them clean!`,
-                    shampoo: `Drag shampoo back and forth across ${petDisplayName} to lather fluffy soap foam!`,
-                    shower: `Shower is rinsing the soap! Tap and pop the floating bubbles!`,
-                    towel: `Rub the fluffy warm towel back and forth across ${petDisplayName} to dry off!`,
-                  };
-                  speakPetText(hints[activeTool] || hints.sponge, currentPet.voice);
-                }}
-                className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-xl shadow-md border border-cyan-500 flex items-center justify-center text-cyan-950 active:scale-90 flex-shrink-0"
-                title="Hear instruction"
-              >
-                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            </div>
-          </section>
+          <button
+            onClick={() => {
+              sfx.pop();
+              if (!isToyComplete && isPetCrying) {
+                speakPetText(
+                  `Waaah! ${petDisplayName} is crying because they want a bath toy! Tap Assemble Toy to build one from body parts!`,
+                  currentPet.voice
+                );
+                return;
+              }
+              const hints = {
+                sponge: `Drag the soft sponge across ${petDisplayName}'s mud spots to scrub them clean!`,
+                shampoo: `Drag shampoo back and forth across ${petDisplayName} to lather fluffy soap foam!`,
+                shower: `Shower is rinsing the soap! Tap and pop the floating bubbles!`,
+                towel: `Rub the fluffy warm towel back and forth across ${petDisplayName} to dry off!`,
+              };
+              speakPetText(hints[activeTool] || hints.sponge, currentPet.voice);
+            }}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-xl shadow-md border border-cyan-500 flex items-center justify-center text-cyan-950 active:scale-90 flex-shrink-0"
+            title="Hear instruction"
+          >
+            <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        </div>
+      </section>
 
           {/* ------------------------------------------------------------- */}
           {/* THE REAL BATHTUB ARENA                                        */}
@@ -631,9 +642,27 @@ export default function BathSpaPage({
                   petId={currentPet.id}
                   stageIndex={stageIndex}
                   feedCount={feedCount}
-                  expression={petExpression}
+                  expression={isPetCrying ? 'crying' : isFullyCompleted ? 'sparkle' : petExpression}
                   accessories={unlockedAccessories}
                 />
+
+                {/* Crying Pet Speech Bubble: Informs child and opens toy modal */}
+                {isPetCrying && !isToyComplete && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sfx.pop();
+                      setShowToyModal(true);
+                      speakPetText(`Waaah! I need my bath toy! Tap to assemble body parts!`, currentPet.voice);
+                    }}
+                    className="absolute -top-8 -right-4 bg-white/95 px-2.5 py-1 rounded-full shadow-lg border-2 border-purple-400 text-[10px] font-black text-purple-900 flex items-center gap-1 animate-bounce z-30 cursor-pointer hover:scale-105"
+                  >
+                    <span>😭</span>
+                    <span>Waaah! Need toy!</span>
+                    <span className="text-purple-600 underline">Assemble 🧩</span>
+                  </button>
+                )}
 
                 {/* 1. MUD SPOTS ON PET (Scrub Stage) */}
                 {activeTool === 'sponge' &&
@@ -734,23 +763,48 @@ export default function BathSpaPage({
               </div>
 
               {/* REAL PHYSICAL FLOATING RUBBER DUCKY (In tub water) */}
-              <button
-                type="button"
-                onClick={handleInteractDuck}
-                style={{
-                  left: `${duckPos.x}%`,
-                  bottom: '24px',
-                }}
-                className={`absolute z-25 flex flex-col items-center justify-center w-12 h-12 bg-amber-300 hover:bg-amber-400 border-2 border-amber-500 rounded-full shadow-lg cursor-pointer transition-transform active:scale-90 ${
-                  duckSqueaking ? 'animate-bounce scale-125' : 'animate-float'
-                }`}
-                title="Squeak the Rubber Ducky!"
-              >
-                <span className="text-2xl leading-none">🦆</span>
-                <span className="text-[8px] font-black text-amber-950 bg-white/80 px-1 rounded-full -mt-0.5 shadow-xs">
-                  Squeak!
-                </span>
-              </button>
+              {isToyComplete ? (
+                <button
+                  type="button"
+                  onClick={handleInteractDuck}
+                  style={{
+                    left: `${duckPos.x}%`,
+                    bottom: '24px',
+                  }}
+                  className={`absolute z-25 flex flex-col items-center justify-center w-12 h-12 bg-amber-300 hover:bg-amber-400 border-2 border-amber-500 rounded-full shadow-lg cursor-pointer transition-transform active:scale-90 ${
+                    duckSqueaking ? 'animate-bounce scale-125' : 'animate-float'
+                  }`}
+                  title="Squeak the Rubber Ducky!"
+                >
+                  <span className="text-2xl leading-none">🦆</span>
+                  <span className="text-[8px] font-black text-amber-950 bg-white/80 px-1 rounded-full -mt-0.5 shadow-xs">
+                    Squeak!
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    sfx.pop();
+                    setShowToyModal(true);
+                    speakPetText(
+                      `No toy in the tub! Assemble body parts in the workshop to build one!`,
+                      currentPet.voice
+                    );
+                  }}
+                  style={{
+                    left: `${duckPos.x}%`,
+                    bottom: '24px',
+                  }}
+                  className="absolute z-25 flex flex-col items-center justify-center w-12 h-12 bg-purple-100/90 border-2 border-dashed border-purple-400 rounded-full shadow-sm cursor-pointer animate-pulse hover:scale-105"
+                  title="Missing bath toy! Assemble it now!"
+                >
+                  <span className="text-xl opacity-40">🦆</span>
+                  <span className="text-[7.5px] font-black text-purple-900 bg-white/90 px-1 rounded-full">
+                    Build 🧩
+                  </span>
+                </button>
+              )}
             </div>
           </main>
 
@@ -872,65 +926,117 @@ export default function BathSpaPage({
               unlockedBadgesCount={unlockedBadges.length}
             />
           </footer>
-        </>
-      )}
 
       {/* ============================================================= */}
-      {/* MODE 2: TOY ANATOMY LAB (Assemble Body Parts To Make A Toy!)  */}
+      {/* MODAL / POPUP: TOY ANATOMY WORKSHOP (NO PET SHOWN IN MODAL!)  */}
+      {/* Teaches body parts, assembles toy to stop pet from crying    */}
       {/* ============================================================= */}
-      {activeSubMode === 'toy_lab' && (
-        <>
-          {/* Mission Card for Toy Lab */}
-          <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
-            <div className="bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-md border-2 border-purple-400 flex items-center justify-between">
-              <div className="text-left">
-                <p className="text-[10px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1">
-                  <span>🧩 Body Parts Anatomy Lab:</span>
-                </p>
-                <h2 className="text-xs sm:text-sm font-black text-slate-800">
-                  {isToyComplete
-                    ? '🎉 Master Toy Builder! All Body Parts Assembled! 🎉'
-                    : `Assemble the bath toy! (${placedToyParts.length} / ${TOY_BODY_PARTS.length} parts placed)`}
-                </h2>
-              </div>
+      {showToyModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-5 overflow-y-auto animate-fade">
+          {/* Modal Header */}
+          <div className="w-full max-w-lg flex items-center justify-between bg-white/95 rounded-2xl px-4 py-2.5 shadow-xl border-2 border-purple-400 flex-shrink-0">
+            <div className="text-left">
+              <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1">
+                <span>🧩 Toy Anatomy Workshop:</span>
+              </span>
+              <h3 className="text-xs sm:text-sm font-black text-slate-900">
+                {placedToyParts.length === TOY_BODY_PARTS.length
+                  ? '🎉 Toy Complete! Give to Pet to Stop Crying! 🎉'
+                  : `Assemble Body Parts! (${placedToyParts.length}/${TOY_BODY_PARTS.length})`}
+              </h3>
+            </div>
 
+            <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={() => {
                   sfx.pop();
                   speakPetText(
-                    `Tap or snap each body part onto the toy silhouette! Learn what each body part does!`,
+                    `Tap or snap each body part into the blueprint to build the bath toy! Learn what each body part does!`,
                     currentPet.voice
                   );
                 }}
-                className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-purple-400 to-indigo-300 rounded-xl shadow-md border border-purple-500 flex items-center justify-center text-purple-950 active:scale-90 flex-shrink-0"
-                title="Hear instructions"
+                className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-300 text-purple-900 flex items-center justify-center shadow-sm active:scale-90"
+                title="Hear audio instructions"
               >
-                <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Volume2 className="w-4 h-4" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  sfx.pop();
+                  setShowToyModal(false);
+                }}
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black shadow-sm active:scale-90"
+                title="Close modal"
+              >
+                ✕
               </button>
             </div>
-          </section>
+          </div>
 
-          {/* Blueprint Canvas for Assembling Body Parts */}
-          <main className="relative my-auto flex-1 min-h-[220px] max-h-[350px] w-full max-w-sm sm:max-w-md bg-gradient-to-b from-indigo-900/90 to-slate-900 rounded-3xl border-4 border-purple-400 shadow-xl p-3 flex flex-col items-center justify-center z-10 select-none">
-            {/* Blueprint Grid Background Pattern */}
-            <div className="absolute inset-0 opacity-15 pointer-events-none bg-[radial-gradient(#a855f7_1.5px,transparent_1.5px)] [background-size:16px_16px]" />
-
-            {/* Title badge */}
-            <div className="absolute top-2 left-3 px-2.5 py-0.5 rounded-full bg-purple-500/80 border border-purple-300 text-[10px] font-black text-white flex items-center gap-1">
-              <span>📐</span>
-              <span>TOY BLUEPRINT: DUCKY</span>
+          {/* Educational Body Part Anatomy Lesson Card */}
+          <div className="w-full max-w-lg my-2 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-purple-300 rounded-2xl px-4 py-2 text-white shadow-lg flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center gap-2 text-left">
+              <span className="text-2xl animate-pulse">💡</span>
+              <div>
+                <p className="text-[10px] font-bold text-purple-200 uppercase tracking-wide">
+                  Body Part Lesson:
+                </p>
+                <p className="text-xs sm:text-sm font-black text-amber-200">
+                  {activeToyLesson ||
+                    'Tap each body part below to attach it and learn what it does!'}
+                </p>
+              </div>
             </div>
 
-            {/* Interactive Blueprint Silhouette Area */}
+            {activeToyLesson && (
+              <button
+                type="button"
+                onClick={() => {
+                  sfx.pop();
+                  speakPetText(activeToyLesson, currentPet.voice);
+                }}
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white flex-shrink-0 active:scale-90"
+                title="Replay lesson audio"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Blueprint Canvas (Silhouette & Assembly Zone) */}
+          <div className="relative my-auto flex-1 min-h-[220px] max-h-[320px] w-full max-w-sm sm:max-w-md bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl border-4 border-purple-400 shadow-2xl p-4 flex flex-col items-center justify-center select-none">
+            {/* Blueprint Grid Background Pattern */}
+            <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#c084fc_1.5px,transparent_1.5px)] [background-size:16px_16px] rounded-3xl" />
+
+            {/* Blueprint Title Badge */}
+            <div className="absolute top-2 left-3 px-3 py-1 rounded-full bg-purple-500/80 border border-purple-300 text-[10px] font-black text-white flex items-center gap-1.5 shadow-sm">
+              <span>📐</span>
+              <span>BLUEPRINT: BATH DUCKY</span>
+              <span className="bg-purple-900/80 px-1.5 py-0.2 rounded-full text-[9px] font-bold">
+                {placedToyParts.length} / {TOY_BODY_PARTS.length}
+              </span>
+            </div>
+
+            {/* Interactive Silhouette Slots */}
             <div className="relative w-64 h-56 flex items-center justify-center">
-              {/* Silhouette Slots for each body part */}
               {TOY_BODY_PARTS.map((part) => {
                 const isPlaced = placedToyParts.includes(part.id);
                 return (
                   <button
                     key={part.id}
                     type="button"
-                    onClick={() => handleSnapToyPart(part)}
+                    onClick={() => {
+                      if (!isPlaced) {
+                        handleSnapToyPart(part);
+                      } else {
+                        sfx.pop();
+                        setActiveToyLesson(`${part.name}: ${part.explanation}`);
+                        speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
+                      }
+                    }}
                     style={{
                       left: `${part.slot.x}%`,
                       top: `${part.slot.y}%`,
@@ -940,14 +1046,17 @@ export default function BathSpaPage({
                     }}
                     className={`absolute flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
                       isPlaced
-                        ? `${part.shape} shadow-xl scale-100`
+                        ? `${part.shape} shadow-xl scale-100 hover:ring-2 hover:ring-purple-300`
                         : 'border-2 border-dashed border-purple-400/60 bg-purple-500/15 rounded-2xl hover:bg-purple-500/30'
                     }`}
+                    title={isPlaced ? `Review ${part.name}` : `Snap in ${part.name}`}
                   >
                     {isPlaced ? (
                       <div className="flex flex-col items-center">
                         <span className="text-xl">{part.icon}</span>
-                        <span className="text-[9px] font-black text-slate-900 leading-tight">{part.name}</span>
+                        <span className="text-[9px] font-black text-slate-900 leading-tight">
+                          {part.name}
+                        </span>
                       </div>
                     ) : (
                       <span className="text-[10px] font-bold text-purple-200/90">
@@ -959,76 +1068,77 @@ export default function BathSpaPage({
               })}
             </div>
 
-            {/* Assembled Toy Celebration */}
-            {isToyComplete && (
-              <div className="absolute inset-0 bg-purple-950/80 rounded-3xl flex flex-col items-center justify-center p-4 z-30 animate-fade text-white text-center">
+            {/* Completion Overlay: Assembled Toy & Give to Pet Button */}
+            {placedToyParts.length === TOY_BODY_PARTS.length && (
+              <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center p-4 z-30 animate-fade text-white text-center">
                 <span className="text-5xl animate-bounce mb-1">🦆✨</span>
-                <h3 className="text-base font-black text-amber-300">Toy Assembly Master!</h3>
+                <h3 className="text-base font-black text-amber-300">Toy Fully Assembled!</h3>
                 <p className="text-xs text-purple-100 max-w-xs mt-1">
-                  You learned all body parts: Head, Eyes, Beak, Wings, Tummy, and Feet!
+                  You learned all body parts: Head, Eyes, Beak, Tummy, Wings, and Feet!
                 </p>
-                <div className="flex gap-2 mt-3">
+                <div className="flex flex-col sm:flex-row gap-2 mt-3 w-full max-w-xs">
                   <button
-                    onClick={() => {
-                      sfx.pop();
-                      setPlacedToyParts([]);
-                      setIsToyComplete(false);
-                    }}
-                    className="bg-purple-600 hover:bg-purple-500 text-white font-black text-xs px-3.5 py-1.5 rounded-full border border-purple-300"
+                    type="button"
+                    onClick={handleGiveToyToPet}
+                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-1.5 animate-pulse active:scale-95"
                   >
-                    Build Again
-                  </button>
-                  <button
-                    onClick={() => {
-                      sfx.pop();
-                      setActiveSubMode('bath');
-                    }}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs px-3.5 py-1.5 rounded-full border border-emerald-300"
-                  >
-                    Play in Bathtub 🛁
+                    <span>🎁</span>
+                    <span>Give Toy to Pet & Stop Crying!</span>
                   </button>
                 </div>
               </div>
             )}
-          </main>
+          </div>
 
-          {/* Parts Tray on Floor (Tap or Drag into Blueprint) */}
-          <footer className="w-full max-w-md flex flex-col gap-1 z-20 pb-0.5 flex-shrink-0">
-            <div className="bg-white/95 rounded-2xl p-2 shadow-md border-2 border-purple-300">
-              <p className="text-[10px] font-black text-purple-800 uppercase tracking-wider mb-1 flex items-center gap-1">
+          {/* Body Parts Tray (Buttons on bottom of modal) */}
+          <div className="w-full max-w-lg bg-white/95 rounded-2xl p-2.5 shadow-xl border-2 border-purple-300 mt-2 flex-shrink-0">
+            <div className="flex items-center justify-between mb-1.5 px-1">
+              <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider flex items-center gap-1">
                 <span>👇 Available Body Parts:</span>
-                <span className="text-slate-500 font-bold">(Tap to attach to toy)</span>
-              </p>
-              <div className="grid grid-cols-6 gap-1">
-                {TOY_BODY_PARTS.map((part) => {
-                  const isPlaced = placedToyParts.includes(part.id);
-                  return (
-                    <button
-                      key={part.id}
-                      type="button"
-                      disabled={isPlaced}
-                      onClick={() => handleSnapToyPart(part)}
-                      className={`flex flex-col items-center justify-center p-1 rounded-xl border transition-all ${
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-600">
+                (Tap part to attach & learn)
+              </span>
+            </div>
+            <div className="grid grid-cols-6 gap-1.5">
+              {TOY_BODY_PARTS.map((part) => {
+                const isPlaced = placedToyParts.includes(part.id);
+                return (
+                  <button
+                    key={part.id}
+                    type="button"
+                    onClick={() => {
+                      if (!isPlaced) {
+                        handleSnapToyPart(part);
+                      } else {
+                        sfx.pop();
+                        setActiveToyLesson(`${part.name}: ${part.explanation}`);
+                        speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
+                      }
+                    }}
+                    className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all cursor-pointer ${
+                      isPlaced
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs'
+                        : 'bg-purple-50 border-purple-300 hover:bg-purple-100 text-purple-950 active:scale-90 shadow-xs ring-1 ring-purple-200'
+                    }`}
+                  >
+                    <span className="text-xl">{part.icon}</span>
+                    <span className="text-[9px] font-black mt-0.5 leading-tight">{part.name}</span>
+                    <span
+                      className={`text-[7.5px] font-bold px-1 rounded-full mt-0.5 ${
                         isPlaced
-                          ? 'bg-slate-100 border-slate-200 opacity-40 cursor-not-allowed'
-                          : 'bg-purple-50 border-purple-300 hover:bg-purple-100 active:scale-90 cursor-pointer shadow-xs'
+                          ? 'bg-emerald-200 text-emerald-900'
+                          : 'bg-purple-200 text-purple-900'
                       }`}
                     >
-                      <span className="text-xl">{part.icon}</span>
-                      <span className="text-[9px] font-black text-purple-900 mt-0.5">{part.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
+                      {isPlaced ? '✓ Placed' : 'Snap'}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-
-            <ActivityNavBar
-              currentActivity="bath"
-              onSelectActivity={onNavigate}
-              unlockedBadgesCount={unlockedBadges.length}
-            />
-          </footer>
-        </>
+          </div>
+        </div>
       )}
     </div>
   );

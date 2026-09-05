@@ -15,6 +15,7 @@ export default function PetAvatar({
   const isChewing = expression === 'chewing';
   const isHappy = expression === 'happy' || expression === 'sparkle';
   const isSleeping = expression === 'sleeping';
+  const isCrying = expression === 'crying' || expression === 'sad';
 
   const petConfig = PETS.find((p) => p.id === petId) || PETS[0];
 
@@ -324,6 +325,26 @@ export default function PetAvatar({
             <path d="M 74 105 Q 86 116 98 105" />
             <path d="M 142 105 Q 154 116 166 105" />
           </g>
+        ) : isCrying ? (
+          <g>
+            <path d="M 72 95 Q 86 106 100 95" stroke="#1E293B" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+            <circle cx="86" cy="104" r="8" fill="#1E293B" />
+            <circle cx="83" cy="101" r="3" fill="#FFFFFF" />
+
+            <path d="M 140 95 Q 154 106 168 95" stroke="#1E293B" strokeWidth="4.5" strokeLinecap="round" fill="none" />
+            <circle cx="154" cy="104" r="8" fill="#1E293B" />
+            <circle cx="151" cy="101" r="3" fill="#FFFFFF" />
+
+            {/* Streaming Tear Drops */}
+            <g className="animate-bounce">
+              <ellipse cx="80" cy="120" rx="3.5" ry="6" fill="#38BDF8" />
+              <ellipse cx="160" cy="120" rx="3.5" ry="6" fill="#38BDF8" />
+            </g>
+            <g className="animate-pulse">
+              <ellipse cx="83" cy="134" rx="3" ry="5" fill="#60A5FA" />
+              <ellipse cx="157" cy="134" rx="3" ry="5" fill="#60A5FA" />
+            </g>
+          </g>
         ) : isHappy ? (
           <g stroke="#1E293B" strokeWidth="5" strokeLinecap="round" fill="none">
             <path d="M 72 102 Q 86 88 100 102" />
@@ -360,6 +381,11 @@ export default function PetAvatar({
         {/* Mouth */}
         {isSleeping ? (
           <ellipse cx="120" cy="136" rx="6" ry="4" fill="#881337" opacity="0.7" />
+        ) : isCrying ? (
+          <g>
+            <path d="M 104 140 Q 120 126 136 140" fill="none" stroke="#1E293B" strokeWidth="4.5" strokeLinecap="round" />
+            <ellipse cx="120" cy="142" rx="4" ry="2.5" fill="#FB7185" opacity="0.7" />
+          </g>
         ) : mouthOpen ? (
           <g>
             <path d="M 94 125 C 94 125, 120 118, 146 125 C 150 155, 90 155, 94 125 Z" fill="#881337" stroke="#1E293B" strokeWidth="3.5" />
