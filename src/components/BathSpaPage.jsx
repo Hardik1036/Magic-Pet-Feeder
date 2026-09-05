@@ -14,55 +14,61 @@ const INITIAL_MUD_SPOTS = [
   { id: 5, x: 50, y: 46, size: 46, label: 'Chest', hint: 'Chest! Protects our strong heart!' },
 ];
 
-// Educational Bath Toy Body Parts for the Assembly Game
+// Educational Cute Human Toy Body Parts for the Assembly Game
 const TOY_BODY_PARTS = [
   {
     id: 'head',
     name: 'Head',
-    icon: '🟡',
-    explanation: 'Head! That is where we think, smile, and learn!',
-    slot: { x: 50, y: 24, w: 76, h: 72 },
-    shape: 'rounded-full bg-amber-300 border-3 border-amber-500 shadow-md',
+    label: '1. Head (Brain & Face)',
+    icon: '👦',
+    explanation: 'Our head holds our brain to think, learn, imagine, and smile with joy!',
+    slot: { x: 50, y: 22, w: 90, h: 86 },
+    hint: 'Drag the head up to the top of the body to think and smile!',
   },
   {
     id: 'eyes',
     name: 'Eyes',
+    label: '2. Eyes (Vision)',
     icon: '👀',
-    explanation: 'Eyes! Used for seeing all the bright and beautiful colors!',
-    slot: { x: 58, y: 22, w: 32, h: 22 },
-    shape: 'flex items-center justify-center text-xl',
+    explanation: 'Our two eyes see vibrant colors, read storybooks, and see our happy friends!',
+    slot: { x: 50, y: 23, w: 56, h: 26 },
+    hint: 'Drag the sparkling eyes onto the face so the buddy can see!',
   },
   {
-    id: 'beak',
-    name: 'Beak',
-    icon: '👄',
-    explanation: 'Beak! Used for eating tasty food and singing songs!',
-    slot: { x: 68, y: 30, w: 30, h: 22 },
-    shape: 'bg-orange-500 rounded-r-2xl border-2 border-orange-700',
+    id: 'ears',
+    name: 'Ears',
+    label: '3. Ears (Hearing)',
+    icon: '👂',
+    explanation: 'Our ears listen to sweet music, birds singing, and cheerful stories!',
+    slot: { x: 50, y: 23, w: 98, h: 28 },
+    hint: 'Drag the ears to both sides of the head to listen!',
   },
   {
-    id: 'body',
-    name: 'Tummy',
-    icon: '🎽',
-    explanation: 'Tummy! Keeps our food digesting and body warm!',
-    slot: { x: 44, y: 52, w: 96, h: 72 },
-    shape: 'rounded-3xl bg-amber-400 border-3 border-amber-600 shadow-md',
+    id: 'tummy',
+    name: 'Tummy & Chest',
+    label: '4. Tummy & Chest',
+    icon: '👕',
+    explanation: 'Our chest breathes healthy fresh air and our tummy digests food for energy!',
+    slot: { x: 50, y: 52, w: 88, h: 74 },
+    hint: 'Drag the tummy and chest right into the middle of the body!',
   },
   {
-    id: 'wings',
-    name: 'Wings',
-    icon: '🪽',
-    explanation: 'Wings! Used for splashing water, flapping, and warm hugs!',
-    slot: { x: 32, y: 52, w: 42, h: 42 },
-    shape: 'rounded-full bg-amber-300 border-2 border-amber-500',
+    id: 'arms',
+    name: 'Arms & Hands',
+    label: '5. Arms & Hands',
+    icon: '🤲',
+    explanation: 'Our arms give big warm hugs, and our hands build toys, draw, and wave hello!',
+    slot: { x: 50, y: 52, w: 140, h: 44 },
+    hint: 'Drag the waving arms to both sides of the chest!',
   },
   {
     id: 'feet',
-    name: 'Feet',
-    icon: '🦶',
-    explanation: 'Feet! Used for walking, waddling, and paddling in the tub!',
-    slot: { x: 46, y: 78, w: 56, h: 22 },
-    shape: 'bg-orange-400 rounded-b-xl border-2 border-orange-600',
+    name: 'Legs & Feet',
+    label: '6. Legs & Feet',
+    icon: '👟',
+    explanation: 'Our strong legs run, jump, and dance, and our feet balance and walk!',
+    slot: { x: 50, y: 81, w: 80, h: 46 },
+    hint: 'Drag the legs and sneakers to the bottom to stand and run!',
   },
 ];
 
@@ -124,6 +130,11 @@ export default function BathSpaPage({
   const [isPetCrying, setIsPetCrying] = useState(true);
   const [showToyModal, setShowToyModal] = useState(false);
   const [activeToyLesson, setActiveToyLesson] = useState('');
+  // Drag & drop state for cute human toy assembly
+  const [draggedToyPart, setDraggedToyPart] = useState(null);
+  const [dragToyPos, setDragToyPos] = useState({ x: 0, y: 0 });
+  const [hoveredToySlot, setHoveredToySlot] = useState(null);
+  const blueprintRef = useRef(null);
 
   // Welcome speech
   useEffect(() => {
@@ -400,7 +411,7 @@ export default function BathSpaPage({
   };
 
   // -------------------------------------------------------------
-  // EDUCATIONAL TOY BODY PARTS ASSEMBLY HANDLERS
+  // EDUCATIONAL CUTE HUMAN TOY ASSEMBLY (DRAG & DROP HANDLERS)
   // -------------------------------------------------------------
   const handleSnapToyPart = (part) => {
     if (placedToyParts.includes(part.id)) return;
@@ -417,13 +428,81 @@ export default function BathSpaPage({
           sfx.fanfare();
           sfx.sparkle();
           speakPetText(
-            `Incredible! All 6 body parts are assembled! Give the toy to ${petDisplayName} so they stop crying!`,
+            `Amazing job! You assembled all 6 human body parts to build Cute Human Buddy! Give it to ${petDisplayName} so they stop crying!`,
             currentPet.voice
           );
         }, 500);
       }
       return next;
     });
+  };
+
+  const handleToyDragStart = (part, e) => {
+    if (placedToyParts.includes(part.id)) return;
+    sfx.pop();
+    const touch = e.touches ? e.touches[0] : e;
+    setDraggedToyPart(part);
+    setDragToyPos({ x: touch.clientX, y: touch.clientY });
+  };
+
+  const handleToyDragMove = (e) => {
+    if (!draggedToyPart) return;
+    const touch = e.touches ? e.touches[0] : e;
+    const x = touch.clientX;
+    const y = touch.clientY;
+    setDragToyPos({ x, y });
+
+    // Calculate proximity to the correct target slot on the blueprint
+    if (blueprintRef.current) {
+      const rect = blueprintRef.current.getBoundingClientRect();
+      const targetSlotX = rect.left + (draggedToyPart.slot.x / 100) * rect.width;
+      const targetSlotY = rect.top + (draggedToyPart.slot.y / 100) * rect.height;
+      const dist = Math.hypot(x - targetSlotX, y - targetSlotY);
+
+      if (dist < 70) {
+        setHoveredToySlot(draggedToyPart.id);
+      } else {
+        setHoveredToySlot(null);
+      }
+    }
+  };
+
+  const handleToyDragEnd = (e) => {
+    if (!draggedToyPart) return;
+    const touch = e.changedTouches ? e.changedTouches[0] : (e.touches ? e.touches[0] : e);
+    const x = touch.clientX;
+    const y = touch.clientY;
+
+    let snapped = false;
+    if (blueprintRef.current) {
+      const rect = blueprintRef.current.getBoundingClientRect();
+      const targetSlotX = rect.left + (draggedToyPart.slot.x / 100) * rect.width;
+      const targetSlotY = rect.top + (draggedToyPart.slot.y / 100) * rect.height;
+      const dist = Math.hypot(x - targetSlotX, y - targetSlotY);
+
+      if (dist < 75) {
+        snapped = true;
+        handleSnapToyPart(draggedToyPart);
+      }
+    }
+
+    if (!snapped) {
+      sfx.boing();
+      speakPetText(draggedToyPart.hint, currentPet.voice);
+    }
+
+    setDraggedToyPart(null);
+    setHoveredToySlot(null);
+  };
+
+  const handleToyDirectTap = (part) => {
+    if (placedToyParts.includes(part.id)) {
+      sfx.pop();
+      setActiveToyLesson(`${part.name}: ${part.explanation}`);
+      speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
+    } else {
+      handleSnapToyPart(part);
+    }
   };
 
   const handleGiveToyToPet = () => {
@@ -441,11 +520,19 @@ export default function BathSpaPage({
 
     setTimeout(() => {
       speakPetText(
-        `Hooray! ${petDisplayName} stopped crying and is so happy with the new bath toy! Now let's scrub and wash in our warm bubble bath!`,
+        `Hooray! ${petDisplayName} stopped crying and loves playing with Cute Human Buddy in the bathtub!`,
         currentPet.voice
       );
       setTimeout(() => setPetSparkle(false), 2000);
     }, 400);
+  };
+
+  const handleInteractToy = () => {
+    sfx.squeak();
+    sfx.splash();
+    setDuckSqueaking(true);
+    setTimeout(() => setDuckSqueaking(false), 500);
+    speakPetText(`Yay! ${petDisplayName} giggles and splashes with Cute Human Buddy in the warm tub!`, currentPet.voice);
   };
 
   const allSpotsCleaned = cleanedSpots.length === INITIAL_MUD_SPOTS.length;
@@ -475,7 +562,7 @@ export default function BathSpaPage({
           </button>
         </div>
 
-        {/* Assemble Toy / Toy Workshop Button */}
+        {/* Assemble Toy / Toy Workshop Button (Extra Noticeable for Kids!) */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
@@ -483,19 +570,20 @@ export default function BathSpaPage({
               setShowToyModal(true);
               speakPetText(
                 isToyComplete
-                  ? `Toy Anatomy Workshop! Learn about body parts and review the toy!`
-                  : `Assemble all body parts to make a bath toy and stop ${petDisplayName} from crying!`,
+                  ? `Anatomy Workshop! Review the body parts on Cute Human Buddy!`
+                  : `Drag and drop body parts to build the cute human toy and stop ${petDisplayName} from crying!`,
                 currentPet.voice
               );
             }}
-            className={`px-3 py-1 rounded-full text-xs font-black transition-all flex items-center gap-1.5 shadow-md active:scale-95 ${
+            className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-black transition-all flex items-center gap-1.5 shadow-xl active:scale-95 cursor-pointer ${
               !isToyComplete
-                ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white border-2 border-purple-300 ring-2 ring-purple-200 animate-pulse'
-                : 'bg-white/90 text-purple-900 border border-purple-300 hover:bg-purple-50'
+                ? 'bg-gradient-to-r from-amber-400 via-pink-500 to-purple-600 text-white border-2 border-white ring-4 ring-pink-400 animate-pulse scale-105 hover:scale-110'
+                : 'bg-white/95 text-purple-900 border-2 border-purple-300 hover:bg-purple-50'
             }`}
+            title="Assemble Cute Human Toy"
           >
-            <span>🧩</span>
-            <span>{isToyComplete ? 'Toy Workshop' : 'Assemble Toy! 😭'}</span>
+            <span className="text-lg animate-bounce">{isToyComplete ? '🧸' : '🧩'}</span>
+            <span>{isToyComplete ? 'Human Toy Lab' : '✨ ASSEMBLE TOY! 😭'}</span>
           </button>
         </div>
       </header>
@@ -518,7 +606,7 @@ export default function BathSpaPage({
             </p>
             <h2 className="text-xs sm:text-sm font-black text-slate-800 tracking-tight leading-tight">
               {!isToyComplete && isPetCrying
-                ? `😭 ${petDisplayName} is crying! Tap 'Assemble Toy' to build one!`
+                ? `😭 ${petDisplayName} is crying! Tap 'ASSEMBLE TOY' to build a cute human buddy!`
                 : isFullyCompleted
                 ? '✨ Sparkling Clean, Soft & Fluffy! ✨'
                 : activeTool === 'sponge'
@@ -646,22 +734,30 @@ export default function BathSpaPage({
                   accessories={unlockedAccessories}
                 />
 
-                {/* Crying Pet Speech Bubble: Informs child and opens toy modal */}
+                {/* Big Impossible-to-Miss Crying Pet Banner */}
                 {isPetCrying && !isToyComplete && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      sfx.pop();
-                      setShowToyModal(true);
-                      speakPetText(`Waaah! I need my bath toy! Tap to assemble body parts!`, currentPet.voice);
-                    }}
-                    className="absolute -top-8 -right-4 bg-white/95 px-2.5 py-1 rounded-full shadow-lg border-2 border-purple-400 text-[10px] font-black text-purple-900 flex items-center gap-1 animate-bounce z-30 cursor-pointer hover:scale-105"
-                  >
-                    <span>😭</span>
-                    <span>Waaah! Need toy!</span>
-                    <span className="text-purple-600 underline">Assemble 🧩</span>
-                  </button>
+                  <div className="absolute -top-14 -inset-x-8 flex flex-col items-center z-35 animate-bounce pointer-events-auto">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sfx.pop();
+                        setShowToyModal(true);
+                        speakPetText(
+                          `Drag and drop body parts to build the cute human toy and stop ${petDisplayName} from crying!`,
+                          currentPet.voice
+                        );
+                      }}
+                      className="bg-gradient-to-r from-purple-600 via-pink-500 to-amber-400 hover:from-purple-500 hover:to-amber-300 text-white font-black text-xs sm:text-sm px-3.5 py-2 rounded-2xl shadow-2xl border-2 border-white ring-4 ring-pink-400 flex items-center gap-1.5 cursor-pointer active:scale-95 animate-pulse"
+                    >
+                      <span className="text-xl animate-spin">🧩</span>
+                      <span>WAAAH! BUILD MY TOY!</span>
+                      <span className="bg-white text-purple-900 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-black shadow-md">
+                        👉 TAP HERE!
+                      </span>
+                    </button>
+                    <div className="w-0 h-0 border-x-8 border-x-transparent border-t-8 border-t-pink-500 -mt-0.5" />
+                  </div>
                 )}
 
                 {/* 1. MUD SPOTS ON PET (Scrub Stage) */}
@@ -762,23 +858,23 @@ export default function BathSpaPage({
                 </div>
               </div>
 
-              {/* REAL PHYSICAL FLOATING RUBBER DUCKY (In tub water) */}
+              {/* REAL PHYSICAL FLOATING CUTE HUMAN BUDDY TOY */}
               {isToyComplete ? (
                 <button
                   type="button"
-                  onClick={handleInteractDuck}
+                  onClick={handleInteractToy}
                   style={{
                     left: `${duckPos.x}%`,
-                    bottom: '24px',
+                    bottom: '22px',
                   }}
-                  className={`absolute z-25 flex flex-col items-center justify-center w-12 h-12 bg-amber-300 hover:bg-amber-400 border-2 border-amber-500 rounded-full shadow-lg cursor-pointer transition-transform active:scale-90 ${
+                  className={`absolute z-25 flex flex-col items-center justify-center w-13 h-13 bg-gradient-to-tr from-amber-300 via-pink-200 to-sky-200 hover:from-amber-400 hover:to-pink-300 border-2 border-white rounded-full shadow-xl cursor-pointer transition-transform active:scale-90 ${
                     duckSqueaking ? 'animate-bounce scale-125' : 'animate-float'
                   }`}
-                  title="Squeak the Rubber Ducky!"
+                  title="Play with Cute Human Buddy!"
                 >
-                  <span className="text-2xl leading-none">🦆</span>
-                  <span className="text-[8px] font-black text-amber-950 bg-white/80 px-1 rounded-full -mt-0.5 shadow-xs">
-                    Squeak!
+                  <span className="text-2xl leading-none">🧸</span>
+                  <span className="text-[7.5px] font-black text-purple-950 bg-white/90 px-1 rounded-full -mt-0.5 shadow-xs">
+                    Buddy!
                   </span>
                 </button>
               ) : (
@@ -788,20 +884,20 @@ export default function BathSpaPage({
                     sfx.pop();
                     setShowToyModal(true);
                     speakPetText(
-                      `No toy in the tub! Assemble body parts in the workshop to build one!`,
+                      `No toy in the tub! Drag and drop body parts to build a cute human toy!`,
                       currentPet.voice
                     );
                   }}
                   style={{
                     left: `${duckPos.x}%`,
-                    bottom: '24px',
+                    bottom: '20px',
                   }}
-                  className="absolute z-25 flex flex-col items-center justify-center w-12 h-12 bg-purple-100/90 border-2 border-dashed border-purple-400 rounded-full shadow-sm cursor-pointer animate-pulse hover:scale-105"
+                  className="absolute z-25 flex items-center gap-1.5 bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 border-2 border-white text-white px-3 py-1.5 rounded-full shadow-xl cursor-pointer animate-bounce ring-3 ring-pink-300 active:scale-90 hover:scale-105"
                   title="Missing bath toy! Assemble it now!"
                 >
-                  <span className="text-xl opacity-40">🦆</span>
-                  <span className="text-[7.5px] font-black text-purple-900 bg-white/90 px-1 rounded-full">
-                    Build 🧩
+                  <span className="text-base animate-spin">🧩</span>
+                  <span className="text-[9.5px] font-black uppercase tracking-wider">
+                    Build Human Toy!
                   </span>
                 </button>
               )}
@@ -932,17 +1028,22 @@ export default function BathSpaPage({
       {/* Teaches body parts, assembles toy to stop pet from crying    */}
       {/* ============================================================= */}
       {showToyModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-between p-3 sm:p-5 overflow-y-auto animate-fade">
+        <div
+          onPointerMove={handleToyDragMove}
+          onPointerUp={handleToyDragEnd}
+          style={{ touchAction: 'none' }}
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-between p-2.5 sm:p-4 overflow-y-auto animate-fade select-none"
+        >
           {/* Modal Header */}
-          <div className="w-full max-w-lg flex items-center justify-between bg-white/95 rounded-2xl px-4 py-2.5 shadow-xl border-2 border-purple-400 flex-shrink-0">
+          <div className="w-full max-w-lg flex items-center justify-between bg-white/95 rounded-2xl px-3.5 py-2 sm:py-2.5 shadow-xl border-2 border-purple-400 flex-shrink-0">
             <div className="text-left">
               <span className="text-[10px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1">
-                <span>🧩 Toy Anatomy Workshop:</span>
+                <span>🧸 Cute Human Buddy Workshop:</span>
               </span>
               <h3 className="text-xs sm:text-sm font-black text-slate-900">
                 {placedToyParts.length === TOY_BODY_PARTS.length
-                  ? '🎉 Toy Complete! Give to Pet to Stop Crying! 🎉'
-                  : `Assemble Body Parts! (${placedToyParts.length}/${TOY_BODY_PARTS.length})`}
+                  ? '🎉 Cute Buddy Complete! Ready to Give to Pet! 🎉'
+                  : `Drag & Drop Body Parts! (${placedToyParts.length}/${TOY_BODY_PARTS.length} Placed)`}
               </h3>
             </div>
 
@@ -952,11 +1053,11 @@ export default function BathSpaPage({
                 onClick={() => {
                   sfx.pop();
                   speakPetText(
-                    `Tap or snap each body part into the blueprint to build the bath toy! Learn what each body part does!`,
+                    `Drag and drop each human body part onto the matching spot on the blueprint! Learn what our head, eyes, ears, tummy, arms, and feet do!`,
                     currentPet.voice
                   );
                 }}
-                className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-300 text-purple-900 flex items-center justify-center shadow-sm active:scale-90"
+                className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-300 text-purple-900 flex items-center justify-center shadow-sm active:scale-90 cursor-pointer"
                 title="Hear audio instructions"
               >
                 <Volume2 className="w-4 h-4" />
@@ -968,7 +1069,7 @@ export default function BathSpaPage({
                   sfx.pop();
                   setShowToyModal(false);
                 }}
-                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black shadow-sm active:scale-90"
+                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 flex items-center justify-center text-xs font-black shadow-sm active:scale-90 cursor-pointer"
                 title="Close modal"
               >
                 ✕
@@ -976,29 +1077,30 @@ export default function BathSpaPage({
             </div>
           </div>
 
-          {/* Educational Body Part Anatomy Lesson Card */}
-          <div className="w-full max-w-lg my-2 bg-gradient-to-r from-purple-900/90 to-indigo-900/90 border-2 border-purple-300 rounded-2xl px-4 py-2 text-white shadow-lg flex items-center justify-between flex-shrink-0">
+          {/* Educational Human Body Part Lesson Card */}
+          <div className="w-full max-w-lg my-1.5 bg-gradient-to-r from-purple-900/95 to-indigo-900/95 border-2 border-purple-300 rounded-2xl px-3.5 py-2 text-white shadow-lg flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-2 text-left">
               <span className="text-2xl animate-pulse">💡</span>
               <div>
                 <p className="text-[10px] font-bold text-purple-200 uppercase tracking-wide">
-                  Body Part Lesson:
+                  {draggedToyPart ? `Dragging ${draggedToyPart.name}:` : 'Human Anatomy Lesson:'}
                 </p>
                 <p className="text-xs sm:text-sm font-black text-amber-200">
-                  {activeToyLesson ||
-                    'Tap each body part below to attach it and learn what it does!'}
+                  {draggedToyPart
+                    ? draggedToyPart.hint
+                    : activeToyLesson || 'Drag each body part from below onto the human silhouette to learn!'}
                 </p>
               </div>
             </div>
 
-            {activeToyLesson && (
+            {activeToyLesson && !draggedToyPart && (
               <button
                 type="button"
                 onClick={() => {
                   sfx.pop();
                   speakPetText(activeToyLesson, currentPet.voice);
                 }}
-                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white flex-shrink-0 active:scale-90"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white flex-shrink-0 active:scale-90 cursor-pointer"
                 title="Replay lesson audio"
               >
                 <Volume2 className="w-4 h-4" />
@@ -1006,37 +1108,227 @@ export default function BathSpaPage({
             )}
           </div>
 
-          {/* Blueprint Canvas (Silhouette & Assembly Zone) */}
-          <div className="relative my-auto flex-1 min-h-[220px] max-h-[320px] w-full max-w-sm sm:max-w-md bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl border-4 border-purple-400 shadow-2xl p-4 flex flex-col items-center justify-center select-none">
-            {/* Blueprint Grid Background Pattern */}
+          {/* Blueprint Canvas: Drag & Drop Drop-Zone with Cute Human Art */}
+          <div
+            ref={blueprintRef}
+            className="relative my-auto flex-1 min-h-[240px] max-h-[350px] w-full max-w-sm sm:max-w-md bg-gradient-to-b from-indigo-950 via-slate-900 to-indigo-900 rounded-3xl border-4 border-purple-400 shadow-2xl p-2 flex flex-col items-center justify-center select-none overflow-hidden"
+          >
+            {/* Blueprint Grid Pattern */}
             <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#c084fc_1.5px,transparent_1.5px)] [background-size:16px_16px] rounded-3xl" />
 
             {/* Blueprint Title Badge */}
-            <div className="absolute top-2 left-3 px-3 py-1 rounded-full bg-purple-500/80 border border-purple-300 text-[10px] font-black text-white flex items-center gap-1.5 shadow-sm">
+            <div className="absolute top-2 left-3 px-3 py-1 rounded-full bg-purple-500/80 border border-purple-300 text-[10px] font-black text-white flex items-center gap-1.5 shadow-sm z-20">
               <span>📐</span>
-              <span>BLUEPRINT: BATH DUCKY</span>
+              <span>BLUEPRINT: CUTE HUMAN BUDDY</span>
               <span className="bg-purple-900/80 px-1.5 py-0.2 rounded-full text-[9px] font-bold">
                 {placedToyParts.length} / {TOY_BODY_PARTS.length}
               </span>
             </div>
 
-            {/* Interactive Silhouette Slots */}
-            <div className="relative w-64 h-56 flex items-center justify-center">
+            {/* Interactive SVG Canvas for Cute Chibi Human Buddy */}
+            <svg
+              viewBox="0 0 200 190"
+              className="w-full h-full max-h-[270px] relative z-10 filter drop-shadow-md"
+            >
+              {/* Dotted Guide Outlines (Shown when parts not yet placed) */}
+              {/* Head Silhouette Outline */}
+              {!placedToyParts.includes('head') && (
+                <circle
+                  cx="100"
+                  cy="52"
+                  r="36"
+                  fill="none"
+                  stroke="#A855F7"
+                  strokeWidth="2"
+                  strokeDasharray="4,4"
+                  opacity="0.4"
+                />
+              )}
+
+              {/* Ears Silhouette Outline */}
+              {!placedToyParts.includes('ears') && (
+                <g opacity="0.35">
+                  <circle cx="62" cy="52" r="8" fill="none" stroke="#A855F7" strokeWidth="2" strokeDasharray="3,3" />
+                  <circle cx="138" cy="52" r="8" fill="none" stroke="#A855F7" strokeWidth="2" strokeDasharray="3,3" />
+                </g>
+              )}
+
+              {/* Eyes Silhouette Outline */}
+              {!placedToyParts.includes('eyes') && (
+                <g opacity="0.35">
+                  <ellipse cx="86" cy="50" rx="6" ry="8" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                  <ellipse cx="114" cy="50" rx="6" ry="8" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                </g>
+              )}
+
+              {/* Tummy & Chest Silhouette Outline */}
+              {!placedToyParts.includes('tummy') && (
+                <rect
+                  x="78"
+                  y="88"
+                  width="44"
+                  height="44"
+                  rx="12"
+                  fill="none"
+                  stroke="#A855F7"
+                  strokeWidth="2"
+                  strokeDasharray="4,4"
+                  opacity="0.4"
+                />
+              )}
+
+              {/* Arms Silhouette Outline */}
+              {!placedToyParts.includes('arms') && (
+                <g opacity="0.35">
+                  <path d="M 78 96 C 60 90, 48 78, 44 66" fill="none" stroke="#A855F7" strokeWidth="2.5" strokeDasharray="4,4" />
+                  <circle cx="44" cy="65" r="7" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                  <path d="M 122 96 C 140 90, 152 78, 156 66" fill="none" stroke="#A855F7" strokeWidth="2.5" strokeDasharray="4,4" />
+                  <circle cx="156" cy="65" r="7" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                </g>
+              )}
+
+              {/* Legs & Feet Silhouette Outline */}
+              {!placedToyParts.includes('feet') && (
+                <g opacity="0.35">
+                  <rect x="80" y="130" width="40" height="15" rx="4" fill="none" stroke="#A855F7" strokeWidth="2" strokeDasharray="4,4" />
+                  <ellipse cx="88" cy="156" rx="8" ry="6" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                  <ellipse cx="112" cy="156" rx="8" ry="6" fill="none" stroke="#A855F7" strokeWidth="1.5" strokeDasharray="3,3" />
+                </g>
+              )}
+
+              {/* --------------------------------------------------- */}
+              {/* ASSEMBLED CUTE CHIBI HUMAN ARTWORK (LAYER BY LAYER) */}
+              {/* --------------------------------------------------- */}
+
+              {/* 1. EARS LAYER */}
+              {placedToyParts.includes('ears') && (
+                <g className="animate-fade">
+                  {/* Left Ear */}
+                  <circle cx="62" cy="52" r="9" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2" />
+                  <circle cx="62" cy="52" r="5" fill="#FDA4AF" opacity="0.75" />
+                  {/* Right Ear */}
+                  <circle cx="138" cy="52" r="9" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2" />
+                  <circle cx="138" cy="52" r="5" fill="#FDA4AF" opacity="0.75" />
+                </g>
+              )}
+
+              {/* 2. HEAD & FACE LAYER */}
+              {placedToyParts.includes('head') && (
+                <g className="animate-fade">
+                  {/* Hair Back */}
+                  <ellipse cx="100" cy="45" rx="45" ry="40" fill="#78350F" />
+                  {/* Cute Round Face */}
+                  <circle cx="100" cy="53" r="37" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2.5" />
+                  {/* Sweet Cheeks */}
+                  <ellipse cx="78" cy="62" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.85" />
+                  <ellipse cx="122" cy="62" rx="7" ry="4.5" fill="#FDA4AF" opacity="0.85" />
+                  {/* Cheerful Mouth Smile */}
+                  <path d="M 94 65 Q 100 72 106 65" stroke="#B45309" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                  {/* Cute Hair Bangs Front */}
+                  <path d="M 65 44 Q 82 26 100 36 Q 118 26 135 44 Q 124 35 100 37 Q 76 35 65 44 Z" fill="#92400E" />
+                  {/* Cute Hair Sprout with Leaf */}
+                  <path d="M 100 24 Q 106 14 113 18 Q 108 24 100 24" fill="#10B981" />
+                </g>
+              )}
+
+              {/* 3. EYES LAYER */}
+              {placedToyParts.includes('eyes') && (
+                <g className="animate-fade">
+                  {/* Left Big Sparkling Anime Eye */}
+                  <ellipse cx="86" cy="51" rx="6.5" ry="8.5" fill="#0F172A" />
+                  <circle cx="84" cy="48" r="2.8" fill="#FFFFFF" />
+                  <circle cx="88" cy="54" r="1.4" fill="#FFFFFF" />
+                  {/* Right Big Sparkling Anime Eye */}
+                  <ellipse cx="114" cy="51" rx="6.5" ry="8.5" fill="#0F172A" />
+                  <circle cx="112" cy="48" r="2.8" fill="#FFFFFF" />
+                  <circle cx="116" cy="54" r="1.4" fill="#FFFFFF" />
+                  {/* Cute Anime Eyebrows */}
+                  <path d="M 80 40 Q 86 37 92 41" stroke="#78350F" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  <path d="M 108 41 Q 114 37 120 40" stroke="#78350F" strokeWidth="2" strokeLinecap="round" fill="none" />
+                </g>
+              )}
+
+              {/* 4. ARMS & HANDS LAYER */}
+              {placedToyParts.includes('arms') && (
+                <g className="animate-fade">
+                  {/* Left Waving Arm */}
+                  <path d="M 78 96 C 60 90, 48 78, 44 66 C 42 60, 50 58, 54 64 C 58 74, 68 85, 80 90" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="45" cy="64" r="7.5" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2" />
+                  {/* Right Waving Arm */}
+                  <path d="M 122 96 C 140 90, 152 78, 156 66 C 158 60, 150 58, 146 64 C 142 74, 132 85, 120 90" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="155" cy="64" r="7.5" fill="#FDE68A" stroke="#F59E0B" strokeWidth="2" />
+                </g>
+              )}
+
+              {/* 5. TUMMY & CHEST LAYER */}
+              {placedToyParts.includes('tummy') && (
+                <g className="animate-fade">
+                  {/* Cute Sky Blue Star T-Shirt */}
+                  <rect x="77" y="88" width="46" height="44" rx="12" fill="#38BDF8" stroke="#0284C7" strokeWidth="2.5" />
+                  {/* Golden Glowing Star Badge */}
+                  <path d="M 100 97 L 103 104 L 111 105 L 105 110 L 107 118 L 100 114 L 93 118 L 95 110 L 89 105 L 97 104 Z" fill="#FBBF24" stroke="#D97706" strokeWidth="1" />
+                  {/* White Collar Trim */}
+                  <path d="M 91 88 Q 100 96 109 88" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" fill="none" />
+                </g>
+              )}
+
+              {/* 6. LEGS & FEET LAYER */}
+              {placedToyParts.includes('feet') && (
+                <g className="animate-fade">
+                  {/* Denim Shorts */}
+                  <rect x="79" y="130" width="42" height="15" rx="4" fill="#6366F1" stroke="#4338CA" strokeWidth="2" />
+                  <line x1="100" y1="130" x2="100" y2="145" stroke="#4338CA" strokeWidth="2" />
+                  {/* Cute White Socks */}
+                  <rect x="83" y="145" width="11" height="8" rx="2" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1" />
+                  <rect x="106" y="145" width="11" height="8" rx="2" fill="#FFFFFF" stroke="#CBD5E1" strokeWidth="1" />
+                  {/* Red Bright Sneakers with White Toe Cap */}
+                  <ellipse cx="88" cy="156" rx="9" ry="6" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
+                  <ellipse cx="88" cy="154" rx="5" ry="2.5" fill="#FFFFFF" />
+                  <ellipse cx="112" cy="156" rx="9" ry="6" fill="#EF4444" stroke="#B91C1C" strokeWidth="2" />
+                  <ellipse cx="112" cy="154" rx="5" ry="2.5" fill="#FFFFFF" />
+                </g>
+              )}
+
+              {/* Hover Golden Pulse on Target Slot while dragging */}
+              {hoveredToySlot && (
+                <g className="animate-pulse">
+                  {hoveredToySlot === 'head' && (
+                    <circle cx="100" cy="52" r="42" fill="none" stroke="#FBBF24" strokeWidth="4" strokeDasharray="6,4" />
+                  )}
+                  {hoveredToySlot === 'eyes' && (
+                    <rect x="74" y="40" width="52" height="22" rx="10" fill="none" stroke="#FBBF24" strokeWidth="3.5" strokeDasharray="4,4" />
+                  )}
+                  {hoveredToySlot === 'ears' && (
+                    <g>
+                      <circle cx="62" cy="52" r="13" fill="none" stroke="#FBBF24" strokeWidth="3" strokeDasharray="4,3" />
+                      <circle cx="138" cy="52" r="13" fill="none" stroke="#FBBF24" strokeWidth="3" strokeDasharray="4,3" />
+                    </g>
+                  )}
+                  {hoveredToySlot === 'tummy' && (
+                    <rect x="72" y="84" width="56" height="52" rx="16" fill="none" stroke="#FBBF24" strokeWidth="4" strokeDasharray="6,4" />
+                  )}
+                  {hoveredToySlot === 'arms' && (
+                    <g>
+                      <circle cx="45" cy="65" r="15" fill="none" stroke="#FBBF24" strokeWidth="3.5" strokeDasharray="4,3" />
+                      <circle cx="155" cy="65" r="15" fill="none" stroke="#FBBF24" strokeWidth="3.5" strokeDasharray="4,3" />
+                    </g>
+                  )}
+                  {hoveredToySlot === 'feet' && (
+                    <rect x="74" y="126" width="52" height="38" rx="12" fill="none" stroke="#FBBF24" strokeWidth="4" strokeDasharray="6,4" />
+                  )}
+                </g>
+              )}
+            </svg>
+
+            {/* Tap-to-Review or Tap-to-Snap overlay targets on blueprint slots */}
+            <div className="absolute inset-0 pointer-events-none">
               {TOY_BODY_PARTS.map((part) => {
                 const isPlaced = placedToyParts.includes(part.id);
                 return (
                   <button
                     key={part.id}
                     type="button"
-                    onClick={() => {
-                      if (!isPlaced) {
-                        handleSnapToyPart(part);
-                      } else {
-                        sfx.pop();
-                        setActiveToyLesson(`${part.name}: ${part.explanation}`);
-                        speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
-                      }
-                    }}
+                    onClick={() => handleToyDirectTap(part)}
                     style={{
                       left: `${part.slot.x}%`,
                       top: `${part.slot.y}%`,
@@ -1044,23 +1336,18 @@ export default function BathSpaPage({
                       height: `${part.slot.h}px`,
                       transform: 'translate(-50%, -50%)',
                     }}
-                    className={`absolute flex flex-col items-center justify-center transition-all duration-300 cursor-pointer ${
-                      isPlaced
-                        ? `${part.shape} shadow-xl scale-100 hover:ring-2 hover:ring-purple-300`
-                        : 'border-2 border-dashed border-purple-400/60 bg-purple-500/15 rounded-2xl hover:bg-purple-500/30'
+                    className={`absolute flex flex-col items-center justify-center pointer-events-auto cursor-pointer rounded-2xl transition-all ${
+                      hoveredToySlot === part.id
+                        ? 'bg-amber-400/25 ring-4 ring-amber-300 scale-105'
+                        : isPlaced
+                        ? 'hover:ring-2 hover:ring-purple-300'
+                        : 'border-2 border-dashed border-purple-400/40 hover:bg-purple-500/20'
                     }`}
-                    title={isPlaced ? `Review ${part.name}` : `Snap in ${part.name}`}
+                    title={isPlaced ? `Review ${part.name}` : `Drop or tap ${part.name}`}
                   >
-                    {isPlaced ? (
-                      <div className="flex flex-col items-center">
-                        <span className="text-xl">{part.icon}</span>
-                        <span className="text-[9px] font-black text-slate-900 leading-tight">
-                          {part.name}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-[10px] font-bold text-purple-200/90">
-                        {part.name}?
+                    {!isPlaced && (
+                      <span className="text-[10px] font-black text-purple-200/80 bg-slate-900/60 px-2 py-0.5 rounded-full backdrop-blur-xs">
+                        {hoveredToySlot === part.id ? '✨ DROP!' : `${part.name}?`}
                       </span>
                     )}
                   </button>
@@ -1068,70 +1355,89 @@ export default function BathSpaPage({
               })}
             </div>
 
-            {/* Completion Overlay: Assembled Toy & Give to Pet Button */}
+            {/* Assembled Cute Buddy Celebration Overlay */}
             {placedToyParts.length === TOY_BODY_PARTS.length && (
-              <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center p-4 z-30 animate-fade text-white text-center">
-                <span className="text-5xl animate-bounce mb-1">🦆✨</span>
-                <h3 className="text-base font-black text-amber-300">Toy Fully Assembled!</h3>
-                <p className="text-xs text-purple-100 max-w-xs mt-1">
-                  You learned all body parts: Head, Eyes, Beak, Tummy, Wings, and Feet!
+              <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center p-4 z-40 animate-fade text-white text-center">
+                <span className="text-5xl animate-bounce mb-1">🧸✨</span>
+                <h3 className="text-base sm:text-lg font-black text-amber-300">
+                  Cute Human Buddy Assembled!
+                </h3>
+                <p className="text-xs text-purple-100 max-w-xs mt-1 leading-relaxed">
+                  You learned all 6 human body parts: <strong>Head</strong>, <strong>Eyes</strong>, <strong>Ears</strong>, <strong>Tummy</strong>, <strong>Arms</strong>, and <strong>Feet</strong>!
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3 w-full max-w-xs">
                   <button
                     type="button"
                     onClick={handleGiveToyToPet}
-                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-1.5 animate-pulse active:scale-95"
+                    className="w-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-2xl shadow-xl border-2 border-emerald-300 flex items-center justify-center gap-1.5 animate-pulse active:scale-95 cursor-pointer"
                   >
                     <span>🎁</span>
-                    <span>Give Toy to Pet & Stop Crying!</span>
+                    <span>Give Cute Buddy to Pet & Stop Crying!</span>
                   </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Body Parts Tray (Buttons on bottom of modal) */}
-          <div className="w-full max-w-lg bg-white/95 rounded-2xl p-2.5 shadow-xl border-2 border-purple-300 mt-2 flex-shrink-0">
-            <div className="flex items-center justify-between mb-1.5 px-1">
-              <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider flex items-center gap-1">
-                <span>👇 Available Body Parts:</span>
+          {/* Floating Drag Clone: Follows finger/pointer while dragging */}
+          {draggedToyPart && (
+            <div
+              style={{
+                left: `${dragToyPos.x}px`,
+                top: `${dragToyPos.y}px`,
+                transform: 'translate(-50%, -50%) scale(1.22)',
+              }}
+              className="fixed pointer-events-none z-[100] flex flex-col items-center justify-center p-3 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl border-3 border-purple-400 ring-4 ring-pink-400 animate-pulse select-none"
+            >
+              <span className="text-4xl leading-none">{draggedToyPart.icon}</span>
+              <span className="text-[10px] font-black text-purple-900 mt-1 uppercase">
+                {draggedToyPart.name}
               </span>
-              <span className="text-[9.5px] font-bold text-slate-600">
-                (Tap part to attach & learn)
+              <span className="text-[8px] font-black text-pink-600 bg-pink-100 px-2 py-0.5 rounded-full mt-0.5">
+                Drop on silhouette!
               </span>
             </div>
-            <div className="grid grid-cols-6 gap-1.5">
+          )}
+
+          {/* Draggable Body Parts Tray at Bottom */}
+          <div className="w-full max-w-lg bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-xl border-2 border-purple-300 mt-1.5 flex-shrink-0">
+            <div className="flex items-center justify-between mb-1 px-1">
+              <span className="text-[10px] font-black text-purple-900 uppercase tracking-wider flex items-center gap-1">
+                <span>👇 Drag Body Parts to Silhouette (or Tap):</span>
+              </span>
+              <span className="text-[9.5px] font-bold text-slate-500">
+                (Touch & drag onto blueprint)
+              </span>
+            </div>
+
+            <div className="grid grid-cols-6 gap-1 sm:gap-1.5">
               {TOY_BODY_PARTS.map((part) => {
                 const isPlaced = placedToyParts.includes(part.id);
                 return (
                   <button
                     key={part.id}
                     type="button"
-                    onClick={() => {
-                      if (!isPlaced) {
-                        handleSnapToyPart(part);
-                      } else {
-                        sfx.pop();
-                        setActiveToyLesson(`${part.name}: ${part.explanation}`);
-                        speakPetText(`${part.name}! ${part.explanation}`, currentPet.voice);
-                      }
-                    }}
-                    className={`flex flex-col items-center justify-center p-1.5 rounded-xl border transition-all cursor-pointer ${
+                    onPointerDown={(e) => handleToyDragStart(part, e)}
+                    onClick={() => handleToyDirectTap(part)}
+                    style={{ touchAction: 'none' }}
+                    className={`flex flex-col items-center justify-center p-1 sm:p-1.5 rounded-xl border transition-all cursor-grab active:cursor-grabbing select-none ${
                       isPlaced
                         ? 'bg-emerald-50 border-emerald-300 text-emerald-900 shadow-xs'
                         : 'bg-purple-50 border-purple-300 hover:bg-purple-100 text-purple-950 active:scale-90 shadow-xs ring-1 ring-purple-200'
                     }`}
                   >
-                    <span className="text-xl">{part.icon}</span>
-                    <span className="text-[9px] font-black mt-0.5 leading-tight">{part.name}</span>
+                    <span className="text-xl sm:text-2xl">{part.icon}</span>
+                    <span className="text-[8.5px] sm:text-[9px] font-black mt-0.5 leading-tight truncate max-w-full">
+                      {part.name}
+                    </span>
                     <span
-                      className={`text-[7.5px] font-bold px-1 rounded-full mt-0.5 ${
+                      className={`text-[7px] sm:text-[7.5px] font-bold px-1 rounded-full mt-0.5 ${
                         isPlaced
                           ? 'bg-emerald-200 text-emerald-900'
                           : 'bg-purple-200 text-purple-900'
                       }`}
                     >
-                      {isPlaced ? '✓ Placed' : 'Snap'}
+                      {isPlaced ? '✓ Placed' : '🖐️ Drag'}
                     </span>
                   </button>
                 );
