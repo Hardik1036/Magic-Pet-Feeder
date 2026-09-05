@@ -58,8 +58,8 @@ function generateDetectiveRound() {
     type: 'letter',
     value: targetLetter,
     isTarget: true,
-    x: 18 + Math.random() * 64,
-    y: 12 + Math.random() * 52,
+    x: 20 + Math.random() * 60,
+    y: 18 + Math.random() * 62,
     vx: (Math.random() - 0.5) * 0.35 || 0.2,
     vy: (Math.random() - 0.5) * 0.35 || -0.2,
     color: 'from-amber-300 via-yellow-400 to-amber-500 border-yellow-200 text-amber-950 ring-4 ring-yellow-300/80 shadow-lg shadow-amber-500/50 scale-110 font-black',
@@ -71,8 +71,8 @@ function generateDetectiveRound() {
     type: 'letter',
     value: decoyLetter,
     isTarget: false,
-    x: 15 + Math.random() * 70,
-    y: 15 + Math.random() * 50,
+    x: 18 + Math.random() * 64,
+    y: 18 + Math.random() * 64,
     vx: (Math.random() - 0.5) * 0.35 || -0.2,
     vy: (Math.random() - 0.5) * 0.35 || 0.2,
     color: 'from-violet-400 to-purple-600 border-purple-300 text-white shadow-md font-black',
@@ -85,8 +85,8 @@ function generateDetectiveRound() {
       type: 'number',
       value: num,
       isTarget: false,
-      x: 10 + Math.random() * 76,
-      y: 10 + Math.random() * 55,
+      x: 14 + Math.random() * 72,
+      y: 14 + Math.random() * 72,
       vx: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? 0.25 : -0.25),
       vy: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? -0.25 : 0.25),
       color: `${NUMBER_PALETTE[idx % NUMBER_PALETTE.length]} shadow-md font-black`,
@@ -142,11 +142,11 @@ export default function PlayroomPage({
   // -------------------------------------------------------------
   const [countTarget, setCountTarget] = useState(1);
   const [countBalloons, setCountBalloons] = useState(() => [
-    { num: 1, color: 'bg-rose-400 border-rose-500', x: 20, y: 22, popped: false },
-    { num: 2, color: 'bg-amber-400 border-amber-500', x: 74, y: 18, popped: false },
-    { num: 3, color: 'bg-emerald-400 border-emerald-500', x: 25, y: 62, popped: false },
-    { num: 4, color: 'bg-sky-400 border-sky-500', x: 78, y: 58, popped: false },
-    { num: 5, color: 'bg-purple-400 border-purple-500', x: 50, y: 15, popped: false },
+    { num: 1, color: 'bg-rose-400 border-rose-500', x: 22, y: 26, popped: false },
+    { num: 2, color: 'bg-amber-400 border-amber-500', x: 78, y: 24, popped: false },
+    { num: 3, color: 'bg-emerald-400 border-emerald-500', x: 25, y: 68, popped: false },
+    { num: 4, color: 'bg-sky-400 border-sky-500', x: 75, y: 66, popped: false },
+    { num: 5, color: 'bg-purple-400 border-purple-500', x: 50, y: 22, popped: false },
   ]);
 
   // -------------------------------------------------------------
@@ -156,8 +156,8 @@ export default function PlayroomPage({
   const [shapeItemsList, setShapeItemsList] = useState(() =>
     SHAPE_ITEMS.map((item, idx) => ({
       ...item,
-      x: 15 + (idx % 3) * 32,
-      y: 18 + Math.floor(idx / 3) * 36,
+      x: 20 + (idx % 3) * 30,
+      y: 22 + Math.floor(idx / 3) * 38,
       matched: false,
     }))
   );
@@ -166,7 +166,7 @@ export default function PlayroomPage({
   // GAME 5: BOUNCY BEACH BALL CATCH
   // -------------------------------------------------------------
   const [ballCatches, setBallCatches] = useState(0);
-  const [ballPos, setBallPos] = useState({ x: 50, y: 74 });
+  const [ballPos, setBallPos] = useState({ x: 50, y: 68 });
   const [isBallFlying, setIsBallFlying] = useState(false);
 
   // Animation Frame ref for continuous smooth drifting of moving items
@@ -226,21 +226,21 @@ export default function PlayroomPage({
           let nvx = item.vx;
           let nvy = item.vy;
 
-          // Bounce off left/right bounds
-          if (nx <= 6) {
-            nx = 6;
+          // Bounce off left/right bounds inside playable box
+          if (nx <= 8) {
+            nx = 8;
             nvx = Math.abs(nvx);
-          } else if (nx >= 88) {
-            nx = 88;
+          } else if (nx >= 92) {
+            nx = 92;
             nvx = -Math.abs(nvx);
           }
 
-          // Bounce off top/bottom bounds
-          if (ny <= 8) {
-            ny = 8;
+          // Bounce off top/bottom bounds inside playable box
+          if (ny <= 10) {
+            ny = 10;
             nvy = Math.abs(nvy);
-          } else if (ny >= 75) {
-            ny = 75;
+          } else if (ny >= 90) {
+            ny = 90;
             nvy = -Math.abs(nvy);
           }
 
@@ -276,12 +276,12 @@ export default function PlayroomPage({
     ].sort(() => 0.5 - Math.random());
 
     const positions = [
-      { x: 18, y: 15 },
-      { x: 50, y: 14 },
-      { x: 80, y: 16 },
-      { x: 16, y: 58 },
-      { x: 82, y: 56 },
-      { x: 48, y: 64 },
+      { x: 20, y: 22 },
+      { x: 50, y: 18 },
+      { x: 80, y: 22 },
+      { x: 22, y: 70 },
+      { x: 78, y: 70 },
+      { x: 50, y: 74 },
     ];
 
     setWordBubbles(
@@ -526,8 +526,8 @@ export default function PlayroomPage({
         setShapeItemsList(
           SHAPE_ITEMS.map((it, idx) => ({
             ...it,
-            x: 15 + (idx % 3) * 32,
-            y: 18 + Math.floor(idx / 3) * 36,
+            x: 20 + (idx % 3) * 30,
+            y: 22 + Math.floor(idx / 3) * 38,
             matched: false,
           }))
         );
@@ -553,11 +553,11 @@ export default function PlayroomPage({
     sfx.bounce();
     setPetExpression('happy');
 
-    setBallPos({ x: 50, y: 38 });
+    setBallPos({ x: 50, y: 28 });
 
     setTimeout(() => {
       sfx.squeak();
-      setBallPos({ x: 50, y: 74 });
+      setBallPos({ x: 50, y: 68 });
       setIsBallFlying(false);
 
       const nextCatches = ballCatches + 1;
@@ -787,8 +787,20 @@ export default function PlayroomPage({
         </div>
       </section>
 
-      {/* Main Playroom Area */}
-      <main className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm sm:max-w-md">
+      {/* ------------------------------------------------------------- */}
+      {/* DEDICATED PLAYABLE GAME BOX                                   */}
+      {/* 100% Unobstructed, high contrast, clean interactive arena     */}
+      {/* ------------------------------------------------------------- */}
+      <main className="relative flex-1 min-h-[210px] max-h-[360px] w-full max-w-sm sm:max-w-md my-1 bg-gradient-to-b from-sky-50/95 via-white to-teal-50/90 rounded-3xl border-4 border-teal-400 shadow-xl overflow-hidden flex flex-col items-center justify-center p-2 z-10 select-none">
+        {/* Subtle decorative playful arena pattern */}
+        <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#0d9488_1.5px,transparent_1.5px)] [background-size:16px_16px]" />
+
+        {/* Play arena badge */}
+        <div className="absolute top-2 left-2.5 px-2 py-0.5 rounded-full bg-teal-100/90 border border-teal-300 text-[10px] font-black text-teal-800 flex items-center gap-1 pointer-events-none z-10">
+          <span>🎮</span>
+          <span className="uppercase tracking-wider">Play Box</span>
+        </div>
+
         {/* Big Celebration Banner */}
         {celebrationMessage && (
           <div className="absolute top-2 z-40 px-4 py-1.5 bg-white/95 border-2 border-amber-400 rounded-full shadow-2xl text-amber-950 font-black text-xs sm:text-sm animate-bounce flex items-center gap-1.5">
@@ -811,7 +823,7 @@ export default function PlayroomPage({
         {/* GAME 1: LETTER DETECTIVE (Swarm of Moving Numbers + Letter)   */}
         {/* ------------------------------------------------------------- */}
         {activeGame === 'detective' && (
-          <div className="absolute inset-0 z-25 pointer-events-auto">
+          <div className="absolute inset-0 z-20 pointer-events-auto">
             {detectiveData.items.map((item) => (
               <button
                 key={item.id}
@@ -839,7 +851,7 @@ export default function PlayroomPage({
         {/* GAME 2: PHONICS WORD SPELLER BUBBLES                          */}
         {/* ------------------------------------------------------------- */}
         {activeGame === 'word' && (
-          <div className="absolute inset-0 z-25 pointer-events-auto">
+          <div className="absolute inset-0 z-20 pointer-events-auto">
             {wordBubbles.map((b) => (
               <button
                 key={b.id}
@@ -862,7 +874,7 @@ export default function PlayroomPage({
         {/* GAME 3: NUMBER COUNTING BALLOONS (1 to 5)                    */}
         {/* ------------------------------------------------------------- */}
         {activeGame === 'count' && (
-          <div className="absolute inset-0 z-25 pointer-events-auto">
+          <div className="absolute inset-0 z-20 pointer-events-auto">
             {countBalloons.map(
               (b) =>
                 !b.popped && (
@@ -889,7 +901,7 @@ export default function PlayroomPage({
         {/* GAME 4: SHAPE & COLOR TOY BOX                                 */}
         {/* ------------------------------------------------------------- */}
         {activeGame === 'shape' && (
-          <div className="absolute inset-0 z-25 pointer-events-auto">
+          <div className="absolute inset-0 z-20 pointer-events-auto">
             {shapeItemsList.map(
               (item) =>
                 !item.matched && (
@@ -910,7 +922,7 @@ export default function PlayroomPage({
             )}
 
             {/* Toy Box graphic on the floor */}
-            <div className="absolute right-2 sm:right-6 bottom-4 bg-gradient-to-tr from-amber-600 to-amber-700 text-white rounded-2xl p-2 shadow-xl border-2 border-amber-300 flex items-center gap-1.5 z-20">
+            <div className="absolute right-2.5 bottom-2.5 bg-gradient-to-tr from-amber-600 to-amber-700 text-white rounded-2xl p-2 shadow-lg border-2 border-amber-300 flex items-center gap-1.5 z-20">
               <span className="text-2xl">📦</span>
               <div className="text-left leading-tight">
                 <p className="text-[9px] font-bold text-amber-200 uppercase">Toy Chest</p>
@@ -942,33 +954,77 @@ export default function PlayroomPage({
             </div>
           </button>
         )}
+      </main>
 
-        {/* Pet Avatar in Playroom Center */}
-        <div
-          className={`relative z-15 transition-transform duration-300 ${
-            isBallFlying ? '-translate-y-4 scale-105' : ''
-          }`}
-        >
-          <PetAvatar
-            petId={currentPet.id}
-            stageIndex={stageIndex}
-            feedCount={feedCount}
-            expression={petExpression}
-            accessories={unlockedAccessories}
-            onPet={() => {
-              setPetSparkle(true);
-              setTimeout(() => setPetSparkle(false), 1200);
-            }}
-            onTease={() => {
-              setPetSparkle(true);
-              setTimeout(() => setPetSparkle(false), 1000);
-            }}
-          />
+      {/* ------------------------------------------------------------- */}
+      {/* PEEKING PET SHELF (Looking Up into Playable Box from Bottom)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className="w-full max-w-sm sm:max-w-md flex items-center justify-between px-2 -mt-1 mb-1 z-20 flex-shrink-0">
+        {/* Interactive Speech Bubble Cheering Player */}
+        <div className="flex-1 mr-2 bg-white/95 rounded-2xl rounded-br-sm px-3 py-1.5 shadow-md border-2 border-teal-300 text-left transition-all">
+          <p className="text-[10px] font-black text-teal-800 uppercase tracking-wider flex items-center gap-1">
+            <span>{currentPet.icon}</span>
+            <span>{petDisplayName}</span>
+          </p>
+          <p className="text-xs font-black text-slate-800 leading-tight mt-0.5 truncate sm:whitespace-normal">
+            {petExpression === 'happy'
+              ? '🌟 Woohoo! Great job!'
+              : activeGame === 'detective'
+              ? `Find letter ${detectiveData.targetLetter} in the box!`
+              : activeGame === 'word'
+              ? `Look for letter ${activeWordObj.word[spelledLetters.length]}!`
+              : activeGame === 'count'
+              ? `Pop balloon #${countTarget} next!`
+              : activeGame === 'shape'
+              ? `Put the ${shapeTarget.shape} into the chest!`
+              : `Tap ball to play catch with me!`}
+          </p>
         </div>
 
-        {/* Floor Mat Graphic */}
-        <div className="w-56 sm:w-72 h-8 sm:h-10 bg-emerald-700/20 rounded-full blur-xs -mt-3 sm:-mt-5 z-0" />
-      </main>
+        {/* Peeking Pet Avatar - resting paws on ledge, looking up */}
+        <div
+          onClick={() => {
+            sfx.squeak();
+            setPetSparkle(true);
+            setPetExpression('happy');
+            setTimeout(() => {
+              setPetSparkle(false);
+              setPetExpression('idle');
+            }, 1000);
+          }}
+          className="relative flex flex-col items-center justify-end cursor-pointer group active:scale-95 transition-transform flex-shrink-0"
+          title={`Tap ${petDisplayName} to cheer!`}
+        >
+          {/* Peeking Avatar window - top half visible, looking up into box */}
+          <div className="w-24 h-18 sm:w-28 sm:h-20 overflow-hidden flex items-start justify-center relative">
+            <div className="transform scale-[0.58] sm:scale-[0.66] origin-top -mt-2.5">
+              <PetAvatar
+                petId={currentPet.id}
+                stageIndex={stageIndex}
+                feedCount={feedCount}
+                expression={petExpression}
+                accessories={unlockedAccessories}
+              />
+            </div>
+          </div>
+
+          {/* Cute Ledge Border with Front Paws */}
+          <div className="relative -mt-2 w-24 sm:w-28 h-2.5 bg-gradient-to-r from-teal-400 via-teal-300 to-teal-400 rounded-full shadow-md flex items-center justify-center gap-6 z-30">
+            {/* Cute Front Paws Over Ledge */}
+            <div
+              className="w-4 h-3 rounded-full border-2 border-teal-800 shadow-sm -mt-1 transition-transform group-hover:-translate-y-0.5"
+              style={{ backgroundColor: currentPet.themeColor || '#10B981' }}
+            />
+            <div
+              className="w-4 h-3 rounded-full border-2 border-teal-800 shadow-sm -mt-1 transition-transform group-hover:-translate-y-0.5"
+              style={{ backgroundColor: currentPet.themeColor || '#10B981' }}
+            />
+          </div>
+          <span className="text-[9px] font-extrabold text-teal-800 mt-0.5">
+            Tap to pet! ✨
+          </span>
+        </div>
+      </div>
 
       {/* Mode Switcher Dock (5 Learning Modes) */}
       <footer className="w-full max-w-md flex flex-col gap-1 z-20 pb-0.5 flex-shrink-0">
