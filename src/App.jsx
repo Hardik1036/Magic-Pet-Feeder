@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import WelcomePage from './components/WelcomePage.jsx';
 import PetSelectPage from './components/PetSelectPage.jsx';
 import PetNamingPage from './components/PetNamingPage.jsx';
@@ -25,6 +25,18 @@ const DEFAULT_STATS = {
   ballsBounced: 0,
   starsCounted: 0,
   photosTaken: 0,
+};
+
+const EMPTY_ARRAY = Object.freeze([]);
+
+const areArraysEqual = (a = [], b = []) => {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 };
 
 export default function App() {
@@ -147,13 +159,13 @@ export default function App() {
     }
   };
 
-  const handleUpdateStats = (updater) => {
+  const handleUpdateStats = useCallback((updater) => {
     setPlayerStats((prev) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       saveToStorage({ playerStats: next });
       return next;
     });
-  };
+  }, []);
 
   // Step 1: Welcome page -> Choose Pet
   const handleWelcomeProceed = (name) => {
@@ -171,42 +183,63 @@ export default function App() {
 
   // Step 3: Confirm Pet Name -> Enter Feeding Game
   const handleConfirmPetName = (customName) => {
-    const updatedPets = {
-      ...petsProgress,
-      [selectedPetId]: {
-        ...(petsProgress[selectedPetId] || {}),
-        customName,
-      },
-    };
-    setPetsProgress(updatedPets);
+    setPetsProgress((prev) => {
+      const updatedPets = {
+        ...prev,
+        [selectedPetId]: {
+          ...(prev[selectedPetId] || {}),
+          customName,
+        },
+      };
+      saveToStorage({ petsProgress: updatedPets, currentPage: 'game' });
+      return updatedPets;
+    });
     setCurrentPage('game');
-    saveToStorage({ petsProgress: updatedPets, currentPage: 'game' });
   };
 
-  // In-Game: Save feed count & accessories for CURRENT pet without touching others!
-  const handleSaveGameProgress = ({ feedCount, stageIndex, unlockedAccessories }) => {
-    const currentPetData = petsProgress[selectedPetId] || {};
-    const updatedPets = {
-      ...petsProgress,
-      [selectedPetId]: {
-        ...currentPetData,
-        feedCount,
-        stageIndex,
-        unlockedAccessories,
-      },
-    };
-    setPetsProgress(updatedPets);
-    saveToStorage({ petsProgress: updatedPets, currentPage: 'game' });
-  };
+  // In-Game: Save feed count & accessories for CURRENT pet with strict equality guard!
+  const handleSaveGameProgress = useCallback(
+    ({ feedCount, stageIndex, unlockedAccessories }) => {
+      setPetsProgress((prev) => {
+        const currentPetData = prev[selectedPetId] || {};
+        // Guard against infinite loop: do not trigger state update if values haven't changed!
+        if (
+          currentPetData.feedCount === feedCount &&
+          currentPetData.stageIndex === stageIndex &&
+          areArraysEqual(currentPetData.unlockedAccessories, unlockedAccessories)
+        ) {
+          return prev;
+        }
+
+        const updatedPets = {
+          ...prev,
+          [selectedPetId]: {
+            ...currentPetData,
+            feedCount,
+            stageIndex,
+            unlockedAccessories: Array.isArray(unlockedAccessories)
+              ? [...unlockedAccessories]
+              : EMPTY_ARRAY,
+          },
+        };
+        saveToStorage({ petsProgress: updatedPets, currentPage: 'game' });
+        return updatedPets;
+      });
+    },
+    [selectedPetId]
+  );
 
   // In-Game: Award badge
-  const handleUnlockBadge = (badgeId) => {
-    if (!unlockedBadges.includes(badgeId)) {
-      const nextBadges = [...unlockedBadges, badgeId];
-      setUnlockedBadges(nextBadges);
-      saveToStorage({ unlockedBadges: nextBadges });
-    }
-  };
+  const handleUnlockBadge = useCallback((badgeId) => {
+    setUnlockedBadges((prev) => {
+      if (!prev.includes(badgeId)) {
+        const nextBadges = [...prev, badgeId];
+        saveToStorage({ unlockedBadges: nextBadges });
+        return nextBadges;
+      }
+      return prev;
+    });
+  }, []);
 
   // Update accessories across pet save
   const handleUpdateAccessories = (unlockedAccessories) => {
@@ -246,7 +279,7 @@ export default function App() {
     customName: activePet.defaultName,
     feedCount: 0,
     stageIndex: 0,
-    unlockedAccessories: [],
+    unlockedAccessories: EMPTY_ARRAY,
   };
 
   const totalFeeds = Object.values(petsProgress).reduce((acc, p) => acc + (p.feedCount || 0), 0);
@@ -296,6 +329,7 @@ export default function App() {
         {/* ACTIVITY 1: FEEDING KITCHEN */}
         {currentPage === 'game' && (
           <MagicPetFeeder
+            key={selectedPetId}
             playerName={playerName}
             petNickname={activePetData.customName}
             selectedPetId={selectedPetId}

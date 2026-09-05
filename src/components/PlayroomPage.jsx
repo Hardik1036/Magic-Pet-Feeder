@@ -1,15 +1,100 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { User, Volume2, Sparkles, RefreshCw, Check } from 'lucide-react';
+import { User, Volume2, Sparkles, RefreshCw, Check, Star, Trophy, Search, Award } from 'lucide-react';
 import PetAvatar from './PetAvatar.jsx';
 import ActivityNavBar from './ActivityNavBar.jsx';
 import { PETS } from '../data/pets.js';
+import { ALL_LETTERS, ALL_NUMBERS, ALL_SHAPES, ALL_COLORS } from '../data/shapes.js';
 import { sfx, speakPetText } from '../utils/audio.js';
 
-// 4-Step Playroom Activity Routine:
-// 1. 'ball': Throw the beach ball to pet to catch 3 times
-// 2. 'blocks': Stack 3 colorful toy building blocks into a tower
-// 3. 'balloon': Pop 3 floating balloons
-// 4. 'duck': Squeeze the rubber ducky for joyful musical giggles
+// ==========================================
+// 1. EDUCATIONAL PHONICS WORDS
+// ==========================================
+const SPELLING_WORDS = [
+  { word: 'CAT', icon: '🐱', hint: 'C - A - T spells Cat!' },
+  { word: 'SUN', icon: '☀️', hint: 'S - U - N spells Sun!' },
+  { word: 'DOG', icon: '🐶', hint: 'D - O - G spells Dog!' },
+  { word: 'STAR', icon: '⭐', hint: 'S - T - A - R spells Star!' },
+  { word: 'FISH', icon: '🐟', hint: 'F - I - S - H spells Fish!' },
+  { word: 'BIRD', icon: '🐦', hint: 'B - I - R - D spells Bird!' },
+  { word: 'BALL', icon: '⚽', hint: 'B - A - L - L spells Ball!' },
+  { word: 'DUCK', icon: '🦆', hint: 'D - U - C - K spells Duck!' },
+];
+
+// ==========================================
+// 2. SHAPE & COLOR MATCH ITEMS
+// ==========================================
+const SHAPE_ITEMS = [
+  { id: 'yellow_star', shape: 'Star', color: 'Yellow', icon: '⭐', bg: 'bg-amber-400 border-amber-500 text-amber-950' },
+  { id: 'blue_circle', shape: 'Circle', color: 'Blue', icon: '🔵', bg: 'bg-blue-500 border-blue-600 text-white' },
+  { id: 'red_heart', shape: 'Heart', color: 'Red', icon: '❤️', bg: 'bg-rose-500 border-rose-600 text-white' },
+  { id: 'green_triangle', shape: 'Triangle', color: 'Green', icon: '🔺', bg: 'bg-emerald-500 border-emerald-600 text-white' },
+  { id: 'purple_diamond', shape: 'Diamond', color: 'Purple', icon: '🔷', bg: 'bg-purple-500 border-purple-600 text-white' },
+  { id: 'orange_square', shape: 'Square', color: 'Orange', icon: '🟧', bg: 'bg-orange-500 border-orange-600 text-white' },
+];
+
+// Color palette for floating numbers
+const NUMBER_PALETTE = [
+  'from-rose-400 to-pink-500 border-rose-300 text-white',
+  'from-sky-400 to-blue-500 border-sky-300 text-white',
+  'from-emerald-400 to-teal-500 border-emerald-300 text-white',
+  'from-purple-400 to-indigo-500 border-purple-300 text-white',
+  'from-teal-400 to-cyan-500 border-teal-300 text-white',
+  'from-fuchsia-400 to-pink-500 border-fuchsia-300 text-white',
+];
+
+// Helper: Generate Letter Detective swarm
+function generateDetectiveRound() {
+  const targetLetter = ALL_LETTERS[Math.floor(Math.random() * ALL_LETTERS.length)];
+  const decoyLetter = ALL_LETTERS.find((l) => l !== targetLetter) || 'Z';
+
+  // Pick 7 unique numbers
+  const pickedNumbers = [...ALL_NUMBERS].sort(() => 0.5 - Math.random()).slice(0, 7);
+
+  const items = [];
+
+  // Target letter (sparkling target)
+  items.push({
+    id: `target_${targetLetter}_${Date.now()}`,
+    type: 'letter',
+    value: targetLetter,
+    isTarget: true,
+    x: 18 + Math.random() * 64,
+    y: 12 + Math.random() * 52,
+    vx: (Math.random() - 0.5) * 0.35 || 0.2,
+    vy: (Math.random() - 0.5) * 0.35 || -0.2,
+    color: 'from-amber-300 via-yellow-400 to-amber-500 border-yellow-200 text-amber-950 ring-4 ring-yellow-300/80 shadow-lg shadow-amber-500/50 scale-110 font-black',
+  });
+
+  // Decoy letter
+  items.push({
+    id: `decoy_${decoyLetter}`,
+    type: 'letter',
+    value: decoyLetter,
+    isTarget: false,
+    x: 15 + Math.random() * 70,
+    y: 15 + Math.random() * 50,
+    vx: (Math.random() - 0.5) * 0.35 || -0.2,
+    vy: (Math.random() - 0.5) * 0.35 || 0.2,
+    color: 'from-violet-400 to-purple-600 border-purple-300 text-white shadow-md font-black',
+  });
+
+  // Numbers in the moving swarm
+  pickedNumbers.forEach((num, idx) => {
+    items.push({
+      id: `num_${num}_${idx}`,
+      type: 'number',
+      value: num,
+      isTarget: false,
+      x: 10 + Math.random() * 76,
+      y: 10 + Math.random() * 55,
+      vx: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? 0.25 : -0.25),
+      vy: (Math.random() - 0.5) * 0.35 || (idx % 2 === 0 ? -0.25 : 0.25),
+      color: `${NUMBER_PALETTE[idx % NUMBER_PALETTE.length]} shadow-md font-black`,
+    });
+  });
+
+  return { targetLetter, items };
+}
 
 export default function PlayroomPage({
   playerName,
@@ -29,46 +114,438 @@ export default function PlayroomPage({
   const currentPet = PETS.find((p) => p.id === selectedPetId) || PETS[0];
   const petDisplayName = petNickname || currentPet.defaultName;
 
-  // Active step: 'ball' | 'blocks' | 'balloon' | 'duck'
-  const [activeToy, setActiveToy] = useState('ball');
+  // Active Educational Game: 'detective' | 'word' | 'count' | 'shape' | 'ball'
+  const [activeGame, setActiveGame] = useState('detective');
 
-  // Step 1: Ball catches
+  // Overall Learning Stars & Celebrations
+  const [learningStars, setLearningStars] = useState(0);
+  const [petExpression, setPetExpression] = useState('idle');
+  const [petSparkle, setPetSparkle] = useState(false);
+  const [celebrationMessage, setCelebrationMessage] = useState('');
+
+  // -------------------------------------------------------------
+  // GAME 1: LETTER DETECTIVE (Find letter among moving numbers)
+  // -------------------------------------------------------------
+  const [detectiveData, setDetectiveData] = useState(() => generateDetectiveRound());
+  const [detectiveFoundCount, setDetectiveFoundCount] = useState(0);
+
+  // -------------------------------------------------------------
+  // GAME 2: WORD SPELLER & PHONICS
+  // -------------------------------------------------------------
+  const [wordRoundIndex, setWordRoundIndex] = useState(0);
+  const activeWordObj = SPELLING_WORDS[wordRoundIndex % SPELLING_WORDS.length];
+  const [spelledLetters, setSpelledLetters] = useState([]);
+  const [wordBubbles, setWordBubbles] = useState([]);
+
+  // -------------------------------------------------------------
+  // GAME 3: NUMBER COUNTING SEQUENCE (1 to 5)
+  // -------------------------------------------------------------
+  const [countTarget, setCountTarget] = useState(1);
+  const [countBalloons, setCountBalloons] = useState(() => [
+    { num: 1, color: 'bg-rose-400 border-rose-500', x: 20, y: 22, popped: false },
+    { num: 2, color: 'bg-amber-400 border-amber-500', x: 74, y: 18, popped: false },
+    { num: 3, color: 'bg-emerald-400 border-emerald-500', x: 25, y: 62, popped: false },
+    { num: 4, color: 'bg-sky-400 border-sky-500', x: 78, y: 58, popped: false },
+    { num: 5, color: 'bg-purple-400 border-purple-500', x: 50, y: 15, popped: false },
+  ]);
+
+  // -------------------------------------------------------------
+  // GAME 4: SHAPE & COLOR MATCH
+  // -------------------------------------------------------------
+  const [shapeTarget, setShapeTarget] = useState(() => SHAPE_ITEMS[0]);
+  const [shapeItemsList, setShapeItemsList] = useState(() =>
+    SHAPE_ITEMS.map((item, idx) => ({
+      ...item,
+      x: 15 + (idx % 3) * 32,
+      y: 18 + Math.floor(idx / 3) * 36,
+      matched: false,
+    }))
+  );
+
+  // -------------------------------------------------------------
+  // GAME 5: BOUNCY BEACH BALL CATCH
+  // -------------------------------------------------------------
   const [ballCatches, setBallCatches] = useState(0);
   const [ballPos, setBallPos] = useState({ x: 50, y: 74 });
   const [isBallFlying, setIsBallFlying] = useState(false);
 
-  // Step 2: Stacked blocks (count 0..3)
-  const [stackedBlocks, setStackedBlocks] = useState([]);
+  // Animation Frame ref for continuous smooth drifting of moving items
+  const animFrameRef = useRef(null);
 
-  // Step 3: Floating balloons
-  const [balloons, setBalloons] = useState(() => [
-    { id: 1, icon: '⭐', color: 'bg-rose-400 border-rose-500', x: 18, y: 15 },
-    { id: 2, icon: '🎈', color: 'bg-amber-400 border-amber-500', x: 50, y: 12 },
-    { id: 3, icon: '✨', color: 'bg-purple-400 border-purple-500', x: 82, y: 16 },
-  ]);
-  const [balloonsPoppedCount, setBalloonsPoppedCount] = useState(0);
-
-  // Step 4: Duck squeaks (0..3)
-  const [duckSqueaks, setDuckSqueaks] = useState(0);
-
-  // Overall celebration
-  const [isPlayCompleted, setIsPlayCompleted] = useState(false);
-  const [petExpression, setPetExpression] = useState('idle');
-  const [petSparkle, setPetSparkle] = useState(false);
-
-  // Welcome speech
+  // Auto-speak on game change
+  const lastSpokenGameRef = useRef('');
   useEffect(() => {
+    if (lastSpokenGameRef.current === activeGame) return;
+    lastSpokenGameRef.current = activeGame;
+
     const timer = setTimeout(() => {
-      speakPetText(
-        `Yay, playtime! Throw the bouncy ball to play catch with ${petDisplayName}!`,
-        currentPet.voice
-      );
+      if (activeGame === 'detective') {
+        speakPetText(
+          `Detective ${playerName}! Can you find the secret letter ${detectiveData.targetLetter} hiding among the moving numbers?`,
+          currentPet.voice
+        );
+      } else if (activeGame === 'word') {
+        speakPetText(
+          `Let's spell ${activeWordObj.word}! Find the letter ${activeWordObj.word[spelledLetters.length]}!`,
+          currentPet.voice
+        );
+      } else if (activeGame === 'count') {
+        speakPetText(
+          `Let's count balloons in order! Tap number ${countTarget}!`,
+          currentPet.voice
+        );
+      } else if (activeGame === 'shape') {
+        speakPetText(
+          `Can you find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box?`,
+          currentPet.voice
+        );
+      } else if (activeGame === 'ball') {
+        speakPetText(
+          `Yay, catch! Tap the bouncy beach ball to toss it to ${petDisplayName}!`,
+          currentPet.voice
+        );
+      }
     }, 350);
+
     return () => clearTimeout(timer);
-  }, [currentPet, petDisplayName]);
+  }, [activeGame, playerName, petDisplayName, currentPet.voice, detectiveData.targetLetter, activeWordObj.word, spelledLetters.length, countTarget, shapeTarget]);
+
+  // Continuous smooth physics loop for Letter Detective moving numbers
+  useEffect(() => {
+    if (activeGame !== 'detective') return;
+
+    let isRunning = true;
+
+    const updatePhysics = () => {
+      if (!isRunning) return;
+
+      setDetectiveData((prev) => {
+        const nextItems = prev.items.map((item) => {
+          let nx = item.x + item.vx;
+          let ny = item.y + item.vy;
+          let nvx = item.vx;
+          let nvy = item.vy;
+
+          // Bounce off left/right bounds
+          if (nx <= 6) {
+            nx = 6;
+            nvx = Math.abs(nvx);
+          } else if (nx >= 88) {
+            nx = 88;
+            nvx = -Math.abs(nvx);
+          }
+
+          // Bounce off top/bottom bounds
+          if (ny <= 8) {
+            ny = 8;
+            nvy = Math.abs(nvy);
+          } else if (ny >= 75) {
+            ny = 75;
+            nvy = -Math.abs(nvy);
+          }
+
+          return { ...item, x: nx, y: ny, vx: nvx, vy: nvy };
+        });
+
+        return { ...prev, items: nextItems };
+      });
+
+      animFrameRef.current = requestAnimationFrame(updatePhysics);
+    };
+
+    animFrameRef.current = requestAnimationFrame(updatePhysics);
+
+    return () => {
+      isRunning = false;
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [activeGame]);
+
+  // Setup Word Speller bubbles when round changes
+  useEffect(() => {
+    if (activeGame !== 'word') return;
+
+    const neededLetters = activeWordObj.word.split('');
+    const extraDecoys = ['A', 'B', 'M', 'S', 'T', 'O', 'P'].filter(
+      (l) => !neededLetters.includes(l)
+    );
+    const bubbleLetters = [
+      ...neededLetters,
+      extraDecoys[0] || 'X',
+      extraDecoys[1] || 'Z',
+    ].sort(() => 0.5 - Math.random());
+
+    const positions = [
+      { x: 18, y: 15 },
+      { x: 50, y: 14 },
+      { x: 80, y: 16 },
+      { x: 16, y: 58 },
+      { x: 82, y: 56 },
+      { x: 48, y: 64 },
+    ];
+
+    setWordBubbles(
+      bubbleLetters.map((char, i) => ({
+        id: `wb_${char}_${i}`,
+        letter: char,
+        x: positions[i % positions.length].x,
+        y: positions[i % positions.length].y,
+        color: NUMBER_PALETTE[i % NUMBER_PALETTE.length],
+      }))
+    );
+    setSpelledLetters([]);
+  }, [wordRoundIndex, activeGame, activeWordObj.word]);
 
   // -------------------------------------------------------------
-  // STEP 1: BOUNCY BALL CATCH
+  // HANDLERS FOR GAME 1: LETTER DETECTIVE
+  // -------------------------------------------------------------
+  const handleTapDetectiveItem = (item) => {
+    if (item.isTarget) {
+      // Correct target letter!
+      sfx.sparkle();
+      sfx.fanfare();
+      setPetExpression('happy');
+      setPetSparkle(true);
+      setCelebrationMessage(`🎉 Found Letter ${item.value}! Super Detective!`);
+
+      const nextStars = learningStars + 1;
+      setLearningStars(nextStars);
+      setDetectiveFoundCount((c) => c + 1);
+
+      // Update global learning stats
+      if (onUpdateStats) {
+        onUpdateStats((prev) => ({
+          ...prev,
+          lettersFed: (prev.lettersFed || 0) + 1,
+          starsCounted: (prev.starsCounted || 0) + 1,
+        }));
+      }
+
+      // Check badge unlock for 12 letters
+      if ((playerStats.lettersFed || 0) + 1 >= 12 && !unlockedBadges.includes('alphabet_champ')) {
+        if (onUnlockBadge) onUnlockBadge('alphabet_champ');
+        speakPetText(`Incredible! You earned the Alphabet Master trophy!`, currentPet.voice);
+      } else {
+        speakPetText(
+          `Hooray! You found letter ${item.value}! You're an amazing detective, ${playerName}!`,
+          currentPet.voice
+        );
+      }
+
+      // Next detective round after short celebration
+      setTimeout(() => {
+        setDetectiveData(generateDetectiveRound());
+        setPetExpression('idle');
+        setPetSparkle(false);
+        setCelebrationMessage('');
+      }, 1300);
+    } else if (item.type === 'number') {
+      // Tapped a number
+      sfx.bounce();
+      sfx.squeak();
+      setPetExpression('hungry');
+      speakPetText(
+        `That's the number ${item.value}! Keep looking for the letter ${detectiveData.targetLetter}!`,
+        currentPet.voice
+      );
+      setTimeout(() => setPetExpression('idle'), 600);
+    } else {
+      // Tapped a decoy letter
+      sfx.pop();
+      speakPetText(
+        `That's letter ${item.value}! We are searching for letter ${detectiveData.targetLetter}!`,
+        currentPet.voice
+      );
+    }
+  };
+
+  // -------------------------------------------------------------
+  // HANDLERS FOR GAME 2: WORD SPELLER
+  // -------------------------------------------------------------
+  const handleTapWordBubble = (bubble) => {
+    const nextNeededLetter = activeWordObj.word[spelledLetters.length];
+
+    if (bubble.letter === nextNeededLetter) {
+      sfx.chime(spelledLetters.length + 1);
+      setPetExpression('happy');
+
+      const nextSpelled = [...spelledLetters, bubble.letter];
+      setSpelledLetters(nextSpelled);
+
+      // Phonics sound praise
+      speakPetText(`${bubble.letter}! Great job!`, currentPet.voice);
+
+      // Remove the clicked bubble
+      setWordBubbles((prev) => prev.filter((b) => b.id !== bubble.id));
+
+      if (nextSpelled.length === activeWordObj.word.length) {
+        // Complete word spelled!
+        setTimeout(() => {
+          sfx.sparkle();
+          sfx.fanfare();
+          setPetSparkle(true);
+          setCelebrationMessage(`🌟 Spelled ${activeWordObj.word}!`);
+          setLearningStars((s) => s + 2);
+
+          speakPetText(
+            `${activeWordObj.hint} You're a spelling superstar, ${playerName}!`,
+            currentPet.voice
+          );
+
+          if (onUpdateStats) {
+            onUpdateStats((prev) => ({
+              ...prev,
+              lettersFed: (prev.lettersFed || 0) + nextSpelled.length,
+              starsCounted: (prev.starsCounted || 0) + 2,
+            }));
+          }
+
+          setTimeout(() => {
+            setWordRoundIndex((idx) => idx + 1);
+            setPetSparkle(false);
+            setPetExpression('idle');
+            setCelebrationMessage('');
+          }, 1800);
+        }, 300);
+      } else {
+        setTimeout(() => setPetExpression('idle'), 400);
+      }
+    } else {
+      sfx.squeak();
+      speakPetText(
+        `That's letter ${bubble.letter}! Find letter ${nextNeededLetter} to spell ${activeWordObj.word}!`,
+        currentPet.voice
+      );
+    }
+  };
+
+  // -------------------------------------------------------------
+  // HANDLERS FOR GAME 3: NUMBER COUNTING (1 to 5)
+  // -------------------------------------------------------------
+  const handleTapCountBalloon = (balloon) => {
+    if (balloon.popped) return;
+
+    if (balloon.num === countTarget) {
+      sfx.bubblePop();
+      setPetExpression('happy');
+
+      setCountBalloons((prev) =>
+        prev.map((b) => (b.num === balloon.num ? { ...b, popped: true } : b))
+      );
+
+      const countWords = ['One', 'Two', 'Three', 'Four', 'Five'];
+      const spokenNum = countWords[balloon.num - 1] || balloon.num;
+      speakPetText(`${spokenNum}!`, currentPet.voice);
+
+      const nextTarget = countTarget + 1;
+      setCountTarget(nextTarget);
+
+      if (nextTarget > 5) {
+        // All 5 balloons popped in order!
+        setTimeout(() => {
+          sfx.fanfare();
+          sfx.sparkle();
+          setPetSparkle(true);
+          setCelebrationMessage('🎈 Counted 1 to 5 Champion!');
+          setLearningStars((s) => s + 1);
+
+          speakPetText(
+            `One, Two, Three, Four, Five! You counted all 5 balloons, ${playerName}!`,
+            currentPet.voice
+          );
+
+          if (onUpdateStats) {
+            onUpdateStats((prev) => ({
+              ...prev,
+              numbersFed: (prev.numbersFed || 0) + 5,
+              starsCounted: (prev.starsCounted || 0) + 1,
+            }));
+          }
+
+          setTimeout(() => {
+            setCountTarget(1);
+            setCountBalloons((prev) => prev.map((b) => ({ ...b, popped: false })));
+            setPetSparkle(false);
+            setPetExpression('idle');
+            setCelebrationMessage('');
+          }, 1800);
+        }, 350);
+      } else {
+        setTimeout(() => setPetExpression('idle'), 350);
+      }
+    } else {
+      sfx.bounce();
+      speakPetText(
+        `That's number ${balloon.num}! Find number ${countTarget} first!`,
+        currentPet.voice
+      );
+    }
+  };
+
+  // -------------------------------------------------------------
+  // HANDLERS FOR GAME 4: SHAPE & COLOR MATCH
+  // -------------------------------------------------------------
+  const handleTapShapeItem = (item) => {
+    if (item.matched) return;
+
+    if (item.id === shapeTarget.id) {
+      sfx.pop();
+      sfx.sparkle();
+      setPetExpression('happy');
+      setPetSparkle(true);
+      setCelebrationMessage(`💎 Found ${shapeTarget.color} ${shapeTarget.shape}!`);
+      setLearningStars((s) => s + 1);
+
+      speakPetText(
+        `Yes! You found the ${shapeTarget.color} ${shapeTarget.shape}! Into the toy box!`,
+        currentPet.voice
+      );
+
+      setShapeItemsList((prev) =>
+        prev.map((it) => (it.id === item.id ? { ...it, matched: true } : it))
+      );
+
+      if (onUpdateStats) {
+        onUpdateStats((prev) => ({
+          ...prev,
+          shapesFed: (prev.shapesFed || 0) + 1,
+          starsCounted: (prev.starsCounted || 0) + 1,
+        }));
+      }
+
+      // Check badge for shapes
+      if ((playerStats.shapesFed || 0) + 1 >= 12 && !unlockedBadges.includes('shape_master')) {
+        if (onUnlockBadge) onUnlockBadge('shape_master');
+      }
+
+      setTimeout(() => {
+        // Pick next unmatched shape
+        const remaining = SHAPE_ITEMS.filter((s) => s.id !== shapeTarget.id);
+        const nextShape = remaining[Math.floor(Math.random() * remaining.length)] || SHAPE_ITEMS[0];
+        setShapeTarget(nextShape);
+        setShapeItemsList(
+          SHAPE_ITEMS.map((it, idx) => ({
+            ...it,
+            x: 15 + (idx % 3) * 32,
+            y: 18 + Math.floor(idx / 3) * 36,
+            matched: false,
+          }))
+        );
+        setPetSparkle(false);
+        setPetExpression('idle');
+        setCelebrationMessage('');
+      }, 1500);
+    } else {
+      sfx.squeak();
+      speakPetText(
+        `That's a ${item.color} ${item.shape}! Look for the ${shapeTarget.color} ${shapeTarget.shape}!`,
+        currentPet.voice
+      );
+    }
+  };
+
+  // -------------------------------------------------------------
+  // HANDLERS FOR GAME 5: BOUNCY BALL CATCH
   // -------------------------------------------------------------
   const handleThrowBall = useCallback(() => {
     if (isBallFlying) return;
@@ -76,7 +553,6 @@ export default function PlayroomPage({
     sfx.bounce();
     setPetExpression('happy');
 
-    // Arc trajectory up to pet
     setBallPos({ x: 50, y: 38 });
 
     setTimeout(() => {
@@ -87,7 +563,6 @@ export default function PlayroomPage({
       const nextCatches = ballCatches + 1;
       setBallCatches(nextCatches);
 
-      // Update global bounces stat
       const nextBounces = (playerStats.ballsBounced || 0) + 1;
       if (onUpdateStats) {
         onUpdateStats((prev) => ({
@@ -96,266 +571,361 @@ export default function PlayroomPage({
         }));
       }
 
-      // Check badge unlock for 10 bounces
       if (nextBounces >= 10 && !unlockedBadges.includes('ball_juggler')) {
         if (onUnlockBadge) onUnlockBadge('ball_juggler');
         sfx.fanfare();
         speakPetText(`Incredible! You earned the Ball Juggler trophy!`, currentPet.voice);
+      } else {
+        const praises = ['Awesome catch!', 'Wheee!', 'Bounce bounce!'];
+        speakPetText(praises[Math.floor(Math.random() * praises.length)], currentPet.voice);
       }
 
-      if (nextCatches >= 3) {
-        setTimeout(() => {
-          sfx.chime(2);
-          speakPetText(
-            `Awesome catch! Now let's stack the colorful building blocks!`,
-            currentPet.voice
-          );
-          setActiveToy('blocks');
-          setPetExpression('idle');
-        }, 350);
-      } else {
-        const praises = ['Good catch!', 'Wheee!', 'Bounce bounce!'];
-        speakPetText(praises[Math.floor(Math.random() * praises.length)], currentPet.voice);
-        setTimeout(() => setPetExpression('idle'), 300);
-      }
+      setTimeout(() => setPetExpression('idle'), 400);
     }, 450);
   }, [isBallFlying, ballCatches, currentPet, playerStats, onUpdateStats, unlockedBadges, onUnlockBadge]);
 
-  // -------------------------------------------------------------
-  // STEP 2: STACKING TOY BLOCKS
-  // -------------------------------------------------------------
-  const handleStackNextBlock = () => {
-    if (stackedBlocks.length >= 3) return;
+  // Voice replay button
+  const handleReplayPrompt = () => {
     sfx.pop();
-    setPetExpression('happy');
-
-    const blockStyles = [
-      { id: 1, label: '🟥', name: 'Cube Base', color: 'bg-rose-500 border-rose-600' },
-      { id: 2, label: '🟡', name: 'Star Middle', color: 'bg-amber-400 border-amber-500' },
-      { id: 3, label: '👑', name: 'Crown Top', color: 'bg-indigo-500 border-indigo-600' },
-    ];
-
-    const nextBlock = blockStyles[stackedBlocks.length];
-    const updated = [...stackedBlocks, nextBlock];
-    setStackedBlocks(updated);
-
-    if (updated.length === 3) {
-      setTimeout(() => {
-        sfx.chime(4);
-        speakPetText(
-          `Look at our tall magic block tower! Look at the floating balloons, pop them!`,
-          currentPet.voice
-        );
-        setActiveToy('balloon');
-        setPetExpression('idle');
-      }, 400);
-    } else {
-      setTimeout(() => setPetExpression('idle'), 300);
+    if (activeGame === 'detective') {
+      speakPetText(
+        `Detective ${playerName}! Search the moving numbers to find letter ${detectiveData.targetLetter}!`,
+        currentPet.voice
+      );
+    } else if (activeGame === 'word') {
+      speakPetText(
+        `We are spelling ${activeWordObj.word}! Find the letter ${activeWordObj.word[spelledLetters.length]}!`,
+        currentPet.voice
+      );
+    } else if (activeGame === 'count') {
+      speakPetText(
+        `Pop balloons in order from 1 to 5! Tap number ${countTarget}!`,
+        currentPet.voice
+      );
+    } else if (activeGame === 'shape') {
+      speakPetText(
+        `Find the ${shapeTarget.color} ${shapeTarget.shape} and put it in my toy box!`,
+        currentPet.voice
+      );
+    } else if (activeGame === 'ball') {
+      speakPetText(
+        `Tap the beach ball to play catch with ${petDisplayName}!`,
+        currentPet.voice
+      );
     }
-  };
-
-  // -------------------------------------------------------------
-  // STEP 3: BALLOON POPPING
-  // -------------------------------------------------------------
-  const handlePopBalloon = (id) => {
-    sfx.bubblePop();
-    setBalloons((prev) => prev.filter((b) => b.id !== id));
-    setPetExpression('happy');
-
-    const nextPopped = balloonsPoppedCount + 1;
-    setBalloonsPoppedCount(nextPopped);
-
-    if (nextPopped >= 3) {
-      setTimeout(() => {
-        sfx.chime(3);
-        speakPetText(
-          `Pop pop pop! All balloons popped! Now squeeze the rubber ducky!`,
-          currentPet.voice
-        );
-        setActiveToy('duck');
-        setPetExpression('idle');
-      }, 400);
-    } else {
-      setTimeout(() => setPetExpression('idle'), 300);
-    }
-  };
-
-  // -------------------------------------------------------------
-  // STEP 4: SQUEAKY DUCK
-  // -------------------------------------------------------------
-  const handleSqueezeDuck = () => {
-    sfx.squeak();
-    setPetExpression('happy');
-
-    const nextSqueaks = duckSqueaks + 1;
-    setDuckSqueaks(nextSqueaks);
-
-    if (nextSqueaks >= 3) {
-      setTimeout(() => {
-        sfx.sparkle();
-        sfx.fanfare();
-        setPetSparkle(true);
-        setIsPlayCompleted(true);
-        speakPetText(
-          `Quack quack! That was the most fun playtime ever, ${playerName}!`,
-          currentPet.voice
-        );
-      }, 350);
-    } else {
-      speakPetText(`Quack! Hehe, that tickles!`, currentPet.voice);
-      setTimeout(() => setPetExpression('idle'), 350);
-    }
-  };
-
-  // Reset routine to play again
-  const handleResetPlay = () => {
-    sfx.pop();
-    setBallCatches(0);
-    setStackedBlocks([]);
-    setDuckSqueaks(0);
-    setBalloonsPoppedCount(0);
-    setBalloons([
-      { id: Date.now() + 1, icon: '⭐', color: 'bg-rose-400 border-rose-500', x: 18, y: 15 },
-      { id: Date.now() + 2, icon: '🎈', color: 'bg-amber-400 border-amber-500', x: 50, y: 12 },
-      { id: Date.now() + 3, icon: '✨', color: 'bg-purple-400 border-purple-500', x: 82, y: 16 },
-    ]);
-    setIsPlayCompleted(false);
-    setPetSparkle(false);
-    setActiveToy('ball');
-    speakPetText(`Ready to play again! Throw the beach ball to catch!`, currentPet.voice);
   };
 
   return (
     <div
-      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-emerald-300 via-teal-100 to-lime-200 flex flex-col justify-between items-center px-2 py-1 sm:px-4 sm:py-2.5 select-none overflow-hidden font-sans"
+      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-teal-200 via-sky-100 to-emerald-200 flex flex-col justify-between items-center px-2 py-1 sm:px-4 sm:py-2.5 select-none overflow-hidden font-sans"
       style={{ touchAction: 'manipulation' }}
     >
       {/* Top Header */}
       <header className="w-full max-w-md flex items-center justify-between px-1 pt-0.5 z-20 flex-shrink-0">
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={onChangeProfile}
-            className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-indigo-900 border border-indigo-200 shadow-sm active:scale-95"
+            className="flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-full text-xs font-bold text-indigo-900 border border-indigo-200 shadow-sm active:scale-95"
           >
             <User className="w-3.5 h-3.5 text-indigo-600" />
             <span>{playerName}</span>
           </button>
           <button
+            type="button"
             onClick={onSwitchPet}
-            className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full text-xs font-bold text-emerald-900 border border-emerald-200 shadow-sm active:scale-95"
+            className="flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-full text-xs font-bold text-emerald-900 border border-emerald-200 shadow-sm active:scale-95"
           >
             <span>{currentPet.icon}</span>
             <span>{petDisplayName}</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-white/90 px-3 py-1 rounded-full shadow-md border-2 border-emerald-300">
-          <span className="text-xs">⚽</span>
-          <span className="text-xs font-black text-emerald-900">
-            {playerStats.ballsBounced || 0} / 10 Bounces
+        <div className="flex items-center gap-1.5 bg-white/95 px-3 py-1 rounded-full shadow-md border-2 border-amber-300 animate-pulse">
+          <span className="text-sm">⭐</span>
+          <span className="text-xs font-black text-amber-900">
+            {learningStars} Learning Stars
           </span>
         </div>
       </header>
 
-      {/* Play Step & Mission Banner */}
+      {/* Educational Mission Card */}
       <section className="w-full max-w-md my-0.5 z-20 flex-shrink-0">
-        <div className="bg-white/95 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 shadow-md border-2 sm:border-3 border-emerald-400 flex items-center justify-between">
-          <div className="text-left">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700">
-              ⚽ Toy Playroom Routine:
-            </p>
-            <h2 className="text-sm sm:text-lg font-black text-slate-800 tracking-tight leading-tight">
-              {isPlayCompleted
-                ? '✨ Super Fun Playtime Champion! ✨'
-                : activeToy === 'ball'
-                ? `1. Throw Beach Ball: ${ballCatches} / 3 Catches`
-                : activeToy === 'blocks'
-                ? `2. Stack Magic Blocks: ${stackedBlocks.length} / 3 Stacked`
-                : activeToy === 'balloon'
-                ? `3. Pop Party Balloons: ${balloonsPoppedCount} / 3 Popped`
-                : `4. Squeeze Squeaky Duck: ${duckSqueaks} / 3 Squeaks`}
-            </h2>
+        <div className="bg-white/95 rounded-2xl p-2 sm:p-2.5 shadow-lg border-2 border-teal-400 flex items-center justify-between gap-2">
+          <div className="flex-1 text-left">
+            {activeGame === 'detective' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">🔍</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-teal-700">
+                    Letter Detective:
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-xs sm:text-sm font-black text-slate-800">
+                    Find Letter:
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-lg bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950 font-black text-base sm:text-lg shadow-sm border border-yellow-300 ring-2 ring-amber-300/60 animate-bounce">
+                    {detectiveData.targetLetter}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-bold hidden sm:inline">
+                    (hiding among moving numbers!)
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {activeGame === 'word' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">{activeWordObj.icon}</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-purple-700">
+                    Phonics Speller:
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {activeWordObj.word.split('').map((char, idx) => {
+                    const isFilled = idx < spelledLetters.length;
+                    const isNext = idx === spelledLetters.length;
+                    return (
+                      <span
+                        key={idx}
+                        className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center font-black text-sm sm:text-base border-2 transition-all ${
+                          isFilled
+                            ? 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
+                            : isNext
+                            ? 'bg-amber-300 text-amber-950 border-amber-400 ring-2 ring-amber-300 animate-pulse'
+                            : 'bg-slate-100 text-slate-400 border-slate-200'
+                        }`}
+                      >
+                        {isFilled ? char : isNext ? '?' : '_'}
+                      </span>
+                    );
+                  })}
+                  <span className="text-[11px] font-extrabold text-purple-900 ml-1">
+                    {activeWordObj.hint}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {activeGame === 'count' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">🔢</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-sky-700">
+                    Number Counting:
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-xs sm:text-sm font-black text-slate-800 mr-1">
+                    Pop Next:
+                  </span>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <span
+                      key={n}
+                      className={`w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center font-black text-xs border ${
+                        n < countTarget
+                          ? 'bg-emerald-500 text-white border-emerald-600'
+                          : n === countTarget
+                          ? 'bg-amber-400 text-amber-950 border-amber-500 ring-2 ring-amber-300 animate-bounce'
+                          : 'bg-slate-200 text-slate-500 border-slate-300'
+                      }`}
+                    >
+                      {n < countTarget ? '✓' : n}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeGame === 'shape' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">🎨</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-rose-700">
+                    Shape & Color Match:
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs sm:text-sm font-black text-slate-800">
+                    Find Shape:
+                  </span>
+                  <span className="px-2 py-0.5 rounded-lg bg-rose-100 border border-rose-300 text-rose-900 font-black text-xs sm:text-sm flex items-center gap-1 shadow-sm">
+                    <span>{shapeTarget.icon}</span>
+                    <span>
+                      {shapeTarget.color} {shapeTarget.shape}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {activeGame === 'ball' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs">⚽</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                    Beach Ball Catch:
+                  </p>
+                </div>
+                <p className="text-xs sm:text-sm font-black text-slate-800 mt-0.5">
+                  Toss Ball to {petDisplayName}! ({ballCatches} Catches)
+                </p>
+              </div>
+            )}
           </div>
 
           <button
-            onClick={() => {
-              sfx.pop();
-              const hints = {
-                ball: `Tap the bouncy beach ball to toss it to ${petDisplayName}!`,
-                blocks: `Tap or stack the colorful toy blocks to build a tower!`,
-                balloon: `Tap any floating balloon to pop it!`,
-                duck: `Squeeze the yellow rubber ducky to hear silly quacks!`,
-              };
-              speakPetText(hints[activeToy] || hints.ball, currentPet.voice);
-            }}
-            className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-emerald-400 to-teal-300 rounded-xl shadow-md border border-emerald-500 flex items-center justify-center text-emerald-950 active:scale-90 flex-shrink-0"
+            type="button"
+            onClick={handleReplayPrompt}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-tr from-teal-400 to-emerald-300 rounded-xl shadow-md border border-teal-500 flex items-center justify-center text-teal-950 active:scale-90 flex-shrink-0"
+            title="Hear instructions again"
           >
             <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
       </section>
 
-      {/* Main Play Area */}
-      <main className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm">
-        {/* Sparkles on Celebration */}
-        {petSparkle && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40 animate-pulse">
-            <span className="text-4xl animate-bounce">🎉</span>
-            <span className="text-4xl -mt-16 ml-12 animate-ping">✨</span>
-            <span className="text-4xl mt-20 -ml-14 animate-bounce">🌟</span>
-            <span className="text-3xl -mt-12 -ml-16 animate-ping">💖</span>
+      {/* Main Playroom Area */}
+      <main className="relative my-auto flex-1 min-h-0 flex flex-col items-center justify-center z-10 w-full max-w-sm sm:max-w-md">
+        {/* Big Celebration Banner */}
+        {celebrationMessage && (
+          <div className="absolute top-2 z-40 px-4 py-1.5 bg-white/95 border-2 border-amber-400 rounded-full shadow-2xl text-amber-950 font-black text-xs sm:text-sm animate-bounce flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>{celebrationMessage}</span>
           </div>
         )}
 
-        {/* Floating Party Balloons (Step 3) */}
-        {balloons.map((b) => (
-          <button
-            key={b.id}
-            onClick={() => handlePopBalloon(b.id)}
-            style={{ left: `${b.x}%`, top: `${b.y}%` }}
-            className={`absolute w-10 h-13 sm:w-12 sm:h-15 rounded-full ${b.color} border-2 shadow-lg flex items-center justify-center text-lg text-white active:scale-130 transition-transform animate-float z-25 cursor-pointer`}
-          >
-            <span className="filter drop-shadow-sm">{b.icon}</span>
-            <div className="absolute -bottom-1.5 w-1 h-2 bg-white/70 rounded-full" />
-          </button>
-        ))}
+        {/* Floating Sparkles on Win */}
+        {petSparkle && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40 animate-pulse">
+            <span className="text-4xl animate-bounce">🎉</span>
+            <span className="text-4xl -mt-16 ml-14 animate-ping">✨</span>
+            <span className="text-4xl mt-20 -ml-16 animate-bounce">🌟</span>
+            <span className="text-3xl -mt-12 -ml-18 animate-ping">💖</span>
+          </div>
+        )}
 
-        {/* Pet Avatar in Playroom */}
-        <div className={`relative z-15 transition-transform duration-300 ${isBallFlying ? '-translate-y-4 scale-105' : ''}`}>
-          <PetAvatar
-            petId={currentPet.id}
-            stageIndex={stageIndex}
-            feedCount={feedCount}
-            expression={petExpression}
-            accessories={unlockedAccessories}
-          />
-        </div>
-
-        {/* 2. STACKED BLOCKS TOWER (Step 2 - on side of pet) */}
-        {activeToy === 'blocks' && (
-          <div
-            onClick={handleStackNextBlock}
-            className="absolute right-3 sm:right-6 bottom-10 z-25 flex flex-col-reverse items-center gap-1 cursor-pointer"
-          >
-            {stackedBlocks.map((block) => (
-              <div
-                key={block.id}
-                className={`w-11 h-10 sm:w-13 sm:h-11 ${block.color} rounded-xl shadow-md border-2 border-white flex items-center justify-center text-lg text-white animate-bounce`}
+        {/* ------------------------------------------------------------- */}
+        {/* GAME 1: LETTER DETECTIVE (Swarm of Moving Numbers + Letter)   */}
+        {/* ------------------------------------------------------------- */}
+        {activeGame === 'detective' && (
+          <div className="absolute inset-0 z-25 pointer-events-auto">
+            {detectiveData.items.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleTapDetectiveItem(item)}
+                style={{
+                  left: `${item.x}%`,
+                  top: `${item.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+                className={`absolute w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-gradient-to-tr ${item.color} border-2 flex items-center justify-center text-lg sm:text-xl active:scale-125 transition-transform duration-100 select-none cursor-pointer drop-shadow-md`}
               >
-                {block.label}
-              </div>
-            ))}
-            {stackedBlocks.length < 3 && (
-              <button className="w-11 h-10 sm:w-13 sm:h-11 bg-white/80 border-2 border-dashed border-amber-400 rounded-xl flex items-center justify-center text-xs font-black text-amber-900 animate-pulse shadow-sm">
-                + Stack
+                <span>{item.value}</span>
+                {item.isTarget && (
+                  <span className="absolute -top-1 -right-1 text-[10px] animate-ping">
+                    ✨
+                  </span>
+                )}
               </button>
+            ))}
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* GAME 2: PHONICS WORD SPELLER BUBBLES                          */}
+        {/* ------------------------------------------------------------- */}
+        {activeGame === 'word' && (
+          <div className="absolute inset-0 z-25 pointer-events-auto">
+            {wordBubbles.map((b) => (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => handleTapWordBubble(b)}
+                style={{
+                  left: `${b.x}%`,
+                  top: `${b.y}%`,
+                  transform: 'translate(-50%, -50%)',
+                }}
+                className={`absolute w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr ${b.color} border-2 flex items-center justify-center text-xl sm:text-2xl font-black active:scale-130 transition-transform select-none cursor-pointer drop-shadow-lg animate-float`}
+              >
+                <span>{b.letter}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* GAME 3: NUMBER COUNTING BALLOONS (1 to 5)                    */}
+        {/* ------------------------------------------------------------- */}
+        {activeGame === 'count' && (
+          <div className="absolute inset-0 z-25 pointer-events-auto">
+            {countBalloons.map(
+              (b) =>
+                !b.popped && (
+                  <button
+                    key={b.num}
+                    type="button"
+                    onClick={() => handleTapCountBalloon(b)}
+                    style={{
+                      left: `${b.x}%`,
+                      top: `${b.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    className={`absolute w-12 h-15 sm:w-14 sm:h-17 rounded-full ${b.color} border-2 text-white shadow-xl flex flex-col items-center justify-center text-xl sm:text-2xl font-black active:scale-130 transition-transform animate-float select-none cursor-pointer`}
+                  >
+                    <span>{b.num}</span>
+                    <div className="w-1 h-2 bg-white/70 rounded-full mt-0.5" />
+                  </button>
+                )
             )}
           </div>
         )}
 
-        {/* 1. INTERACTIVE BOUNCY BALL (Step 1) */}
-        {activeToy === 'ball' && (
+        {/* ------------------------------------------------------------- */}
+        {/* GAME 4: SHAPE & COLOR TOY BOX                                 */}
+        {/* ------------------------------------------------------------- */}
+        {activeGame === 'shape' && (
+          <div className="absolute inset-0 z-25 pointer-events-auto">
+            {shapeItemsList.map(
+              (item) =>
+                !item.matched && (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleTapShapeItem(item)}
+                    style={{
+                      left: `${item.x}%`,
+                      top: `${item.y}%`,
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                    className={`absolute w-12 h-12 sm:w-14 sm:h-14 rounded-2xl ${item.bg} border-2 shadow-lg flex flex-col items-center justify-center text-xl sm:text-2xl active:scale-130 transition-transform animate-float select-none cursor-pointer`}
+                  >
+                    <span>{item.icon}</span>
+                  </button>
+                )
+            )}
+
+            {/* Toy Box graphic on the floor */}
+            <div className="absolute right-2 sm:right-6 bottom-4 bg-gradient-to-tr from-amber-600 to-amber-700 text-white rounded-2xl p-2 shadow-xl border-2 border-amber-300 flex items-center gap-1.5 z-20">
+              <span className="text-2xl">📦</span>
+              <div className="text-left leading-tight">
+                <p className="text-[9px] font-bold text-amber-200 uppercase">Toy Chest</p>
+                <p className="text-[11px] font-black">{shapeTarget.shape}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* GAME 5: BOUNCY BEACH BALL                                     */}
+        {/* ------------------------------------------------------------- */}
+        {activeGame === 'ball' && (
           <button
+            type="button"
             onClick={handleThrowBall}
             style={{
               left: `${ballPos.x}%`,
@@ -373,131 +943,121 @@ export default function PlayroomPage({
           </button>
         )}
 
-        {/* 4. SQUEAKY RUBBER DUCK (Step 4) */}
-        {activeToy === 'duck' && (
-          <button
-            onClick={handleSqueezeDuck}
-            className="absolute left-6 sm:left-10 bottom-10 w-16 h-16 rounded-full bg-yellow-400 border-4 border-yellow-500 shadow-xl flex items-center justify-center text-3xl active:scale-80 transition-transform animate-bounce z-30 cursor-pointer"
-            title="Squeeze Rubber Duck!"
-          >
-            🐥
-          </button>
-        )}
+        {/* Pet Avatar in Playroom Center */}
+        <div
+          className={`relative z-15 transition-transform duration-300 ${
+            isBallFlying ? '-translate-y-4 scale-105' : ''
+          }`}
+        >
+          <PetAvatar
+            petId={currentPet.id}
+            stageIndex={stageIndex}
+            feedCount={feedCount}
+            expression={petExpression}
+            accessories={unlockedAccessories}
+            onPet={() => {
+              setPetSparkle(true);
+              setTimeout(() => setPetSparkle(false), 1200);
+            }}
+            onTease={() => {
+              setPetSparkle(true);
+              setTimeout(() => setPetSparkle(false), 1000);
+            }}
+          />
+        </div>
 
         {/* Floor Mat Graphic */}
         <div className="w-56 sm:w-72 h-8 sm:h-10 bg-emerald-700/20 rounded-full blur-xs -mt-3 sm:-mt-5 z-0" />
-
-        {/* Replay Button when Finished */}
-        {isPlayCompleted && (
-          <div className="mt-2 z-30 flex-shrink-0">
-            <button
-              onClick={handleResetPlay}
-              className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black text-xs px-4 py-2 rounded-full shadow-lg active:scale-95 transition-transform"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>⚽ PLAY AGAIN!</span>
-            </button>
-          </div>
-        )}
       </main>
 
-      {/* 4-Step Toy Selector Bar */}
+      {/* Mode Switcher Dock (5 Learning Modes) */}
       <footer className="w-full max-w-md flex flex-col gap-1 z-20 pb-0.5 flex-shrink-0">
-        <div className="flex items-center justify-around gap-1 bg-white/95 rounded-2xl p-1.5 shadow-md border-2 border-emerald-300">
-          {/* Toy 1: Bouncy Ball */}
+
+        {/* 5 Educational Game Tabs */}
+        <div className="flex items-center justify-between gap-1 bg-white/95 rounded-2xl p-1 shadow-md border-2 border-teal-300">
+          {/* 1. Letter Detective */}
           <button
+            type="button"
             onClick={() => {
               sfx.pop();
-              setActiveToy('ball');
-              speakPetText(`Throw the bouncy ball to play catch!`, currentPet.voice);
+              setActiveGame('detective');
             }}
-            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
-              activeToy === 'ball'
-                ? 'bg-amber-400 text-amber-950 font-black shadow-md ring-2 ring-amber-300 scale-105'
-                : 'bg-slate-100 text-slate-700 font-bold'
+            className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
+              activeGame === 'detective'
+                ? 'bg-amber-400 text-amber-950 font-black shadow-md ring-2 ring-amber-300 scale-102'
+                : 'bg-slate-100 text-slate-700 font-bold hover:bg-slate-200'
             }`}
           >
-            <div className="relative">
-              <span className="text-xl">⚽</span>
-              {ballCatches >= 3 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  ✓
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5">1. Catch</span>
+            <span className="text-base sm:text-lg">🔍</span>
+            <span className="text-[9px] leading-tight mt-0.5 font-extrabold">Letters</span>
           </button>
 
-          {/* Toy 2: Blocks */}
+          {/* 2. Word Speller */}
           <button
+            type="button"
             onClick={() => {
               sfx.pop();
-              setActiveToy('blocks');
-              speakPetText(`Stack colorful wooden blocks into a tower!`, currentPet.voice);
+              setActiveGame('word');
             }}
-            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
-              activeToy === 'blocks'
-                ? 'bg-rose-500 text-white font-black shadow-md ring-2 ring-rose-300 scale-105'
-                : 'bg-slate-100 text-slate-700 font-bold'
+            className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
+              activeGame === 'word'
+                ? 'bg-purple-500 text-white font-black shadow-md ring-2 ring-purple-300 scale-102'
+                : 'bg-slate-100 text-slate-700 font-bold hover:bg-slate-200'
             }`}
           >
-            <div className="relative">
-              <span className="text-xl">🧱</span>
-              {stackedBlocks.length >= 3 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  ✓
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5">2. Blocks</span>
+            <span className="text-base sm:text-lg">🔤</span>
+            <span className="text-[9px] leading-tight mt-0.5 font-extrabold">Words</span>
           </button>
 
-          {/* Toy 3: Balloons */}
+          {/* 3. Number Count */}
           <button
+            type="button"
             onClick={() => {
               sfx.pop();
-              setActiveToy('balloon');
-              speakPetText(`Tap the floating balloons to pop them!`, currentPet.voice);
+              setActiveGame('count');
             }}
-            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
-              activeToy === 'balloon'
-                ? 'bg-purple-500 text-white font-black shadow-md ring-2 ring-purple-300 scale-105'
-                : 'bg-slate-100 text-slate-700 font-bold'
+            className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
+              activeGame === 'count'
+                ? 'bg-sky-500 text-white font-black shadow-md ring-2 ring-sky-300 scale-102'
+                : 'bg-slate-100 text-slate-700 font-bold hover:bg-slate-200'
             }`}
           >
-            <div className="relative">
-              <span className="text-xl">🎈</span>
-              {balloonsPoppedCount >= 3 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  ✓
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5">3. Balloons</span>
+            <span className="text-base sm:text-lg">🔢</span>
+            <span className="text-[9px] leading-tight mt-0.5 font-extrabold">Count</span>
           </button>
 
-          {/* Toy 4: Squeaky Duck */}
+          {/* 4. Shapes */}
           <button
+            type="button"
             onClick={() => {
               sfx.pop();
-              setActiveToy('duck');
-              speakPetText(`Squeeze the rubber ducky!`, currentPet.voice);
+              setActiveGame('shape');
             }}
-            className={`flex-1 flex flex-col items-center py-1.5 px-0.5 rounded-xl transition-all active:scale-90 ${
-              activeToy === 'duck'
-                ? 'bg-yellow-400 text-yellow-950 font-black shadow-md ring-2 ring-yellow-300 scale-105'
-                : 'bg-slate-100 text-slate-700 font-bold'
+            className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
+              activeGame === 'shape'
+                ? 'bg-rose-500 text-white font-black shadow-md ring-2 ring-rose-300 scale-102'
+                : 'bg-slate-100 text-slate-700 font-bold hover:bg-slate-200'
             }`}
           >
-            <div className="relative">
-              <span className="text-xl">🐥</span>
-              {duckSqueaks >= 3 && (
-                <span className="absolute -top-1 -right-2 w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[8px] font-bold">
-                  ✓
-                </span>
-              )}
-            </div>
-            <span className="text-[9px] mt-0.5">4. Squeak</span>
+            <span className="text-base sm:text-lg">🎨</span>
+            <span className="text-[9px] leading-tight mt-0.5 font-extrabold">Shapes</span>
+          </button>
+
+          {/* 5. Ball */}
+          <button
+            type="button"
+            onClick={() => {
+              sfx.pop();
+              setActiveGame('ball');
+            }}
+            className={`flex-1 flex flex-col items-center py-1 px-0.5 rounded-xl transition-all active:scale-95 ${
+              activeGame === 'ball'
+                ? 'bg-emerald-500 text-white font-black shadow-md ring-2 ring-emerald-300 scale-102'
+                : 'bg-slate-100 text-slate-700 font-bold hover:bg-slate-200'
+            }`}
+          >
+            <span className="text-base sm:text-lg">⚽</span>
+            <span className="text-[9px] leading-tight mt-0.5 font-extrabold">Ball</span>
           </button>
         </div>
 

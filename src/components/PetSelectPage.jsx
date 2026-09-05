@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Sparkles, Volume2, Check, Heart, Trophy } from 'lucide-react';
+import { ArrowLeft, Sparkles, Volume2, Check, Heart, Trophy, Hand } from 'lucide-react';
 import { PETS } from '../data/pets.js';
+import ThreePetCanvas from './ThreePetCanvas.jsx';
+import { sfx } from '../utils/audio.js';
 
 export default function PetSelectPage({
   playerName,
@@ -11,13 +13,19 @@ export default function PetSelectPage({
   onBack,
 }) {
   const [activePetId, setActivePetId] = useState(selectedPetId || PETS[0].id);
+  const [pettingReact, setPettingReact] = useState('');
+
+  const currentPet = PETS.find((p) => p.id === activePetId) || PETS[0];
+  const petProg = petsProgress[currentPet.id];
+  const displayName = petProg?.customName || currentPet.defaultName;
 
   const playVoicePreview = (pet) => {
+    sfx.pop();
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const petProg = petsProgress[pet.id];
-      const displayName = petProg?.customName || pet.defaultName;
-      const text = `Hi ${playerName}! I'm ${displayName}! ${pet.voice.greeting}`;
+      const prog = petsProgress[pet.id];
+      const name = prog?.customName || pet.defaultName;
+      const text = `Hi ${playerName}! I'm ${name}! ${pet.voice.greeting}`;
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.pitch = pet.voice.pitch;
       utterance.rate = pet.voice.rate;
@@ -36,19 +44,28 @@ export default function PetSelectPage({
   };
 
   const handleConfirm = (pet) => {
+    sfx.fanfare();
     onSelectPet(pet.id);
+  };
+
+  const handlePetAvatar = () => {
+    setPettingReact('❤️ Purr! You petted me!');
+    setTimeout(() => setPettingReact(''), 2000);
   };
 
   return (
     <div
-      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center px-2 py-1.5 sm:px-4 sm:py-3 select-none overflow-hidden font-sans"
+      className="relative w-full h-full max-h-[100dvh] bg-gradient-to-b from-sky-300 via-indigo-100 to-pink-200 flex flex-col justify-between items-center px-2 py-1 sm:px-3 sm:py-2 select-none overflow-hidden font-sans"
       style={{ touchAction: 'manipulation' }}
     >
-      {/* Top Navigation */}
-      <header className="w-full max-w-md flex items-center justify-between pt-0.5 flex-shrink-0">
+      {/* Top Header Navigation */}
+      <header className="w-full max-w-md flex items-center justify-between pt-0.5 flex-shrink-0 z-20">
         <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 bg-white/85 active:scale-95 px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-md border-2 border-slate-200 transition-transform"
+          onClick={() => {
+            sfx.pop();
+            onBack();
+          }}
+          className="flex items-center gap-1.5 bg-white/90 active:scale-95 px-3 py-1 rounded-full text-xs font-bold text-slate-700 shadow-md border-2 border-slate-200 transition-transform"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Profile</span>
@@ -57,7 +74,10 @@ export default function PetSelectPage({
         <div className="flex items-center gap-1.5">
           {onOpenBadges && (
             <button
-              onClick={onOpenBadges}
+              onClick={() => {
+                sfx.pop();
+                onOpenBadges();
+              }}
               className="flex items-center gap-1 bg-amber-400 text-amber-950 active:scale-95 px-2.5 py-1 rounded-full text-xs font-black shadow-md border-2 border-amber-500 transition-transform"
             >
               <Trophy className="w-3.5 h-3.5" />
@@ -65,27 +85,82 @@ export default function PetSelectPage({
             </button>
           )}
 
-          <div className="flex items-center gap-1 bg-white/85 px-2.5 py-1 rounded-full shadow-md border-2 border-purple-300">
+          <div className="flex items-center gap-1 bg-white/90 px-2.5 py-1 rounded-full shadow-md border-2 border-purple-300">
             <Sparkles className="w-3.5 h-3.5 text-purple-600" />
             <span className="text-xs font-black text-purple-900 uppercase">
-              {playerName || 'Player'}'s Pets
+              {playerName || 'Player'}'s World
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Title */}
-      <div className="w-full max-w-md text-center my-0.5 flex-shrink-0">
-        <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">
-          Choose Your Magic Pet!
-        </h1>
-        <p className="text-[11px] sm:text-xs font-semibold text-slate-600">
-          Tap any pet to hear its voice! Each animal keeps its own progress!
-        </p>
-      </div>
+      {/* ------------------------------------ */}
+      {/* 3D AVATAR HERO SHOWCASE STAGE        */}
+      {/* ------------------------------------ */}
+      <section className="w-full max-w-md my-1 flex flex-col items-center relative z-10 flex-shrink-0">
+        <div className="relative w-full h-44 sm:h-52 bg-white/80 backdrop-blur-md rounded-2xl sm:rounded-3xl p-1.5 shadow-xl border-3 border-amber-300 flex items-center justify-center overflow-hidden">
+          {/* Ambient Spotlight Aura */}
+          <div className="absolute inset-0 bg-gradient-to-t from-amber-100/60 via-transparent to-sky-100/50 pointer-events-none" />
 
-      {/* 8 Pets Grid */}
-      <main className="w-full max-w-md flex-1 min-h-0 my-1 grid grid-cols-2 gap-2 z-10 overflow-y-auto pr-0.5 pb-1">
+          {/* 3D Interactive Canvas */}
+          <div className="relative w-full h-full flex items-center justify-center">
+            <ThreePetCanvas
+              key="select_pet_canvas"
+              petId={activePetId}
+              expression="idle"
+              isNearFood={false}
+              accessories={['crown', 'sunglasses']}
+              onPet={handlePetAvatar}
+              className="w-full h-full"
+            />
+          </div>
+
+          {/* Top-Left: Live 3D Badge */}
+          <div className="absolute top-2 left-2.5 flex items-center gap-1 bg-slate-900/80 text-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-400/30 backdrop-blur-md shadow pointer-events-none">
+            <Sparkles className="w-3 h-3 text-emerald-400 animate-spin" />
+            <span>3D LIVE AVATAR</span>
+          </div>
+
+          {/* Top-Right: Hear Voice Button */}
+          <button
+            type="button"
+            onClick={() => playVoicePreview(currentPet)}
+            className="absolute top-2 right-2.5 flex items-center gap-1 bg-amber-400 hover:bg-amber-300 text-amber-950 text-[10px] font-black px-2 py-1 rounded-full shadow-md active:scale-90 transition-transform"
+            title="Hear Voice"
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+            <span>Voice</span>
+          </button>
+
+          {/* Bottom Overlay: Active Pet Info Banner */}
+          <div className="absolute bottom-1.5 inset-x-2 bg-slate-900/85 backdrop-blur-md text-white rounded-xl py-1 px-2.5 flex items-center justify-between border border-white/20 shadow">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm">{currentPet.icon}</span>
+                <h2 className="text-xs sm:text-sm font-black text-amber-300 leading-tight">
+                  {displayName}
+                </h2>
+                <span className="text-[9px] uppercase font-bold text-slate-300 tracking-wider">
+                  • {currentPet.species}
+                </span>
+              </div>
+              <p className="text-[9px] text-slate-300 font-medium leading-none line-clamp-1 mt-0.5">
+                {pettingReact || currentPet.tagline}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-1 text-[9px] text-emerald-300 font-bold bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+              <Hand className="w-3 h-3" />
+              <span>Pet head!</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------ */}
+      {/* 8 AVAILABLE PETS SELECTOR TRAY       */}
+      {/* ------------------------------------ */}
+      <main className="w-full max-w-md flex-1 min-h-0 my-0.5 grid grid-cols-4 gap-1.5 z-10 overflow-y-auto pr-0.5 pb-1">
         {PETS.map((pet) => {
           const isSelected = activePetId === pet.id;
           const prog = petsProgress[pet.id];
@@ -96,36 +171,37 @@ export default function PetSelectPage({
             <div
               key={pet.id}
               onClick={() => {
+                sfx.pop();
                 setActivePetId(pet.id);
                 playVoicePreview(pet);
               }}
               className={`
-                relative bg-white/95 rounded-2xl sm:rounded-3xl p-2 sm:p-2.5 flex flex-col items-center justify-between text-center
-                cursor-pointer shadow-md border-2 sm:border-3 transition-all duration-200 active:scale-95
+                relative bg-white/95 rounded-xl sm:rounded-2xl p-1 sm:p-1.5 flex flex-col items-center justify-between text-center
+                cursor-pointer shadow-sm border-2 transition-all duration-200 active:scale-95
                 ${
                   isSelected
-                    ? 'border-amber-400 ring-2 sm:ring-4 ring-amber-200 shadow-lg bg-gradient-to-b from-white to-amber-50'
-                    : 'border-slate-200 hover:border-indigo-300'
+                    ? 'border-amber-400 ring-2 ring-amber-300 shadow-md bg-gradient-to-b from-white to-amber-50 scale-[1.02]'
+                    : 'border-slate-200 hover:border-indigo-300 opacity-90'
                 }
               `}
             >
               {/* Selected Check Badge */}
               {isSelected && (
-                <div className="absolute top-1.5 right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black shadow-xs">
-                  <Check className="w-3 h-3 stroke-[3]" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center font-black shadow-xs z-10">
+                  <Check className="w-2.5 h-2.5 stroke-[3]" />
                 </div>
               )}
 
-              {/* Saved Progress Chip if pet was played */}
+              {/* Played Feeds Badge */}
               {hasPlayed && (
-                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[8px] sm:text-[9px] font-black border border-emerald-300">
-                  Feeds: {prog.feedCount}
+                <div className="absolute top-0.5 left-0.5 px-1 rounded-full bg-emerald-100 text-emerald-800 text-[7px] font-black border border-emerald-300">
+                  ★{prog.feedCount}
                 </div>
               )}
 
-              {/* Big Mascot Icon */}
+              {/* Icon Container */}
               <div
-                className={`w-14 h-14 sm:w-18 sm:h-18 rounded-xl sm:rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-inner mt-1 bg-gradient-to-tr ${pet.bgColor} ${
+                className={`w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center text-xl sm:text-2xl shadow-inner mt-0.5 bg-gradient-to-tr ${pet.bgColor} ${
                   isSelected ? 'animate-bounce' : ''
                 }`}
               >
@@ -133,53 +209,30 @@ export default function PetSelectPage({
               </div>
 
               {/* Pet Info */}
-              <div className="mt-1 w-full">
-                <h3 className="text-xs sm:text-sm font-black text-slate-800 leading-tight">
+              <div className="mt-0.5 w-full">
+                <h3 className="text-[10px] sm:text-xs font-black text-slate-800 leading-tight truncate">
                   {petDisplayName}
                 </h3>
-                <span className="text-[9px] font-bold text-slate-500 block uppercase tracking-wider">
+                <span className="text-[8px] font-extrabold text-indigo-600 block uppercase tracking-wider">
                   {pet.species}
                 </span>
-                <p className="text-[8px] font-medium text-slate-600 line-clamp-1 mt-0.5 leading-snug">
-                  {pet.tagline}
-                </p>
               </div>
-
-              {/* Hear Voice Button */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActivePetId(pet.id);
-                  playVoicePreview(pet);
-                }}
-                className="mt-1 w-full py-0.5 px-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-extrabold flex items-center justify-center gap-1 active:scale-90 transition-transform"
-              >
-                <Volume2 className="w-3 h-3 text-indigo-600" />
-                <span>Hear Voice</span>
-              </button>
             </div>
           );
         })}
       </main>
 
-      {/* Confirm Selection Button */}
-      <footer className="w-full max-w-md pt-1 pb-1 flex-shrink-0">
-        {(() => {
-          const currentPet = PETS.find((p) => p.id === activePetId) || PETS[0];
-          const petProg = petsProgress[currentPet.id];
-          const displayName = petProg?.customName || currentPet.defaultName;
-
-          return (
-            <button
-              onClick={() => handleConfirm(currentPet)}
-              className="w-full py-3 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-base sm:text-lg shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
-            >
-              <Heart className="w-5 h-5 fill-white text-white animate-pulse" />
-              <span>SELECT {displayName.toUpperCase()}! ➔</span>
-            </button>
-          );
-        })()}
+      {/* ------------------------------------ */}
+      {/* CONFIRM SELECTION BUTTON             */}
+      {/* ------------------------------------ */}
+      <footer className="w-full max-w-md pt-1 pb-1 flex-shrink-0 z-20">
+        <button
+          onClick={() => handleConfirm(currentPet)}
+          className="w-full py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-sm sm:text-base shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 border-b-4 border-teal-700"
+        >
+          <Heart className="w-4 h-4 sm:w-5 sm:h-5 fill-white text-white animate-pulse" />
+          <span>PLAY WITH {displayName.toUpperCase()}! ➔</span>
+        </button>
       </footer>
     </div>
   );

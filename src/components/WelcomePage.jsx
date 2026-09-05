@@ -70,16 +70,26 @@ export default function WelcomePage({
 
       {/* Main Form Card */}
       <main className="w-full max-w-md my-auto bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-2xl border-3 sm:border-4 border-amber-400 flex flex-col gap-3 sm:gap-4 text-center z-10">
-        {/* Animated Mascot Preview */}
+        {/* Animated Mascot Preview Banner */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-pink-400 via-purple-300 to-emerald-300 p-1 shadow-inner flex items-center justify-center animate-bounce">
-            <span className="text-3xl sm:text-4xl">🥚</span>
+          <div className="relative">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-emerald-400 via-teal-400 to-indigo-500 p-1 shadow-xl flex items-center justify-center animate-bounce border-3 border-white">
+              <span className="text-4xl sm:text-5xl">🦖</span>
+            </div>
+            <span className="absolute -bottom-2 -right-2 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full border-2 border-white shadow">
+              3D ✨
+            </span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight mt-1.5">
-            Welcome, Adventurer!
+
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight mt-3">
+            Magic Pet Feeder
           </h1>
-          <p className="text-xs sm:text-sm font-semibold text-slate-600">
-            Feed, care, and watch your magic pets hatch and grow!
+          <div className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 px-3 py-0.5 rounded-full text-xs font-black mt-1 border border-emerald-300">
+            <Sparkles className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+            <span>8 Interactive 3D Pet Avatars!</span>
+          </div>
+          <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1">
+            Feed, play, groom & care for your 3D animal companions!
           </p>
         </div>
 

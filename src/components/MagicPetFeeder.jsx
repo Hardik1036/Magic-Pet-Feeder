@@ -312,25 +312,59 @@ export default function MagicPetFeeder({
   const petZoneRectRef = useRef(null);
 
   // Auto-speak on round change using selected pet's voice!
+  const lastSpokenPromptRef = useRef('');
   useEffect(() => {
     if (evolutionModal || accessoryModal || newBadgeModal) return;
+    if (!round?.spokenPrompt || lastSpokenPromptRef.current === round.spokenPrompt) return;
+    lastSpokenPromptRef.current = round.spokenPrompt;
+
     const timer = setTimeout(() => {
       speakPetText(round.spokenPrompt, currentPet.voice);
     }, 400);
     return () => clearTimeout(timer);
-  }, [round, currentPet, evolutionModal, accessoryModal, newBadgeModal]);
+  }, [round?.spokenPrompt, currentPet.voice, evolutionModal, accessoryModal, newBadgeModal]);
 
-  // Sync initial props when switching pets
+  // Sync initial props ONLY when switching to a DIFFERENT pet (never on re-renders)
+  const prevPetIdRef = useRef(selectedPetId);
   useEffect(() => {
-    setFeedCount(initialFeedCount);
-    const newStage = getStageFromFeeds(initialFeedCount);
-    setStageIndex(newStage);
-    setUnlockedAccessories(initialAccessories);
-    setRound(generateRound(currentMode, newStage, petDisplayName));
-  }, [selectedPetId, initialFeedCount, initialAccessories, petDisplayName]);
+    if (prevPetIdRef.current !== selectedPetId) {
+      prevPetIdRef.current = selectedPetId;
+      setFeedCount(initialFeedCount);
+      const newStage = getStageFromFeeds(initialFeedCount);
+      setStageIndex(newStage);
+      setUnlockedAccessories(initialAccessories || []);
+      setRound(generateRound(currentMode, newStage, petDisplayName));
+    }
+  }, [selectedPetId]);
 
-  // Persist progress
+  // Persist progress ONLY when gameplay values actually change from user action
+  const lastSavedRef = useRef({
+    feedCount: initialFeedCount,
+    stageIndex: getStageFromFeeds(initialFeedCount),
+    accessoriesStr: JSON.stringify(initialAccessories || []),
+    petId: selectedPetId,
+  });
+
   useEffect(() => {
+    const last = lastSavedRef.current;
+    const accsStr = JSON.stringify(unlockedAccessories || []);
+    const isSame =
+      last.petId === selectedPetId &&
+      last.feedCount === feedCount &&
+      last.stageIndex === stageIndex &&
+      last.accessoriesStr === accsStr;
+
+    if (isSame) {
+      return;
+    }
+
+    lastSavedRef.current = {
+      feedCount,
+      stageIndex,
+      accessoriesStr: accsStr,
+      petId: selectedPetId,
+    };
+
     if (onSaveProgress) {
       onSaveProgress({
         feedCount,
@@ -338,7 +372,7 @@ export default function MagicPetFeeder({
         unlockedAccessories,
       });
     }
-  }, [feedCount, stageIndex, unlockedAccessories, onSaveProgress]);
+  }, [feedCount, stageIndex, unlockedAccessories, selectedPetId, onSaveProgress]);
 
   // Check and award badges based on challenging milestones & achievements
   const checkBadgeAwards = useCallback(
@@ -886,6 +920,14 @@ export default function MagicPetFeeder({
           expression={petExpression}
           accessories={unlockedAccessories}
           isNearFood={isNearPet}
+          onPet={() => {
+            setPetSparkle(true);
+            setTimeout(() => setPetSparkle(false), 1200);
+          }}
+          onTease={() => {
+            setPetSparkle(true);
+            setTimeout(() => setPetSparkle(false), 1000);
+          }}
         />
 
         <div
