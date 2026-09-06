@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, User, Volume2, Trophy } from 'lucide-react';
-import { speakPetText } from '../utils/audio.js';
+import { sfx, speakPetText, getAudioAccent, toggleAudioAccent } from '../utils/audio.js';
 
 const POPULAR_PLAYER_NAMES = ['Emma', 'Leo', 'Maya', 'Noah', 'Zara', 'Lucas', 'Oliver', 'Chloe'];
 
@@ -16,6 +16,26 @@ export default function WelcomePage({
   onOpenBadges,
 }) {
   const [playerName, setPlayerName] = useState(initialPlayerName || '');
+  const [currentAccent, setCurrentAccent] = useState(() => getAudioAccent());
+
+  useEffect(() => {
+    const handleAccentChange = (e) => {
+      if (e?.detail?.accent) setCurrentAccent(e.detail.accent);
+    };
+    window.addEventListener('pet-accent-change', handleAccentChange);
+    return () => window.removeEventListener('pet-accent-change', handleAccentChange);
+  }, []);
+
+  const handleToggleAccent = () => {
+    sfx.pop();
+    const next = toggleAudioAccent();
+    setCurrentAccent(next);
+    if (next === 'indian') {
+      speakPetText('Namaste! Welcome to Magic Pet Feeder!', { pitch: 1.25, rate: 0.9 }, 'indian');
+    } else {
+      speakPetText('Hello! Welcome to Magic Pet Feeder!', { pitch: 1.25, rate: 0.9 }, 'us');
+    }
+  };
 
   const handleStart = (e) => {
     if (e) e.preventDefault();
@@ -23,17 +43,15 @@ export default function WelcomePage({
     onProceed(finalPlayer);
   };
 
-  const isHindi = audioLanguage === 'hi' || audioLanguage === 'hinglish';
-
   const speakWelcome = () => {
-    const text = isHindi
-      ? playerName.trim()
-        ? `नमस्ते ${playerName}! चलो जादुई पेट चुनें!`
-        : 'मैजिक पेट फीडर में आपका स्वागत है! आपका नाम क्या है?'
-      : playerName.trim()
-      ? `Hi ${playerName}! Let's pick a magic pet!`
+    const text = playerName.trim()
+      ? currentAccent === 'indian'
+        ? `Namaste ${playerName}! Let's pick a magic pet!`
+        : `Hi ${playerName}! Let's pick a magic pet!`
+      : currentAccent === 'indian'
+      ? 'Welcome to Magic Pet Feeder! What is your name?'
       : 'Welcome to Magic Pet Feeder! What is your name?';
-    speakPetText(text, { pitch: 1.3, rate: 0.9 }, isHindi ? 'hi' : 'en');
+    speakPetText(text, { pitch: 1.25, rate: 0.9 }, currentAccent);
   };
 
   return (
@@ -51,21 +69,19 @@ export default function WelcomePage({
         </div>
 
         <div className="flex items-center gap-1.5">
-          {onToggleLanguage && (
-            <button
-              type="button"
-              onClick={onToggleLanguage}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
-                isHindi
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
-                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
-              }`}
-              title={isHindi ? "Switch to English audio" : "Switch to Hindi audio"}
-            >
-              <span>{isHindi ? '🇮🇳' : '🇬🇧'}</span>
-              <span>{isHindi ? 'हिंदी' : 'English'}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleToggleAccent}
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+              currentAccent === 'indian'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+            title={currentAccent === 'indian' ? 'Audio Accent: Indian (en-IN). Click to switch to US Accent' : 'Audio Accent: US (en-US). Click to switch to Indian Accent'}
+          >
+            <span>{currentAccent === 'indian' ? '🇮🇳' : '🇺🇸'}</span>
+            <span>{currentAccent === 'indian' ? 'Indian Accent' : 'US Accent'}</span>
+          </button>
 
           {unlockedBadgesCount > 0 && onOpenBadges && (
             <button

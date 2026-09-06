@@ -487,26 +487,130 @@ if (typeof window !== 'undefined') {
 }
 
 // ==========================================
-// LANGUAGE HELPERS (ENGLISH ONLY)
+// VOICE ACCENT & LANGUAGE MANAGEMENT
 // ==========================================
-export function setAudioLanguage() {
-  // English only mode
+const ACCENT_STORAGE_KEY = 'magic_pet_feeder_accent';
+
+let currentAudioAccent = 'indian';
+try {
+  if (typeof localStorage !== 'undefined') {
+    const saved = localStorage.getItem(ACCENT_STORAGE_KEY);
+    if (saved === 'indian' || saved === 'us') {
+      currentAudioAccent = saved;
+    }
+  }
+} catch (e) {}
+
+export function getAudioAccent() {
+  return currentAudioAccent;
+}
+
+export function setAudioAccent(accent) {
+  if (accent === 'indian' || accent === 'us') {
+    currentAudioAccent = accent;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(ACCENT_STORAGE_KEY, accent);
+      }
+    } catch (e) {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('pet-accent-change', { detail: { accent } }));
+    }
+  }
+}
+
+export function toggleAudioAccent() {
+  const next = currentAudioAccent === 'indian' ? 'us' : 'indian';
+  setAudioAccent(next);
+  return next;
+}
+
+// Find high quality Indian English (en-IN) voices across all platforms
+export function findIndianVoice(voices) {
+  if (!voices || !voices.length) return null;
+
+  // 1. High-fidelity Named Indian Voices on Windows, macOS, Android, and Chromium
+  // Microsoft Heera, Microsoft Ravi, Microsoft Neerja, Microsoft Prabhat,
+  // Veena, Rishi, Lekha, Google English (India), etc.
+  const namedIndianEnglish = voices.find(
+    (v) =>
+      v.name &&
+      /neerja|prabhat|heera|ravi|veena|rishi|lekha|kavya|arun|kalpana|swara|madhur|priya|ananya/i.test(v.name)
+  );
+  if (namedIndianEnglish) return namedIndianEnglish;
+
+  // 2. Exact or regional Indian English language codes (en-IN, en_IN)
+  const exactEnIN = voices.find(
+    (v) =>
+      v.lang &&
+      (v.lang.toLowerCase() === 'en-in' ||
+       v.lang.toLowerCase() === 'en_in' ||
+       v.lang.toLowerCase().startsWith('en-in'))
+  );
+  if (exactEnIN) return exactEnIN;
+
+  // 3. Any voice containing "India" or "Indian"
+  const nameIndia = voices.find(
+    (v) =>
+      (v.name && /india|indian/i.test(v.name)) ||
+      (v.lang && /[-_]in\b/i.test(v.lang))
+  );
+  if (nameIndia) return nameIndia;
+
+  // 4. Hindi/Indian bilingual TTS voices (e.g. Google हिन्दी, hi-IN)
+  const hiIN = voices.find(
+    (v) =>
+      v.lang &&
+      (v.lang.toLowerCase().startsWith('hi') || /hindi|हिन्दी/i.test(v.name || ''))
+  );
+  if (hiIN) return hiIN;
+
+  return null;
+}
+
+// Helper to find US / standard English voices
+export function findUSVoice(voices) {
+  if (!voices || !voices.length) return null;
+
+  return (
+    voices.find(
+      (v) =>
+        v.lang &&
+        v.lang.toLowerCase().startsWith('en') &&
+        /natural|google us english|samantha|zira|david|jenny|guy|karen/i.test(v.name)
+    ) ||
+    voices.find(
+      (v) =>
+        v.lang &&
+        (v.lang === 'en-US' || v.lang === 'en_US' || v.lang.toLowerCase().startsWith('en-us'))
+    ) ||
+    voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en')) ||
+    null
+  );
+}
+
+export function setAudioLanguage(lang) {
+  if (lang === 'hi' || lang === 'en-in') {
+    setAudioAccent('indian');
+  } else if (lang === 'en' || lang === 'en-us') {
+    setAudioAccent('us');
+  }
 }
 
 export function getAudioLanguage() {
-  return 'en';
+  return currentAudioAccent === 'indian' ? 'en-IN' : 'en-US';
 }
 
 export function toHindi(text) {
-  return text; // Pure English
+  return text;
 }
 
 export function toHinglish(text) {
-  return text; // Pure English
+  return text;
 }
 
 // ==========================================
-// CRYSTAL-CLEAR ENGLISH SPEECH SYNTHESIZER
+// CRYSTAL-CLEAR SPEECH SYNTHESIZER
 // High intelligibility, natural pitch, relaxed rate
 // ==========================================
 let activeSpeechTimer = null;
@@ -531,7 +635,7 @@ export function playBodyPartGuide(partName, partExplanation, petVoice) {
   speakPetText(speech, petVoice);
 }
 
-export function speakPetText(text, petVoice) {
+export function speakPetText(text, petVoice, accentOverride) {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   if (!text || typeof text !== 'string' || !text.trim()) return;
 
@@ -566,22 +670,20 @@ export function speakPetText(text, petVoice) {
         }
 
         const voices = refreshVoices();
+        const effectiveAccent = accentOverride || currentAudioAccent;
 
-        const bestVoice =
-          voices.find(
-            (v) =>
-              v.lang &&
-              v.lang.toLowerCase().startsWith('en') &&
-              /natural|google us english|samantha|zira|david|jenny|guy|karen/i.test(v.name)
-          ) ||
-          voices.find(
-            (v) =>
-              v.lang &&
-              (v.lang === 'en-US' || v.lang === 'en_US' || v.lang.toLowerCase().startsWith('en-us'))
-          ) ||
-          voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('en')) ||
-          voices[0] ||
-          null;
+        let bestVoice = null;
+        let targetLang = 'en-IN';
+
+        if (effectiveAccent === 'indian' || effectiveAccent === 'hi') {
+          bestVoice = findIndianVoice(voices) || findUSVoice(voices) || voices[0] || null;
+          targetLang = bestVoice?.lang?.toLowerCase().startsWith('hi')
+            ? bestVoice.lang
+            : 'en-IN';
+        } else {
+          bestVoice = findUSVoice(voices) || voices[0] || null;
+          targetLang = bestVoice?.lang || 'en-US';
+        }
 
         const clean = cleanSpeechText(text);
         const cleanText = clean.length > 0 ? clean : text.trim();
@@ -589,7 +691,7 @@ export function speakPetText(text, petVoice) {
         if (bestVoice) {
           utterance.voice = bestVoice;
         }
-        utterance.lang = bestVoice?.lang || 'en-US';
+        utterance.lang = targetLang;
 
         const rawPitch = typeof petVoice?.pitch === 'number' ? petVoice.pitch : 1.00;
         utterance.pitch = Math.max(0.98, Math.min(1.06, rawPitch));

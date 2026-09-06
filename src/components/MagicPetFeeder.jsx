@@ -4,7 +4,7 @@ import { PETS } from '../data/pets.js';
 import { ALL_LETTERS, ALL_NUMBERS, ALL_SHAPES, ALL_COLORS } from '../data/shapes.js';
 import { BADGES } from '../data/badges.js';
 
-import { sfx, speakPetText } from '../utils/audio.js';
+import { sfx, speakPetText, getAudioAccent, toggleAudioAccent } from '../utils/audio.js';
 import PetAvatar from './PetAvatar.jsx';
 import ActivityNavBar from './ActivityNavBar.jsx';
 
@@ -304,6 +304,28 @@ export default function MagicPetFeeder({
   const [wobbleId, setWobbleId] = useState(null);
   const [flyingFoodId, setFlyingFoodId] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
+
+  // Voice Accent State (Indian English by default)
+  const [currentAccent, setCurrentAccent] = useState(() => getAudioAccent());
+
+  useEffect(() => {
+    const handleAccentChange = (e) => {
+      if (e?.detail?.accent) setCurrentAccent(e.detail.accent);
+    };
+    window.addEventListener('pet-accent-change', handleAccentChange);
+    return () => window.removeEventListener('pet-accent-change', handleAccentChange);
+  }, []);
+
+  const handleToggleAccent = () => {
+    sfx.pop();
+    const next = toggleAudioAccent();
+    setCurrentAccent(next);
+    if (next === 'indian') {
+      speakPetText('Namaste! Indian accent ready!', currentPet.voice, 'indian');
+    } else {
+      speakPetText('Hello! US accent ready!', currentPet.voice, 'us');
+    }
+  };
 
   // Dragging with direct GPU acceleration
   const [draggingItem, setDraggingItem] = useState(null);
@@ -819,22 +841,20 @@ export default function MagicPetFeeder({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Audio Language Switcher */}
-            {onToggleLanguage && (
-              <button
-                type="button"
-                onClick={onToggleLanguage}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
-                  audioLanguage === 'hi' || audioLanguage === 'hinglish'
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
-                    : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
-                }`}
-                title={audioLanguage === 'hi' || audioLanguage === 'hinglish' ? "Switch to English audio" : "Switch to Hindi audio"}
-              >
-                <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? '🇮🇳' : '🇬🇧'}</span>
-                <span>{audioLanguage === 'hi' || audioLanguage === 'hinglish' ? 'हिंदी' : 'English'}</span>
-              </button>
-            )}
+            {/* Audio Voice Accent Switcher */}
+            <button
+              type="button"
+              onClick={handleToggleAccent}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-black shadow-sm border-2 transition-all active:scale-95 ${
+                currentAccent === 'indian'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-300 ring-2 ring-emerald-200'
+                  : 'bg-white/95 text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+              title={currentAccent === 'indian' ? 'Audio Accent: Indian (en-IN). Click to switch to US Accent' : 'Audio Accent: US (en-US). Click to switch to Indian Accent'}
+            >
+              <span>{currentAccent === 'indian' ? '🇮🇳' : '🇺🇸'}</span>
+              <span>{currentAccent === 'indian' ? 'Indian Accent' : 'US Accent'}</span>
+            </button>
 
             {/* Trophies Button */}
             <button
